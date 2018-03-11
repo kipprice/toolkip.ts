@@ -87,7 +87,7 @@ namespace KIP {
 		 * the elements that make up a Drawable
 		 * ...........................................................................
 		 */
-		protected abstract _createElements(): void;
+		protected abstract _createElements(...args: any[]): void;
 
 		/**...........................................................................
 		 * _shouldSkipCreateElements

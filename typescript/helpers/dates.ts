@@ -7,6 +7,16 @@ namespace KIP.Dates {
 	 * @since 1.1
 	 */
 
+	export interface IDateDifferences {
+		years?: number;
+		months?: number;
+		days?: number;
+		hours?: number;
+		minutes?: number;
+		seconds?: number;
+		milliseconds?: number;
+	}
+
 	/**
 	 *	Finds the difference in days between two date objects
 	 *	@param {Date} a - The first date to compare
@@ -265,8 +275,7 @@ namespace KIP.Dates {
 		return days + "D  " + hr_str + ":" + min_str + ":" + sec_str + " '" + milli;
 	};
 
-	export function addToDate(date: Date, counts: { milliseconds?: number, seconds?: number, minutes?: number, hours?: number, days?: number }): Date {
-		"use strict";
+	export function addToDate(date: Date, counts: IDateDifferences): Date {
 
 		if (counts.milliseconds) {
 			date.setMilliseconds(date.getMilliseconds() + counts.milliseconds);
@@ -288,6 +297,14 @@ namespace KIP.Dates {
 			date.setDate(date.getDate() + counts.days);
 		}
 
+		if (counts.months) {
+			date.setMonth(date.getMonth() + counts.months);
+		}
+
+		if (counts.years) {
+			date.setFullYear(date.getFullYear() + counts.years);
+		}
+
 		return date;
 
 	};
@@ -299,7 +316,6 @@ namespace KIP.Dates {
 	 * @returns string of month name
 	 */
 	export function getMonthName(date: Date, short?: boolean): string {
-		"use strict";
 		switch (date.getMonth()) {
 			case 0:
 				if (short) return "Jan";
@@ -396,4 +412,60 @@ namespace KIP.Dates {
 		if (shortDate(dateA) === shortDate(dateB)) { return true; }
 		return false;
 	}
+
+	/**
+	 * getDisplayDuration
+	 * 
+	 * Create a display string for a time duration
+	 * @param 	counts	The duration to stringify
+	 * @returns	The display duration string 
+	 * 
+	 */
+	export function getDisplayDuration(counts: IDateDifferences): string {
+		// update up to the highest available range for dates
+		_updateDateDifferences(1000, counts, "milliseconds", "seconds");
+		_updateDateDifferences(60, counts, "seconds", "minutes");
+		_updateDateDifferences(60, counts, "minutes", "hours");
+		_updateDateDifferences(24, counts, "hours", "days");
+		_updateDateDifferences(30, counts, "days", "months");
+		_updateDateDifferences(12, counts, "months", "years");
+
+		// create the string based on the counts
+		let out: string[] = [];
+		
+		if (counts.years) { out.push(_createPluralString(counts.years, "year")); }
+		if (counts.months) { out.push(_createPluralString(counts.months, "month")); }
+		if (counts.days) { out.push(_createPluralString(counts.days, "day")); }
+		if (counts.hours) { out.push(_createPluralString(counts.hours, "hour")); }
+		if (counts.minutes) { out.push(_createPluralString(counts.minutes, "minute")); }
+		if (counts.seconds) { out.push(_createPluralString(counts.seconds, "second")); }
+		if (counts.milliseconds) { out.push(_createPluralString(counts.milliseconds, "millisecond")); }
+
+		return out.join(" ");
+	}
+
+	function _updateDateDifferences (divisor: number, out: IDateDifferences, startKey: keyof IDateDifferences, endKey: keyof IDateDifferences): IDateDifferences {
+
+		if (!out[startKey]) { out[startKey] = 0; }
+		if (!out[endKey]) { out[endKey] = 0; }
+		let dividend: number = out[startKey];
+
+		let remainder: number = dividend % divisor;
+		let quotient: number = Math.floor(dividend / divisor);
+
+		out[startKey] = remainder;
+		out[endKey] += quotient;
+
+		return out;
+	}
+
+	function _createPluralString (amount: number, singular: string, plural?: string): string {
+		if (amount === 1) {
+			return amount + " " + singular;
+		} else {
+			if (!plural) { plural = singular + "s"; }
+			return amount + " " + plural;
+		}
+	}
+
 }
