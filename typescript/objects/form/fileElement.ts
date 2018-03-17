@@ -184,7 +184,7 @@ namespace KIP.Forms {
          */
         protected _onChange(): boolean {
             // check if the link is the one that changed, and if so, update that
-            if (this._tempLink) {
+            if (!isNullOrUndefined(this._tempLink)) {
                 return this._onLinkChange();
             }
 
@@ -203,7 +203,7 @@ namespace KIP.Forms {
 
         protected _onLinkChange(): boolean {
             let out: boolean = this._standardValidation(this._tempLink);    // Check if we can set that link
-            this._tempLink = "";                                            // Clear it in either case
+            this._tempLink = null;                                          // Clear it in either case
             return out;                                                     // Quit with the result
         }
 

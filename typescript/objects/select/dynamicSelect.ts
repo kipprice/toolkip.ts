@@ -1,4 +1,4 @@
-///<reference path="drawable.ts" />
+///<reference path="../drawable.ts" />
 namespace KIP {
 
     /**...........................................................................

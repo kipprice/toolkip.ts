@@ -1,5 +1,25 @@
 namespace KIP.SVG {
+	/**...........................................................................
+	 * @class ISVGStyle
+	 * ...........................................................................
+	 * Keep track of SVG styles
+	 * ...........................................................................
+	 */
+	export interface ISVGStyle {
+		fill: string;
+		fillOpacity?: number;
 
+		fontSize?: number;
+		fontWeight?: string;
+		fontFamily?: string;
+
+		stroke: string;
+		strokeWidth?: number;
+		strokeOpacity?: number;
+		strokeLinecap?: string;
+		strokeLinejoin?: string;
+	}
+	
     /**...........................................................................
 	 * @class	SVGStyle
 	 * ...........................................................................

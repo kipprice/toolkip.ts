@@ -33,7 +33,7 @@ namespace KIP {
 	}
 
 	export class SVGProject extends Drawable {
-		private _canvas: SVGDrawable;
+		private _canvas: SVG.SVGDrawable;
 		private _projectLines: Collection<IProjectLine>;
 		private _options: IProjectOptions;
 		private _lineCount: number

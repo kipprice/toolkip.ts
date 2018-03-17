@@ -1,4 +1,5 @@
-/*globals KIP,window,console*/
+///<reference path="../svg/svgDrawable.ts" />
+
 namespace KIP.Old {
 
 	export interface IDictionary<T> {
@@ -12,7 +13,7 @@ namespace KIP.Old {
 	 * @param {Date} end   - OBSOLETE. The date at which the default viewing window should end. Can be a date string or a Date object
 	 * @param {Object} [dim]   - What the dimensions of SVG Element should be
 	 */
-	export class ProjectWindow extends SVGDrawable {
+	export class ProjectWindow extends SVG.SVGDrawable {
 		headerGap: number;
 		beginningRatio: number;
 		lastBubble: any;
@@ -131,7 +132,7 @@ namespace KIP.Old {
 			}
 
 			// Create a SVG canvas for the project items
-			SVGDrawable.call(this, this.id, "", { aspect: "none", zoomY: false });
+			SVG.SVGDrawable.call(this, this.id, "", { aspect: "none", zoomY: false });
 
 
 			// Set up the view for the object
@@ -800,11 +801,11 @@ namespace KIP.Old {
 				this.lineProperty.color = "rgba(0,0,0,0)";
 
 				event = this.addPath([
-					{ point: { x: ev.x - dx, y: ev.y - dy }},
-					{point:{ x: ev.x - dx, y: ev.y }},
-					{point: { x: ev.x, y: ev.y + (0.5 * dy) }},
-					{point:{ x: ev.x + dx, y: ev.y }},
-					{point:{ x: ev.x + dx, y: ev.y - dy }}
+					{  x: ev.x - dx, y: ev.y - dy },
+					{ x: ev.x - dx, y: ev.y },
+					{ x: ev.x, y: ev.y + (0.5 * dy) },
+					{ x: ev.x + dx, y: ev.y },
+					{ x: ev.x + dx, y: ev.y - dy }
 				], { id: "ev." + this.eventCnt }, item.eventGrp);
 
 				// Draw the small event line
@@ -876,7 +877,7 @@ namespace KIP.Old {
 				this.eventGrp.appendChild(item.eventGrp);
 				item.expanded = false;
 				this.expanded = null;
-				this._elems.base.style.cursor = "-webkit-grab";
+				//this._elems.base.style.cursor = "-webkit-grab";
 
 				item.grp.removeAttribute("transform");
 				item.eventGrp.removeAttribute("transform");
@@ -907,7 +908,7 @@ namespace KIP.Old {
 				this._parent.appendChild(item.addlInfoExpanded);
 				item.expanded = true;
 				this.expanded = item;
-				this._elems.base.style.cursor = "default";
+				//this._elems.base.style.cursor = "default";
 
 				// Calculate the appropriate coordinates
 				w = document.documentElement.clientWidth || window.innerWidth;

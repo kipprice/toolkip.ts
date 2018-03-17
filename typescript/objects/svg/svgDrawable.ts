@@ -31,97 +31,6 @@ namespace KIP.SVG {
 	};
 
 	/**...........................................................................
-	 * @class ISVGAttributes
-	 * ...........................................................................
-	 * Additional attributes that can be applied 
-	 * ...........................................................................
-	 */
-	export interface ISVGAttributes extends IAttributes {
-		unscalable?: boolean;
-        svgStyle?: ISVGStyle;
-        parent?: SVGElement;
-        type?: string;
-		[key: string]: any;
-	}
-
-	/**...........................................................................
-	 * @class ISVGStyle
-	 * ...........................................................................
-	 * Keep track of SVG styles
-	 * ...........................................................................
-	 */
-	export interface ISVGStyle {
-		fill: string;
-		fillOpacity?: number;
-
-		fontSize?: number;
-		fontWeight?: string;
-		fontFamily?: string;
-
-		stroke: string;
-		strokeWidth?: number;
-		strokeOpacity?: number;
-		strokeLinecap?: string;
-		strokeLinejoin?: string;
-	}
-
-	export interface IPathPoint {
-		point: IPoint,
-		controls?: IPoint[],
-		radius?: IPoint,
-		xRotation?: number,
-		largeArc?: number,
-		sweepFlag?: number
-	}
-
-	/**
-	 * @class IGradientPoint
-	 * 
-	 * Keep track of a point used for gradients
-	 */
-	export interface IGradientPoint {
-		point: IPoint,
-		color: string,
-		offset: string,
-		opacity: number
-	}
-
-	/**
-	 * @class SVGGradientTypeEnum
-	 * 
-	 * Handle different types of gradients
-	 */
-	export enum SVGGradientTypeEnum {
-		LINEAR = 1,
-		RADIAL = 2
-	}
-
-	export enum SVGShapeEnum {
-		CHECKMARK = 1,
-		X = 2,
-		PLUS = 3
-	}
-
-	/**
-	 * @type IExtrema
-	 * 
-	 * Interface that stores a max point and a min point
-	 */
-	export type IExtrema = IGenericExtrema<IPoint>;
-
-	/**
-	 * @class IGenericExtrema
-	 * 
-	 * Handle any type of extreema
-	 */
-	export interface IGenericExtrema<T> {
-		max: T,
-		min: T
-	};
-
-	
-
-	/**...........................................................................
 	 * @class 	SVGDrawable
 	 * ...........................................................................
 	 * Create a drawable SVG canvas
@@ -130,6 +39,17 @@ namespace KIP.SVG {
 	 * ...........................................................................
 	 */
 	export class SVGDrawable extends Drawable {
+
+		//#region ID TRACKING
+		protected static _lastId: number = 0;
+
+		protected static get _nextId(): string {
+			SVGDrawable._lastId += 1;
+			return SVGDrawable._lastId.toString();
+		}
+		//#endregion
+
+		//#region PROPERTIES
 
 		/** The base element of the SVG canvas */
 		public base: SVGElement;
@@ -165,25 +85,9 @@ namespace KIP.SVG {
 		private _style: SVGStyle;
 		public get style(): SVGStyle { return this._style; }
 
-		/**...........................................................................
-		 * Sets the real-world width of the canvas
-		 * @param 	w 	The width to set
-		 * ...........................................................................
-		 */
-		public set width (w: number) {
-			this._bounds.w = w;
-			this._elems.base.setAttribute("width", w.toString());
-		}
+		private _elemCollections: Collection<SVGElem>;
 
-		/**...........................................................................
-		 * Sets the real-world height of the canvas
-		 * @param 	h 	The height to set
-		 * ...........................................................................
-		 */
-		public set height (h: number) {
-			this._bounds.h = h;
-			this._elems.base.setAttribute("height", h.toString());
-		}
+		//#endregion
 
 		/**...........................................................................
 		 * Constructs a basic SVG canvas
@@ -193,18 +97,33 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		constructor(id?: string, bounds?: IBasicRect, opts?: ISVGOptions) {
-			super();
+			super({id: id});
 			this._bounds = bounds;
 			this._nonScaled = [];
 
-			// Create the base element
-			this.base  = createSVG(id, this._bounds.w, this._bounds.h);
-
-			// Create the definitions element
-			this._definitionsElement = createSVGElem("defs");
-			this.base.appendChild(this._definitionsElement);
-
 			// Initialize the default maxima / minima
+			this._initializeInternalSizing();
+
+			// Reconcile options
+			let defaults: ISVGOptions = this._createDefaultOptions();
+			this._options = reconcileOptions<ISVGOptions>(opts, defaults);
+
+			// Initiate collections
+			this._svgElems = new Collection<SVGElement>();
+			this._nonScaled = new Array<SVGElement>();
+
+			// Add event listeners
+			this._addEventListeners();
+
+		}
+
+		/**...........................................................................
+		 * _initializeInternalSizing
+		 * ...........................................................................
+		 * Make sure we have default values for extrema
+		 * ...........................................................................
+		 */
+		private _initializeInternalSizing (): void {
 			this._extrema = {
 				min : {
 					x: 1000000,
@@ -224,8 +143,16 @@ namespace KIP.SVG {
 				w: 0,
 				h: 0
 			}
+		}
 
-			// Reconcile options
+		/**...........................................................................
+		 * _createDefaultOptions
+		 * ...........................................................................
+		 * Get the set of default options
+		 * @returns	The created default options
+		 * ...........................................................................
+		 */
+		private _createDefaultOptions(): ISVGOptions {
 			let defaults: ISVGOptions = {
 				gutter: 1,
 				auto_resize: true,
@@ -238,19 +165,25 @@ namespace KIP.SVG {
 				prevent_events: false
 			};
 
-			this._options = reconcileOptions<ISVGOptions>(opts, defaults);
-
-			// Initiate collections
-			this._svgElems = new Collection<SVGElement>();
-			this._nonScaled = new Array<SVGElement>();
-
-			// Add event listeners
-			this._addEventListeners();
-
+			return defaults;
 		}
 
-		protected _createElements(): void {}
+		/**...........................................................................
+		 * _createElements
+		 * ...........................................................................
+		 * Create the elements needed for this SVG drawable
+		 * ...........................................................................
+		 */
+		protected _createElements(): void {
+			// Create the base element
+			this.base  = createSVG(this._id, this._bounds.w, this._bounds.h);
 
+			// Create the definitions element
+			this._definitionsElement = createSVGElem("defs");
+			this.base.appendChild(this._definitionsElement);
+		}
+
+		//#region EVENT HANDLING
 		/**...........................................................................
 		 * _addEventListeners
 		 * ...........................................................................
@@ -269,13 +202,11 @@ namespace KIP.SVG {
 			// Add the drag listeners
 			makeDraggable(
 				this.base as any as HTMLElement,
-				document.body,
-				true,
-				null,
-				null,
-				null,
-				(delta: IPoint) => {
-					this._onPan(delta);
+				{ 
+					target: document.body,
+					onMove: (delta: IPoint) => {
+						this._onPan(delta);
+					}
 				}
 			);
 
@@ -331,6 +262,29 @@ namespace KIP.SVG {
 			this.generateViewboxAttribute(true);
 		}
 
+		//#endregion
+
+		//#region WIDTH AND HEIGHT CALCULATION
+
+		/**...........................................................................
+		 * Sets the real-world width of the canvas
+		 * @param 	w 	The width to set
+		 * ...........................................................................
+		 */
+		public set width (w: number) {
+			this._bounds.w = w;
+			this._elems.base.setAttribute("width", w.toString());
+		}
+
+		/**...........................................................................
+		 * Sets the real-world height of the canvas
+		 * @param 	h 	The height to set
+		 * ...........................................................................
+		 */
+		public set height (h: number) {
+			this._bounds.h = h;
+			this._elems.base.setAttribute("height", h.toString());
+		}
 		/**...........................................................................
 		 * generateViewboxAttribute
 		 * ...........................................................................
@@ -395,6 +349,7 @@ namespace KIP.SVG {
 			if (extrema.max.x > this._extrema.max.x) { this._extrema.max.x = extrema.max.x; }
 			if (extrema.max.y > this._extrema.max.y) { this._extrema.max.y = extrema.max.y; }
 		}
+		//#endregion
 
 		//#region CONVERSIONS
 
@@ -504,90 +459,32 @@ namespace KIP.SVG {
 			return elem;
 		}
 
-		//#region ADD PATH
+		private _initializeAttributes(attr: ISVGAttributes, group?: SVGElement): ISVGAttributes {
+			if (!attr) { attr = {}; }
 
-		/**...........................................................................
-		 * _checkForCurrentPath
-		 * ...........................................................................
-		 * 
-		 * ...........................................................................
-		 */
-		private _checkForCurrentPath () : void {
-			if (!this._currentPath) {
-				throw new Error ("no path started");
+			// initialize the appropriate parent
+			if (group) { attr.parent = group; }
+			else { attr.parent = this.base; }
+
+			// initialize the ID of the child
+			if (!attr.id) { attr.id = SVGDrawable._nextId; }
+
+			return attr;
+		}
+
+		private _addChildElement(elem: SVGElem): void {
+			//this._elems.addElement(elem.id, elem);
+
+			if (elem.preventScaling) {
+				//this._nonScaled.push(elem);
+			}
+
+			if (this._options.auto_resize) {
+				this._updateExtrema(elem.extrema);
 			}
 		}
 
-		/**...........................................................................
-		 * _constructPathAttribute
-		 * ...........................................................................
-		 * @param prefix 
-		 * @param point 
-		 * @returns	The appropriate path string
-		 * ...........................................................................
-		 */
-		private _constructPathAttribute (prefix: string, point: IPoint) : string {
-			let out: string = "";
-			out = prefix + this._pointToAttributeString(point) + "\n";
-			return out;
-		}
-
-		private _pointToAttributeString (point: IPoint) : string {
-			let out: string = point.x + " " + point.y;
-			return out;
-		}
-
-		private _addToPathAttribute (suffix: string) : boolean {
-			this._checkForCurrentPath();
-			let d: string = this._currentPath.getAttribute("d");
-			d += suffix;
-			this._currentPath.setAttribute("d", d);
-			return true;
-		}
-
-		public startPath (attr?: ISVGAttributes, parentGroup?: SVGElement) : SVGElement {
-			this._currentPath = this._addChild("path", attr, parentGroup) as SVGPathElement;
-			return this._currentPath;
-		}
-
-		public lineTo (point: IPoint) : void {
-			this._checkForCurrentPath();
-			this._addToPathAttribute(this._constructPathAttribute("L", point));
-		}
-
-		public moveTo (point: IPoint) : void {
-			this._checkForCurrentPath();
-			this._addToPathAttribute(this._constructPathAttribute("M", point));
-		}
-
-		public curveTo (destination: IPoint, control1: IPoint, control2: IPoint) : void {
-			this._checkForCurrentPath();
-			let d: string;
-			d = "C" + this._pointToAttributeString(control1) + ", ";
-			d += this._pointToAttributeString(control2) + ", ";
-			d += this._pointToAttributeString(destination) + "\n";
-			this._addToPathAttribute(d);
-		}
-
-		public arcTo (destination: IPoint, radius: IPoint, xRotation: number, largeArc: number, sweepFlag: number) {
-			let d: string;
-			d = "A" + this._pointToAttributeString(radius) + " ";
-			d += xRotation + " " + largeArc + " " + sweepFlag + " ";
-			d += this._pointToAttributeString(destination) + "\n";
-			this._addToPathAttribute(d);
-		}
-
-		/** closes the path so it creates an enclosed space */
-		public closePath () : void {
-			this._checkForCurrentPath();
-			this._addToPathAttribute(" Z");
-			this.finishPathWithoutClosing();
-		}
-
-		/** indicates the path is finished without closing the path */
-		public finishPathWithoutClosing () : void {
-			delete this._currentPath;
-		}
+		//#region ADD PATH
 
 		/**
 		 * Adds a path to the SVG canvas
@@ -597,45 +494,18 @@ namespace KIP.SVG {
 		 * @param   {boolean}      noFinish True if we should finish the path without closing
 		 * @returns {SVGElement}            The path that was created
 		 */
-		public addPath (points: IPathPoint[], attr?: IAttributes, group?: SVGElement, noFinish?: boolean) : SVGElement {
+		public addPath (points: IPathPoint[], attr?: IPathSVGAttributes, group?: SVGElement, noFinish?: boolean) : SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
+			attr.noFinish = noFinish;
 
-			if (!attr) { attr = {}; }
-
-			let path: SVGElement = this.startPath(attr, group);
-
-			let firstPt: boolean = true;
-			for (let pathPt of points) {
-
-				if (firstPt) {
-					this.moveTo(pathPt.point);
-					firstPt = false;
-				}
-
-				else if (pathPt.controls) {
-					this.curveTo(pathPt.point, pathPt.controls[0], pathPt.controls[1]);
-				}
-
-				else if (pathPt.radius) {
-					this.arcTo(pathPt.point, pathPt.radius, pathPt.xRotation, pathPt.largeArc, pathPt.sweepFlag);
-				}
-
-				else {
-					this.lineTo(pathPt.point);
-				}
-
-				if (this._options.auto_resize) {
-					this._updateExtrema({max: pathPt.point, min: pathPt.point});
-				}
-
-			}
-
-			if (!noFinish) { this.closePath(); }
-			else { this.finishPathWithoutClosing(); }
-
-			return path;
+			let path: PathElement = new PathElement(points, attr);
+			this._addChildElement(path);
+			return path.base;
 		}
 
 		//#endregion
+
+		//#region ADD RECTANGLE
 
 		/**...........................................................................
 		 * addRectangle
@@ -649,45 +519,11 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		public addRectangle (x: number, y: number, width: number, height: number, attr?: ISVGAttributes, group?: SVGElement) : SVGElement {
-			let rect: IBasicRect;
-			rect = {
-				x: x,
-				y: y,
-				w: width,
-				h: height
-			}
+			attr = this._initializeAttributes(attr, group);
 
-			return this._addRectangleHelper(rect, attr,group);
-		}
-
-		/**...........................................................................
-		 * _addRectangleHelper
-		 * ...........................................................................
-		 * @param points 
-		 * @param attr 
-		 * @param group 
-		 * ...........................................................................
-		 */
-		private _addRectangleHelper (points: IBasicRect, attr?: IAttributes, group?: SVGElement): SVGElement {
-
-			this._checkBasicRectForBadData(points);
-
-			if (!attr) {
-				attr = {};
-			}
-
-			attr["x"] = points.x;
-			attr["y"] = points.y;
-			attr["width"] = points.w;
-			attr["height"] = points.h;
-
-			let elem: SVGElement = this._addChild("rect", attr, group);
-
-			if (this._options.auto_resize) {
-				this._updateExtrema(this._basicRectToExtrema(points));
-			}
-
-			return elem;
+			let rect: RectangleElement = new RectangleElement(x, y, width, height, attr);
+			this._addChildElement(rect);
+			return rect.base;
 		}
 
 		//#endregion
@@ -706,73 +542,16 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		public addCircle (centerPt: IPoint, radius: number, attr?: IAttributes, group?: SVGElement) : SVGElement {
-			if (!attr){
-				attr = {};
-			}
+			attr = this._initializeAttributes(attr, group);
 
-			// Set our appropriate attribute
-			attr["cx"] = centerPt.x;
-			attr["cy"] = centerPt.y;
-			attr["r"] = radius;
-
-			let elem: SVGElement = this._addChild("circle", attr, group);
-
-			// Auto-resize if appropriate
-			if (this._options.auto_resize) {
-				this._updateExtrema(this._extremaFromCenterPointAndRadius(centerPt, radius));
-			}
-
-			// Add the child
-			return elem;
+			let circle: CircleElement = new CircleElement(centerPt, radius, attr);
+			this._addChildElement(circle);
+			return circle.base;
 		}
 
 		//#endregion
 
-		//#region ADD ARC
-		/**...........................................................................
-		 * addPerfectArc
-		 * ...........................................................................
-		 * Adds a perfect arc to the SVG canvas 
-		 * ...........................................................................
-		 */
-		public addPerfectArc (centerPt: IPoint, radius: number, startDegree: number, endDegree: number, direction: number, noRadii: boolean, attr?: IAttributes, group?: SVGElement) {
-
-			let padding: number = 0;	//TODO
-			let angleDiff: number = (endDegree - startDegree);
-
-			let adjust: number = this._style.strokeWidth * Math.sqrt(2);
-			let adjustedPoint: IPoint = {
-				x: centerPt.x + adjust,
-				y: centerPt.y + adjust
-			};
-
-			let start: IPoint = this._calculatePolygonPoint(adjustedPoint, Trig.degreesToRadians(startDegree), radius);
-			let end: IPoint = this._calculatePolygonPoint(adjustedPoint, Trig.degreesToRadians(endDegree), radius);
-
-			if (!attr) { attr = {}; }
-			let path: SVGElement = this.startPath(attr, group);
-
-			this.moveTo(start);
-			this.arcTo(end, {x: radius, y: radius}, 0, (angleDiff > 180)? 1: 0, direction);
-
-			// auto-resize if appropriate
-			if (this._options.auto_resize) {
-				let extrema: IExtrema = this._arcToExtrema(start, end, centerPt, radius, startDegree, endDegree);
-				this._updateExtrema(extrema);
-			}
-
-			// If we aren't showing the radius, quit now
-			if (noRadii) {
-				this.finishPathWithoutClosing();
-				return path;
-			}
-
-			// Otherwise close the segment path
-			this.lineTo(centerPt);
-			this.closePath();
-
-			return path;
-		}
+		
 
 		//#endregion
 
@@ -789,31 +568,12 @@ namespace KIP.SVG {
 		 * @returns The created polygon on the SVG Canvas
 		 * ...........................................................................
 		 */
-		public regularPolygon (centerPt: IPoint, sides: number, radius: number, attr?: IAttributes, group?: SVGElement) : SVGElement {
+		public regularPolygon (centerPt: IPoint, sides: number, radius: number, attr?: IPathSVGAttributes, group?: SVGElement) : SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
 
-			// Generate the point list for the polygon
-			let points: string;
-			let curAngle: number = 0;
-			let intAngle: number = Trig.calculatePolygonInternalAngle(sides);
-
-			for (let i = 0; i < sides; i += 1) {
-				let pt: IPoint = this._calculatePolygonPoint(centerPt, curAngle, radius);
-				curAngle += intAngle;
-				points += pt.x + "," + pt.y + " ";
-			}
-
-			// Set our attributes to include the points
-			if (!attr) { attr = {}; }
-			attr["points"] = points;
-
-			let elem: SVGElement = this._addChild("polygon", attr, group);
-
-			// Auto-resize if appropriate
-			if (this._options.auto_resize) {
-				this._updateExtrema(this._extremaFromCenterPointAndRadius(centerPt, radius));
-			}
-
-			return elem;
+			let polygon: PolygonElement = new PolygonElement(centerPt, sides, radius, attr);
+			this._addChildElement(polygon);
+			return polygon.base;
 		}
 		//#endregion
 
@@ -831,36 +591,12 @@ namespace KIP.SVG {
 		 * @returns The created star
 		 * ...........................................................................
 		 */
-		public addRegularStar (centerPt: IPoint, numberOfPoints: number, radius: number, innerRadius: number, attr?: IAttributes, group?: SVGElement) : SVGElement {
-			let curAngle: number = 0;
-			let intAngle: number = (Trig.calculatePolygonInternalAngle(numberOfPoints) / 2);
-			let points = "";
-			for (let i = 0; i < numberOfPoints; i += 1) {
-				let pt: IPoint;
+		public addRegularStar (centerPt: IPoint, numberOfPoints: number, radius: number, innerRadius: number, attr?: IPathSVGAttributes, group?: SVGElement) : SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
 
-				// Outer point
-				pt = this._calculatePolygonPoint(centerPt, curAngle, radius);
-				curAngle += intAngle;
-				points += pt.x + "," + pt.y + " ";
-
-				// Inner point
-				pt = this._calculatePolygonPoint(centerPt, curAngle, innerRadius);
-				curAngle += intAngle;
-				points += pt.x + "," + pt.y + " ";
-			}
-
-			// Set the points value into our attributes
-			if (!attr) { attr = {}; }
-			attr["points"] = points;
-
-			let elem: SVGElement = this._addChild("polygon", attr, group);
-
-			// Auto-resize if appropriate
-			if (this._options.auto_resize) {
-				this._updateExtrema(this._extremaFromCenterPointAndRadius(centerPt, radius));
-			}
-
-			return elem;
+			let star: StarElement = new StarElement(centerPt, numberOfPoints, radius, innerRadius, attr);
+			this._addChildElement(star);
+			return star.base;
 		}
 		//#endregion
 
@@ -930,7 +666,11 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		public addGroup (attr?: IAttributes, group?: SVGElement): SVGElement {
-			return this._addChild("g", attr, group);
+			attr = this._initializeAttributes(attr, group);
+
+			let grp: GroupElement = new GroupElement(attr);
+			this._addChildElement(grp);
+			return grp.base;
 		}
 		//#endregion
 
@@ -946,46 +686,8 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		public addGradient (type: SVGGradientTypeEnum, points: IGradientPoint[], transforms: {start: IPoint, end: IPoint}) : string {
-			let id: string = "gradient" + this.__gradients.length;
-			let attr: IAttributes = {
-				id: id
-			}
-
-			let gradient: SVGGradientElement;
-			gradient = createSVGElem(SVGGradientTypeEnum[type] + "Gradient", attr) as SVGGradientElement;
-
-
-			// Apply the points
-			for (let point of points) {
-				let ptElem: HTMLElement = createSVGElem("stop") as any as HTMLElement;
-				ptElem.style.stopColor = point.color;
-				ptElem.style.stopOpacity = point.opacity.toString();
-				ptElem.setAttribute("offset", point.offset);
-				gradient.appendChild(ptElem);
-			}
-
-			// Add to our element & our collection
-			this._definitionsElement.appendChild(gradient);
-			this.__gradients.push(gradient);
-
-			// Add transform points (BROKEN?)
-			if (transforms) {
-				let tID: string = "gradient" + this.__gradients.length;
-				let tGrad: SVGGradientElement = createSVGElem(type + "Gradient", {id: tID}) as SVGGradientElement;
-
-				tGrad.setAttribute("x1", transforms.start.x.toString());
-				tGrad.setAttribute("x2", transforms.end.x.toString());
-				tGrad.setAttribute("y1", transforms.start.y.toString());
-				tGrad.setAttribute("y2", transforms.end.y.toString());
-
-				tGrad.setAttribute("xlink:href", "#" + id);
-
-				this._definitionsElement.appendChild(tGrad);
-				this.__gradients.push(tGrad);
-				id = tID;
-			}
-
-			return id;
+			return "";
+			//TODO: the real thing
 		}
 		//#endregion
 
@@ -1029,80 +731,34 @@ namespace KIP.SVG {
 		/**
 		 * Adds a checkmark to the canvas with the provided scale
 		 */
-		private _addCheckShape (scale: number, attr?: IAttributes, group?: SVGElement): SVGElement {
-			scale *= (1/4);
-			let basePoints: IPoint[] = [
-				{x: -0.15, y: 2.95},
-				{x: 1, y: 4},
-				{x: 1.25, y: 4},
+		private _addCheckShape (scale: number, attr?: IPathSVGAttributes, group?: SVGElement): SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
 
-				{x: 3, y: 0.25},
-				{x: 2.4, y: 0},
-
-				{x: 1, y: 3},
-				{x: 0.3, y: 2.3}
-			];
-
-			let points: IPathPoint[] = this._convertPointsToPathPoints(basePoints, scale);
-
-			return this.addPath(points, attr, group);
+			let checkmark: CheckElement = new CheckElement(null, attr);
+			this._addChildElement(checkmark);
+			return checkmark.base;
 		}
 
 		/**
 		 * Adds an 'ex' to the canvas with the provided scale
 		 */
-		private _addExShape (scale: number, attr?: IAttributes, group?: SVGElement): SVGElement {
-			scale *= (1/3.75);
-			let basePoints: IPoint[] = [
-				{x: 0.25, y: 0.6},
-				{x: 1, y: 0},
-				{x: 2, y: 1.1},
-				{x: 3, y: 0},
-				{x: 3.75, y: 0.6},
+		private _addExShape (scale: number, attr?: IPathSVGAttributes, group?: SVGElement): SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
 
-				{x: 2.66, y: 1.75},
-
-				{x: 3.75, y: 2.9},
-				{x: 3, y: 3.5},
-				{x: 2, y: 2.5},
-				{x: 1, y: 3.5},
-				{x: 0.25, y: 2.9},
-
-				{x: 1.33, y: 1.75}
-			];
-
-			let points: IPathPoint[] = this._convertPointsToPathPoints(basePoints, scale);
-
-			return this.addPath(points, attr, group);
+			let exElem: ExElement = new ExElement(null, attr);
+			this._addChildElement(exElem);
+			return exElem.base;
 		}
 
 		/**
 		 * Adds a plus to the canvas with the provided scale
 		 */
-		private _addPlusShape (scale: number, attr?: IAttributes, group?: SVGElement): SVGElement {
-			scale *= (1/5);
+		private _addPlusShape (scale: number, attr?: IPathSVGAttributes, group?: SVGElement): SVGElement {
+			attr = this._initializeAttributes(attr, group) as IPathSVGAttributes;
 
-			let basePoints: IPoint[] = [
-				{x: 2, y: 2},
-				{x: 2, y: 0},
-				{x: 3, y: 0},
-
-				{x: 3, y: 2},
-				{x: 5, y: 2},
-				{x: 5, y: 3},
-
-				{x: 3, y: 3},
-				{x: 3, y: 5},
-				{x: 2, y: 5},
-
-				{x: 2, y: 3},
-				{x: 0, y: 3},
-				{x: 0, y: 2}
-			];
-
-			let points: IPathPoint[] = this._convertPointsToPathPoints(basePoints, scale);
-
-			return this.addPath(points, attr, group);
+			let plusSymbol: PlusElement = new PlusElement(null, attr);
+			this._addChildElement(plusSymbol);
+			return plusSymbol.base;
 		}
 
 		//#endregion
@@ -1127,9 +783,7 @@ namespace KIP.SVG {
 				pt.x *= scale;			// Scale the x dimension
 				pt.y *= scale;			// Scale the y dimension
 
-				pathPoints.push({
-					point: pt
-				});
+				pathPoints.push(pt);
 			}
 
 			return pathPoints;
@@ -1209,76 +863,13 @@ namespace KIP.SVG {
 
 		}
 
-		/**...........................................................................
-		 * _checkBasicRectForBadData
-		 * ...........................................................................
-		 * helper function to check that a rectangle is actually renderable 
-		 * @param	rect	Determine if a rectangle is renderable
-		 * ...........................................................................
-		 */
-		private _checkBasicRectForBadData (rect: IBasicRect) : void {
-			let err: boolean = false;
+		
 
-			// check for null values first
-			if (rect.x !== 0 && !rect.x) { err = true; }
-			if (rect.y !== 0 && !rect.y) { err = true; }
-			if (rect.w !== 0 && !rect.w) { err = true; }
-			if (rect.h !== 0 && !rect.h) { err = true; }
+		
 
-			// Then for non-sensical
-			if (rect.w < 0) { err = true; }
-			if (rect.h < 0) { err = true; }
+		
 
-			if (err) {
-				throw new Error("invalid basic rectangle values");
-			}
-		}
-
-		/**...........................................................................
-		 * _basicRectToExtrema
-		 * ...........................................................................
-		 * helper function to turn a basic rect to extrema 
-		 * @param	rect	Rect to convert
-		 * @returns	The extrema that correspond with the rect
-		 * ...........................................................................
-		 */
-		private _basicRectToExtrema (rect: IBasicRect) : IExtrema {
-			let extrema : IExtrema = {
-				min: { x: rect.x, y: rect.y },
-				max: {x: rect.x + rect.w, y: rect.y + rect.h}
-			}
-			return extrema;
-		}
-
-		/**...........................................................................
-		 * _extremaFromCenterPointAndRadius
-		 * ...........................................................................
-		 * helper function to calculate extrema from a central point and radius 
-		 * ...........................................................................
-		 */
-		private _extremaFromCenterPointAndRadius(center: IPoint, radius: number): IExtrema {
-			let extrema: IExtrema = {
-				max: { x: center.x + radius, y: center.y + radius},
-				min:{ x: center.x - radius, y: center.y - radius}
-			};
-			return extrema;
-		}
-
-		/**...........................................................................
-		 * _calculatePolygonPoint
-		 * ...........................................................................
-		 * helper function to calculate a polygon's point at a certain angle 
-		 * ........................................................................... 
-		 */
-		private _calculatePolygonPoint (centerPt: IPoint, currentAngle: number, radius: number) : IPoint {
-			let out: IPoint = {
-				x: centerPt.x + roundToPlace(Math.sin(currentAngle) * radius, 10),
-				y: centerPt.y + roundToPlace(-1 * Math.cos(currentAngle) * radius, 10)
-			};
-
-			return out;
-		}
-
+		
 		/**...........................................................................
 		 * _arcToExtrema
 		 * ...........................................................................

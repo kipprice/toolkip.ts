@@ -1,3 +1,5 @@
+///<reference path="trig.ts" />
+
 namespace KIP {
 
   /** check if the element is an HTML element */
@@ -160,6 +162,16 @@ namespace KIP {
   	test_name = (test as T).paddedClassName;
   	if (!test_name) { return false; }
    	return (test_name.indexOf(name) !== -1);
+  }
+
+  /**
+   * isUpdatable
+   * 
+   * Determine if this object has an update method
+   * @param test 
+   */
+  export function isUpdatable (test: any): test is IUpdatable {
+    return !!((test as any).update);
   }
 
 }

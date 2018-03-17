@@ -1,6 +1,8 @@
 ///<reference path="drawable.ts" />
 namespace KIP {
 
+	//TODO: Cleanup this implementation
+
 	export interface OnDragEnterFunction {
 		(target: HTMLElement, e: Event): void;
 	}
@@ -24,6 +26,40 @@ namespace KIP {
 		Move
 	}
 
+	/**...........................................................................
+	 * IDraggableHandlers
+	 * ...........................................................................
+	 * Keep track of handlers for draggable elements
+	 * ...........................................................................
+	 */
+	export interface IDraggableHandlers {
+		/** what to do when we start dragging over the target */
+		onDragEnter?: OnDragEnterFunction;
+
+		/** what to do when we stop dragging over the target */
+		onDragLeave?: OnDragLeaveFunction;
+
+		/** what to do when the element is dropped */
+		onDrop?: OnDropFunction;
+
+		/** wwhat to do when the element is moved */
+		onMove?: OnMoveFunction;
+	}
+
+	/**...........................................................................
+	 * IDraggableOptions
+	 * ...........................................................................
+	 * Keep track of options for the draggable element
+	 * ...........................................................................
+	 */
+	export interface IDraggableOptions extends IDraggableHandlers {
+		/** what element is considered the target of this function */
+		target?: HTMLElement;
+
+		/** keep track of whether we're using HTML5 events for dragging/dropping */
+		isNonStandard?: boolean;
+	}
+
 	/** functions that can be used for a draggable element */
 	export type DraggableFunction = OnDragEnterFunction | OnDragLeaveFunction | OnDropFunction | OnMoveFunction;
 
@@ -35,6 +71,8 @@ namespace KIP {
 	 * ...........................................................................
 	 */
 	export abstract class Draggable extends Drawable {
+
+		//#region PROPERTIES
 
 		/** the elements that should be treated as valid targets of the drag-drop interaction */
 		private _targets: Array<HTMLElement>;
@@ -80,6 +118,8 @@ namespace KIP {
 			}
 		}
 
+		//#endregion
+
 		/**...........................................................................
 		 * Creates a Draggable element
 		 * 
@@ -123,6 +163,12 @@ namespace KIP {
 			}, 0);
 		}
 
+		/**...........................................................................
+		 * _addDefaultEventFunctions
+		 * ...........................................................................
+		 * Add handlers for each of these elements
+		 * ...........................................................................
+		 */
 		private _addDefaultEventFunctions() {
 			let base: StandardElement = this._elems.base;
 
@@ -166,6 +212,12 @@ namespace KIP {
 
 		}
 
+		/**...........................................................................
+		 * _addStandardDragEventListeners
+		 * ...........................................................................
+		 * Add 
+		 * ...........................................................................
+		 */
 		private _addStandardDragEventListeners(): void {
 			let base: StandardElement = this._elems.base;
 
@@ -194,6 +246,12 @@ namespace KIP {
 
 		}
 
+		/**...........................................................................
+		 * _addNonStandardDragEventListeners
+		 * ...........................................................................
+		 * 
+		 * ...........................................................................
+		 */
 		private _addNonStandardDragEventListeners(): void {
 			let base: StandardElement = this._elems.base;
 
@@ -254,6 +312,12 @@ namespace KIP {
 			}
 		}
 
+		/**...........................................................................
+		 * _addNonStandardTargetEventListeners
+		 * ...........................................................................
+		 * @param target 
+		 * ...........................................................................
+		 */
 		private _addNonStandardTargetEventListeners(target: HTMLElement): void {
 			target.addEventListener("mouseup", (e: MouseEvent) => {
 				if (!this._isDragging) { return; }
@@ -271,6 +335,12 @@ namespace KIP {
 			});
 		}
 
+		/**...........................................................................
+		 * _addStandardTargetEventListeners
+		 * ...........................................................................
+		 * @param target 
+		 * ...........................................................................
+		 */
 		private _addStandardTargetEventListeners(target: HTMLElement): void {
 			target.addEventListener("dragover", (e: DragEvent) => {
 				this._onDragEnterTarget(target, e);
@@ -285,9 +355,12 @@ namespace KIP {
 			})
 		}
 
-		/**
+		/**...........................................................................
+		 * addDragTarget
+		 * ...........................................................................
 		 * Adds a new element that can receive the draggable element
-		 * @param {HTMLElement} target The new target to allow drop events on
+		 * @param 	target 	The new target to allow drop events on
+		 * ...........................................................................
 		 */
 		public addDragTarget(target: HTMLElement): void {
 			this._targets.push(target);
@@ -299,41 +372,86 @@ namespace KIP {
 			}
 		}
 
+		/**...........................................................................
+		 * _onDragEnterTarget
+		 * ...........................................................................
+		 * @param target 
+		 * @param e 
+		 * ...........................................................................
+		 */
 		protected _onDragEnterTarget(target: HTMLElement, e: Event): void {
 			this._dragEnterFunc(target, e);
 		}
 
+		/**...........................................................................
+		 * _onDragLeaveTarget
+		 * ...........................................................................
+		 * @param target 
+		 * @param e 
+		 * ...........................................................................
+		 */
 		protected _onDragLeaveTarget(target: HTMLElement, e: Event): void {
 			this._dragLeaveFunc(target, e)
 		}
 
+		/**...........................................................................
+		 * _onMove
+		 * ...........................................................................
+		 * @param delta 
+		 * ...........................................................................
+		 */
 		protected _onMove(delta: IPoint): void {
 			this._moveFunc(delta);
 		}
 
-
+		/**...........................................................................
+		 * _onDropOnTarget
+		 * ...........................................................................
+		 * @param target 
+		 * @param e 
+		 * ...........................................................................
+		 */
 		protected _onDropOnTarget(target: HTMLElement, e: Event): void {
 			this._dropFunc(target, e);
 		}
 
-		public overrideFunctions(dragEnter?: OnDragEnterFunction, dragLeave?: OnDragLeaveFunction, drop?: OnDropFunction, move?: OnMoveFunction, noReplace?: boolean): void {
-			if (dragEnter) {
-				this._overrideFunction(DraggableFunctions.DragEnter, this._dragEnterFunc, dragEnter, noReplace);
+		/**...........................................................................
+		 * _overrideFunctions
+		 * ...........................................................................
+		 * @param dragEnter 
+		 * @param dragLeave 
+		 * @param drop 
+		 * @param move 
+		 * @param noReplace 
+		 * ...........................................................................
+		 */
+		public overrideFunctions(handlers: IDraggableHandlers, noReplace?: boolean): void {
+			if (handlers.onDragEnter) {
+				this._overrideFunction(DraggableFunctions.DragEnter, this._dragEnterFunc, handlers.onDragEnter, noReplace);
 			}
 
-			if (dragLeave) {
-				this._overrideFunction(DraggableFunctions.DragLeave, this._dragLeaveFunc, dragLeave, noReplace);
+			if (handlers.onDragLeave) {
+				this._overrideFunction(DraggableFunctions.DragLeave, this._dragLeaveFunc, handlers.onDragLeave, noReplace);
 			}
 
-			if (drop) {
-				this._overrideFunction(DraggableFunctions.Drop, this._dropFunc, drop, noReplace);
+			if (handlers.onDrop) {
+				this._overrideFunction(DraggableFunctions.Drop, this._dropFunc, handlers.onDrop, noReplace);
 			}
 
-			if (move) {
-				this._overrideFunction(DraggableFunctions.Move, this._moveFunc, move, noReplace);
+			if (handlers.onMove) {
+				this._overrideFunction(DraggableFunctions.Move, this._moveFunc, handlers.onMove, noReplace);
 			}
 		}
 
+		/**...........................................................................
+		 * _overrideFunction
+		 * ...........................................................................
+		 * @param func 
+		 * @param def 
+		 * @param override 
+		 * @param no_replace 
+		 * ...........................................................................
+		 */
 		private _overrideFunction(func: DraggableFunctions, def: DraggableFunction, override: DraggableFunction, no_replace?: boolean) {
 			let wrapper: DraggableFunction;
 
@@ -378,10 +496,13 @@ namespace KIP {
 			}
 		}
 
-		/**
+		/**...........................................................................
+		 * _getDelta
+		 * ...........................................................................
 		 * Gets the delta from the last measurement and this point
-		 * @param   {MouseEvent} e The event we are measuring from
-		 * @returns {IPoint}       The delta represented as a point
+		 * @param	e 	The event we are measuring from
+		 * @returns The delta represented as a point
+		 * ...........................................................................
 		 */
 		private _getDelta(e: MouseEvent): IPoint {
 			let delta: IPoint;
@@ -443,6 +564,8 @@ namespace KIP {
 		protected _createElements(): void {}
 	}
 
+
+
 	/**...........................................................................
 	 * makeDraggable
 	 * ...........................................................................
@@ -451,20 +574,15 @@ namespace KIP {
 	 * @param 	elem         	The element to make draggable
 	 * @param 	target       	The drop-target of the draggable
 	 * @param 	non_standard 	True if we should use non-standard events
-	 * @param	dragEnterFunc	What to do when entering a drag target
-	 * @param	dragLeaveFunc	What to do when leaving a drag target
-	 * @param	dropFunc		What to do when an element is dropped
-	 * @param	moveFunc		What to do when an element is moved
 	 * 
 	 * @returns	HTML element that respects drag events
 	 * ...........................................................................
 	 */
-	export function makeDraggable(elem: HTMLElement, target?: HTMLElement, non_standard?: boolean, dragEnterFunc?: OnDragEnterFunction, dragLeaveFunc?: OnDragLeaveFunction, dropFunc?: OnDropFunction, moveFunc?: OnMoveFunction): StandardElement {
+	export function makeDraggable(elem: HTMLElement, options: IDraggableOptions): StandardElement {
 
 		// Behind the scenes, we create a draggable to get this
-		let drg: ExistingDraggable;
-		drg = new ExistingDraggable(elem, target, non_standard);
-		drg.overrideFunctions(dragEnterFunc, dragLeaveFunc, dropFunc, moveFunc);
+		let drg: ExistingDraggable = new ExistingDraggable(elem, options.target, options.isNonStandard);
+		drg.overrideFunctions(options);
 
 		// Return the element of the Draggable
 		return drg.base;

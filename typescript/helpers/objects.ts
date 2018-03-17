@@ -14,6 +14,16 @@ namespace KIP {
   export interface ISelectOptions {
     [value: number]: string;
   }
+
+  /**...........................................................................
+   * IConstructor
+   * ...........................................................................
+   * Generic tracker of a constructor function
+   * ...........................................................................
+   */
+  export interface IConstructor<T> {
+    new(...addlArgs: any[]): T;
+  }
   
   /**...........................................................................
    * IToggleBtnOptions

@@ -25,6 +25,25 @@ namespace KIP {
 		h: number; /** Height of the rectangle @type {number} */
 	}
 
+	/**...........................................................................
+	 * @type IExtrema
+	 * ...........................................................................
+	 * Interface that stores a max point and a min point
+	 * ...........................................................................
+	 */
+	export type IExtrema = IGenericExtrema<IPoint>;
+
+	/**...........................................................................
+	 * @class IGenericExtrema
+	 * ...........................................................................
+	 * Handle any type of extreema
+	 * ...........................................................................
+	 */
+	export interface IGenericExtrema<T> {
+		max: T,
+		min: T
+	};
+
 	/**--------------------------------------------------------------------------
 	 * @interface IVector
 	 * Keeps track of a vector definition
