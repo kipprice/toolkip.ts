@@ -366,19 +366,26 @@ namespace KIP.Forms {
          * @returns True if we can save this element
          * ...........................................................................
          */
-        public canSave<K extends keyof T>(): boolean {
+        public canSave<K extends keyof T>(): ICanSaveTracker {
+           
+            // if we only have a single child, check that one
             if (isFormElement(this._children)) {
                 return this._children.canSave();
+
+            // otherwise, check all of our children
             } else {
-                let canSave: boolean = true;
-                map(
-                    this._children,
+                let canSave: ICanSaveTracker = {
+                    hasErrors: false,
+                    hasMissingRequired: false
+                };
+
+                map(this._children,
                     (child: FormElement<T[K]>) => {
-                        if (!child.canSave()) {
-                            canSave = false;
-                        }
+                        let childCanSave: ICanSaveTracker = child.canSave();
+                        canSave.hasErrors = canSave.hasErrors || childCanSave.hasErrors;
+                        canSave.hasMissingRequired = canSave.hasMissingRequired || childCanSave.hasMissingRequired;
                     },
-                    () => { return !canSave; }
+                    () => { return canSave.hasErrors && canSave.hasMissingRequired; }
                 );
                 return canSave;
             }
@@ -692,16 +699,19 @@ namespace KIP.Forms {
          * @returns True if we can save this element
          * ...........................................................................
          */
-        public canSave<K extends keyof T>(): boolean {
-            let canSave: boolean = true;
+        public canSave<K extends keyof T>(): ICanSaveTracker {
+            let canSave: ICanSaveTracker = {
+                hasErrors: false,
+                hasMissingRequired: false
+            };
             map(
                 this._children,
                 (child: FormElement<T[K]>) => {
-                    if (!child.canSave()) {
-                        canSave = false;
-                    }
+                    let childCanSave: ICanSaveTracker = child.canSave();
+                    canSave.hasErrors = canSave.hasErrors || childCanSave.hasErrors;
+                    canSave.hasMissingRequired = canSave.hasMissingRequired || childCanSave.hasMissingRequired;
                 },
-                () => { return !canSave; }
+                () => { return canSave.hasErrors && canSave.hasMissingRequired; }
             );
             return canSave;
         }
@@ -807,21 +817,12 @@ namespace KIP.Forms {
                 }
             },
 
-            ".formChildren > div.arrayChild .prev.kipBtn": {
+            ".formChildren > div.arrayChild:first-child .prev.kipBtn": {
                 display: "none"
             },
 
-            ".formChildren > div.arrayChild + div.arrayChild .prev.kipBtn": {
-                display: "block"
-            },            
-
-
-            ".formChildren > div.arrayChild + div.arrayChild .next": {
+            ".formChildren > div.arrayChild:last-child .next.kipBtn": {
                 display: "none"
-            },
-
-            ".formChildren > div.arrayChild .next.kipBtn": {
-                display: "block"
             }
 
         }

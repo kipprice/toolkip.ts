@@ -23,11 +23,10 @@ namespace KIP.Forms {
         /** handle standard styles for the form */
         protected static _uncoloredStyles: Styles.IStandardStyles = {
             ".kipForm": {
-                borderRadius: "2px",
-                backgroundColor: "#FFF",
-                width: "60%",
-                marginLeft: "20%",
-                padding: "5px",
+                margin: "0",
+                padding: "0",
+                width: "100%",
+                height: "100%",
                 fontFamily: "OpenSansLight,Segoe UI,Helvetica",
                 fontSize: "1.2em",
                 position: "inherit",
@@ -38,8 +37,8 @@ namespace KIP.Forms {
                 display: "none"
             },
 
-            ".kipForm overlay": {
-                position: "absolute",
+            ".kipForm .formOverlay": {
+                position: "fixed",
                 width: "100%",
                 height: "100%",
                 top: "0",
@@ -47,14 +46,40 @@ namespace KIP.Forms {
                 backgroundColor: "rgba(0,0,0,.6)"
             },
 
+            ".kipForm .background": {
+                borderRadius: "2px",
+                backgroundColor: "#FFF",
+                width: "60%",
+                marginLeft: "20%",
+                maxHeight: "90%",
+                position: "relative",
+                display: "flex",
+                flexDirection: "column"
+            },
+
+            ".kipForm .formOverlay .background": {
+                marginTop: "2%"
+            },
+
             ".kipForm .formContent": {
-                marginRight: "10px"
+                overflowY: "auto",
+                position: "relative",
+                padding: "5px",
+                paddingRight: "15px",
+                flexGrow: "1"
             },
 
             ".kipForm .kipBtns": {
                 display: "flex",
-                justifyContent: "flex-end"
+                justifyContent: "flex-end",
+                padding: "3px 5px",
+                flexShrink: "0",
+                zIndex: "5"
             },
+
+            ".kipForm.popup .kipBtns": {
+                boxShadow: "0px -2px 2px 1px rgba(0,0,0,.15)"
+            },   
 
             ".kipForm .kipBtn": {
                 padding: "5px 20px",
@@ -68,7 +93,7 @@ namespace KIP.Forms {
                 transition: "all ease-in-out .1s"
             },
 
-            ".kipForm .kipBtn:hover, .kipForm .kipBtn.selected": {
+            ".kipForm .kipBtn:not(.disabled):hover, .kipForm .kipBtn.selected": {
                 transform: "scale(1.05)"
             },
 
@@ -78,20 +103,27 @@ namespace KIP.Forms {
                 width: "20%"
             },
 
+            ".kipForm .save.kipBtn.disabled": {
+                backgroundColor: "#888",
+                color: "#FFF",
+                opacity: "0.5",
+                cursor: "unset"
+            },
+
             ".kipForm .close.kipBtn": {
-                borderRadius: "10px",
+                borderRadius: "100%",
                 border: "2px solid #999",
-                width: "15px",
-                height: "15px",
+                width: "24px",
+                height: "24px",
                 backgroundColor: "#999",
                 color: "#FFF",
                 padding: "0",
-                fontSize: "0.6em",
                 position: "absolute",
-                top: "-7px",
-                left: "calc(100% - 7px)",
+                top: "-12px",
+                left: "calc(100% - 12px)",
                 boxSizing: "content-box",
-                textAlign: "center"
+                textAlign: "center",
+                fontSize: "20px"
             },
 
             ".kipForm .cancel.kipBtn": {
@@ -102,7 +134,7 @@ namespace KIP.Forms {
 
         /** get the appropriate data out of this form */
         public get data(): F {
-            return this._coreFormElem.save();
+            return this._coreFormElem.save(true);
         }
 
         /** internal tracking for whether the form is showing or not */
@@ -135,6 +167,9 @@ namespace KIP.Forms {
         /** keep track of whether there are changes in this form */
         protected _hasChanges: boolean;
 
+        /** keep track of whether we can save this form */
+        protected _canSaveTracker: ICanSaveTracker;
+
         //#endregion
 
         //#region CONSTRUCTOR
@@ -159,6 +194,7 @@ namespace KIP.Forms {
             this._hidden = true;
             this._additionalButtons = options.addlButtons || [];
             this._hasChanges = false;
+            this._canSaveTracker = { hasMissingRequired: false, hasErrors: false };
 
             this._colors = options.colors || ["#4A5", "#284"];
             this._applyColors();
@@ -210,9 +246,9 @@ namespace KIP.Forms {
 
             // Create the elements that are only used for the popup version of the form
             addClass(this._elems.base, "popup");
-            this._elems.overlay = createSimpleElement("", "overlay", "", null, null, this._elems.base);
+            this._elems.overlay = createSimpleElement("", "formOverlay", "", null, null, this._elems.base);
             this._elems.overlay.appendChild(this._elems.background);
-            this._elems.closeButton = createSimpleElement("", "close kipBtn", "", null, null, this._elems.background);
+            this._elems.closeButton = createSimpleElement("", "close kipBtn", "x", null, null, this._elems.background);
         }
 
         /**...........................................................................
@@ -226,7 +262,7 @@ namespace KIP.Forms {
 
             this._elems.saveButton = createSimpleElement("", "kipBtn save", "Save", null, null, this._elems.buttons);
             this._elems.saveButton.addEventListener("click", () => {
-                this.save();
+                this.trySave();
                 this.hide();
             });
 
@@ -285,10 +321,28 @@ namespace KIP.Forms {
                 }
             );
 
+            // add listener for savable changes
+            this._addSaveButtonUpdater();
+
             // add the section to the overall form UI
             this._coreFormElem.render(this._elems.formContent);
         }
         //#endregion
+
+        protected _addSaveButtonUpdater(): void {
+            Events.addEventListener(FORM_SAVABLE_CHANGE, {
+                func: (event: Events.Event) => {
+                    let canSave = this._canSave();
+                    if (!canSave) {
+                        this._elems.saveButton.title = this._getCannotSaveMessage();
+                        addClass(this._elems.saveButton, "disabled");
+                    } else {
+                        this._elems.saveButton.title = "";
+                        removeClass(this._elems.saveButton, "disabled");
+                    }
+                }
+            })
+        }
 
         //#region DATA MANIPULATIONS
 
@@ -300,13 +354,77 @@ namespace KIP.Forms {
          * @returns The data contained in the form
          * ...........................................................................
          */
-        public save(): F {
+        protected _save(): F {
             let data: F = this._coreFormElem.save();
 
             // Alert any listeners of this particular form that 
             this._notifySaveListeners(data);
             this._hasChanges = false;
             return data;
+        }
+
+        /**...........................................................................
+         * trySave
+         * ...........................................................................
+         * Attempt to save the form
+         * ...........................................................................
+         */
+        public trySave(): F {
+            if (hasClass(this._elems.saveButton, "disabled")) { return null; }
+            if (!this._canSave()) {
+                this._showCannotSaveMessage();
+                return null;
+            } else {
+                return this._save();
+            }
+        }
+
+        /**...........................................................................
+         * _canSave
+         * ...........................................................................
+         * Check with our elements that we are able to save
+         * ...........................................................................
+         */
+        protected _canSave(): boolean {
+            this._canSaveTracker = this._coreFormElem.canSave();
+
+            return !(this._canSaveTracker.hasErrors || this._canSaveTracker.hasMissingRequired);
+        }
+
+        /**...........................................................................
+         * _showCannotSaveMessage
+         * ...........................................................................
+         * Show popup indicating why we couldn't save this form
+         * ...........................................................................
+         */
+        protected _showCannotSaveMessage(): void {
+            let msg: string = this._getCannotSaveMessage();
+            if (!msg) { return; }
+
+            let popup: ErrorPopup = new ErrorPopup(msg, "Couldn't Save");
+            popup.setThemeColor(0, this._colors[0]);
+            popup.setThemeColor(1, this._colors[1]);
+            popup.draw(document.body);
+        }
+
+        /**...........................................................................
+         * _getCannotSaveMessage
+         * ...........................................................................
+         * Determine what message to show as to why the form cannot be saved
+         * ...........................................................................
+         */
+        protected _getCannotSaveMessage(): string {
+            let msg: string = "";
+
+            if (this._canSaveTracker.hasErrors && this._canSaveTracker.hasMissingRequired) {
+                msg = "This form has missing data and errors; correct errors and fill in all required fields before saving."
+            } else if (this._canSaveTracker.hasErrors) {
+                msg = "There are some errors in your form; correct them before saving.";
+            }  else if (this._canSaveTracker.hasMissingRequired) {
+                msg = "There are some fields with missing data; fill them in before saving.";
+            }
+
+            return msg;
         }
 
         /**...........................................................................
@@ -532,6 +650,11 @@ namespace KIP.Forms {
         key: FORM_ELEM_CHANGE
     });
 
+    export const FORM_SAVABLE_CHANGE = "formsavablechange";
+    KIP.Events.createEvent({
+        name: "Form Savable Change",
+        key: FORM_SAVABLE_CHANGE
+    });
     //#endregion
 
 }

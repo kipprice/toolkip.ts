@@ -58,7 +58,7 @@ namespace KIP.Forms {
         protected _layout: FormElementLayoutEnum;
 
         /** whether this element is required */
-        protected _required: boolean;
+        protected _isRequired: boolean;
 
         /** where this element sits in the order of the form */
         protected _position: number;
@@ -123,6 +123,12 @@ namespace KIP.Forms {
                 fontSize: "1.8em",
                 position: "absolute",
                 marginLeft: "2px"
+            },
+
+            ".kipFormElem .error": {
+                color: "#C30",
+                fontSize: "0.7em",
+                fontStyle: "italic"
             }
         };
         
@@ -158,6 +164,7 @@ namespace KIP.Forms {
             super();
             this._addClassName("FormElement");
             this._id = id;
+            this._hasErrors = false;
 
             // If this is another element, parse it
             if (isFormElement(data)) {
@@ -208,7 +215,10 @@ namespace KIP.Forms {
             this._layout = template.layout || FormElementLayoutEnum.MULTILINE;
 
             // determine whether we need this element to submit
-            this._required = template.required;
+            this._isRequired = template.required;
+            if (this._isRequired) {
+                Events.dispatchEvent(FORM_SAVABLE_CHANGE, {hasErrors: false, hasMissingRequired: true});
+            }
 
             // ensure a particular order of elements
             this._position = template.position;
@@ -268,6 +278,10 @@ namespace KIP.Forms {
 
             // register the change listener if we created one
             if (this._elems.input) {
+                this._elems.input.addEventListener("input", () => {
+                    this._changeEventFired();
+                });
+
                 this._elems.input.addEventListener("change", () => {
                     this._changeEventFired();
                 });
@@ -384,7 +398,7 @@ namespace KIP.Forms {
 
         //#endregion
 
-        //#region Publicly-accessible functions 
+        //#region PUBLICLY-ACCESSIBLE FUNCTIONS
 
         /**...........................................................................
          * save
@@ -405,8 +419,23 @@ namespace KIP.Forms {
          * @returns True if this element is prepared to save
          * ...........................................................................
          */
-        public canSave(): boolean {
-            return !this._hasErrors;
+        public canSave(): ICanSaveTracker {
+            return {
+                hasErrors: this._hasErrors,
+                hasMissingRequired: this._hasBlankRequiredElems()
+            };
+        }
+
+        /**...........................................................................
+         * _hasBlankRequiredElems
+         * ...........................................................................
+         * Check if this element has any misisng required elements
+         * ...........................................................................
+         */
+        protected _hasBlankRequiredElems(): boolean {
+            if (!this._isRequired) { return false; }
+            if (this._data !== this._defaultValue) { return false; }
+            return true;
         }
 
         /** ...........................................................................
@@ -475,6 +504,8 @@ namespace KIP.Forms {
                 this._dispatchChangeEvent();
             }
 
+            this._dispatchSavableChangeEvent();
+
         }
 
         /**...........................................................................
@@ -495,15 +526,16 @@ namespace KIP.Forms {
          *  handle the shared validation function 
          * ...........................................................................
          */
-        protected _validate(data: T): boolean {
+        protected _validate(data: T, errorString: IErrorString): boolean {
 
             // run it through the eval function
             if (this._onValidate) {
-                if (!this._onValidate(data)) {
+                if (!this._onValidate(data, errorString)) {
+                    this._hasErrors = true;
                     return false;
                 }
             }
-
+            this._hasErrors = false;
             return true;
         }
 
@@ -513,8 +545,13 @@ namespace KIP.Forms {
          * display a default error message 
          * ...........................................................................
          */
-        protected _onValidateError(msg?: string): void {
-            if (!msg) { msg = "uh-oh: " + this._id + "'s data couldn't be saved"; }
+        protected _onValidateError(err?: IErrorString): void {
+            let msg: string;
+
+            if (err) {
+                msg = err.title? err.title + ": " : "Uh-oh: ";
+                msg += err.details || (this._id + "'s data couldn't be saved");
+            }
             console.log(msg);
 
             /** if we have an error element, fill it with the error */
@@ -524,13 +561,40 @@ namespace KIP.Forms {
 
             /** update the thing */
             if (this._elems.input) {
-                this._elems.input.value = this._data;
+                let value: T;
+                switch (this._validationType) {
+                    case ValidationType.CLEAR_ERROR_VALUE:
+                        value = this._defaultValue;
+                        break;
+                    case ValidationType.KEEP_ERROR_VALUE:
+                        value = this._elems.input.value;
+                        break;
+                    case ValidationType.NO_BLUR_PROCESSED:
+                        value = this._elems.input.value;
+                        window.setTimeout(() => { this._elems.input.focus(); }, 10);
+                        break;
+                    case ValidationType.RESTORE_OLD_VALUE:
+                        value = this._data;
+                        break;
+                    default:
+                        value = this._defaultValue;
+                        break;
+                }
+                this._elems.input.value = value;
             }
 
             
         }
 
-        
+         /**...........................................................................
+         * _dispatchSavableChangeEvent
+         * ...........................................................................
+         * let any listeners know that we updated the savable status of this element
+         * ...........................................................................
+         */
+        protected _dispatchSavableChangeEvent(): void {
+            Events.dispatchEvent(FORM_SAVABLE_CHANGE, {});
+        }
 
         /**...........................................................................
          * _dispatchChangeEvent
@@ -596,9 +660,13 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _standardValidation(value: T): boolean {
+            let errorString: IErrorString = {
+                title: "",
+                details: ""
+            };
 
-            if (!this._validate(value)) {
-                this._onValidateError();
+            if (!this._validate(value, errorString)) {
+                this._onValidateError(errorString);
                 return false;
             }
 

@@ -264,7 +264,6 @@ namespace KIP.Forms {
         }
 
         public setThemeColor(idx: number, color: string, noReplace?: boolean): void {
-            debugger;
             super.setThemeColor(idx, color, noReplace);
         }
 

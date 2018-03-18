@@ -20,6 +20,11 @@ namespace KIP.Forms {
             FILE_PATH = 16,
             COLOR = 17
         };
+
+        export interface ICanSaveTracker {
+            hasErrors: boolean;
+            hasMissingRequired: boolean;
+        }
     
         /** options for layout */
         export enum FormElementLayoutEnum {
@@ -97,9 +102,14 @@ namespace KIP.Forms {
             onChange: IFileChangeCallback;
         }
     
+        export interface IErrorString {
+            title?: string;
+            details?: string;
+        }
+
         /** handle when the element's data has changed */
         export interface IValidateFunc<T> {
-            (data: T): boolean;
+            (data: T, errorString: IErrorString): boolean;
         }
     
         /** handle when another element of the form has changed */
