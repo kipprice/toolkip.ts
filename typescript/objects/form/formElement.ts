@@ -129,6 +129,17 @@ namespace KIP.Forms {
                 color: "#C30",
                 fontSize: "0.7em",
                 fontStyle: "italic"
+            },
+
+            ".kipFormElem.flex": {
+                display: "flex",
+                alignItems: "center",
+                nested: {
+                    "> div:not(.error), > label, > span, > input": {
+                        width: "auto",
+                        marginRight: "10px"
+                    }
+                }
             }
         };
         

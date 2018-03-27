@@ -19,8 +19,9 @@ namespace KIP {
 				}
 			}
 
-			view.draw(parent);
+			view.draw(this._parent);
 		}
 
+		protected _handleTransition () { }
 	}
 }

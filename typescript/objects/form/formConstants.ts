@@ -72,8 +72,13 @@ namespace KIP.Forms {
            
             [key: string]: any; 
         }
+
+        export interface IFormCollapsibleTemplate<T> extends IFormElemTemplate<T> {
+            isExpanded?: boolean;
+            hideTitle?: boolean;
+        }
     
-        export interface IFormArrayTemplate<T> extends IFormElemTemplate<T[]> {
+        export interface IFormArrayTemplate<T> extends IFormCollapsibleTemplate<T[]> {
             newLabel?: string;
         }
         /** select-specific template options */

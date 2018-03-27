@@ -614,38 +614,11 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		public addText (text: string, point: IPoint, originPt: IPoint, attr: IAttributes, group: SVGElement) : SVGElement {
+			attr = this._initializeAttributes(attr, group);
 
-			if (!attr) { attr = {}; }
-			attr["x"] = point.x;
-			attr["y"] = point.y;
-
-			let textElem: SVGElement = this._addChild("text", attr, group);
-			textElem.innerHTML = text;
-
-			let box: IBasicRect;
-			if (originPt) {
-				box = this.measureElement(textElem);
-				let newPt: IPoint = {
-					x: box.w * originPt.x,
-					y: (box.h * originPt.y) - box.h
-				};
-
-				textElem.setAttribute("x", newPt.x.toString());
-				textElem.setAttribute("y", newPt.y.toString());
-
-				box.x = newPt.x;
-				box.y = newPt.y;
-			}
-
-			if (this._options.auto_resize) {
-				if (!box) { this.measureElement(textElem); }
-				this._updateExtrema({ min: {x: box.x, y: box.y}, max: {x: box.x + box.w, y: box.y + box.h} });
-			}
-
-			// Make sure we add the unselectable class
-			addClass(textElem as any as HTMLElement, "unselectable");
-
-			return textElem;
+			let txt: TextElement = new TextElement(attr);
+			this._addChildElement(txt);
+			return txt.base;
 		}
 
 		public addFlowableText (text: string, bounds: IBasicRect, attr: IAttributes, group: SVGElement) : SVGElement {
@@ -861,59 +834,6 @@ namespace KIP.SVG {
 
 			return rect;
 
-		}
-
-		
-
-		
-
-		
-
-		
-		/**...........................................................................
-		 * _arcToExtrema
-		 * ...........................................................................
-		 * helper function to convert arc params to extrema 
-		 * ...........................................................................
-		 */
-		private _arcToExtrema(startPt: IPoint, endPt: IPoint, centerPt: IPoint, radius: number, startDeg: number, endDeg: number) : IExtrema {
-
-			let extrema: IExtrema = {
-				max: {
-					x: Math.max(startPt.x, endPt.x),
-					y: Math.max(startPt.y, endPt.y)
-				},
-				min: {
-					x: Math.min(startPt.x, endPt.x),
-					y: Math.min(startPt.y, endPt.y)
-				}
-			};
-
-			// O DEGREES : STRAIGHT UP
-			if ( startDeg < 0 && endDeg > 0) {
-				let maxY: number = centerPt.y - radius;
-				if (maxY > extrema.max.y) { extrema.max.y = maxY; }
-			}
-
-			// 90 DEGREES : TO THE RIGHT
-			if (startDeg < 90 && endDeg > 90) {
-				let maxX: number = centerPt.x + radius;
-				if (maxX > extrema.max.x) { extrema.max.x = maxX; }
-			}
-
-			// 180 DEGREES : STRAIGHT DOWN
-			if (startDeg < 180 && endDeg > 180) {
-				let minY: number = centerPt.y + radius;
-				if (minY < extrema.min.y) { extrema.min.y = minY; }
-			}
-
-			// 270 DEGREES : TO THE LEFT
-			if (startDeg < 270 && endDeg > 270) {
-				let minX: number = centerPt.x - radius;
-				if (minX < extrema.min.x) { extrema.min.x = minX; }
-			}
-
-			return extrema;
 		}
 
 		/**

@@ -90,6 +90,52 @@ namespace KIP.SVG {
 
 			return path;
 		}
+
+		/**...........................................................................
+		 * _arcToExtrema
+		 * ...........................................................................
+		 * helper function to convert arc params to extrema 
+		 * ...........................................................................
+		 */
+		private _arcToExtrema(startPt: IPoint, endPt: IPoint, centerPt: IPoint, radius: number, startDeg: number, endDeg: number) : IExtrema {
+
+			let extrema: IExtrema = {
+				max: {
+					x: Math.max(startPt.x, endPt.x),
+					y: Math.max(startPt.y, endPt.y)
+				},
+				min: {
+					x: Math.min(startPt.x, endPt.x),
+					y: Math.min(startPt.y, endPt.y)
+				}
+			};
+
+			// O DEGREES : STRAIGHT UP
+			if ( startDeg < 0 && endDeg > 0) {
+				let maxY: number = centerPt.y - radius;
+				if (maxY > extrema.max.y) { extrema.max.y = maxY; }
+			}
+
+			// 90 DEGREES : TO THE RIGHT
+			if (startDeg < 90 && endDeg > 90) {
+				let maxX: number = centerPt.x + radius;
+				if (maxX > extrema.max.x) { extrema.max.x = maxX; }
+			}
+
+			// 180 DEGREES : STRAIGHT DOWN
+			if (startDeg < 180 && endDeg > 180) {
+				let minY: number = centerPt.y + radius;
+				if (minY < extrema.min.y) { extrema.min.y = minY; }
+			}
+
+			// 270 DEGREES : TO THE LEFT
+			if (startDeg < 270 && endDeg > 270) {
+				let minX: number = centerPt.x - radius;
+				if (minX < extrema.min.x) { extrema.min.x = minX; }
+			}
+
+			return extrema;
+		}
 	}
 
 	/**...........................................................................

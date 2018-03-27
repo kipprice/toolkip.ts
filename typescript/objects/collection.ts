@@ -92,6 +92,9 @@ namespace KIP {
 		/** Tracks of the data in this collection */
 		private _data: IDictionaryKeys<T>; 
 
+		/** allow retrieval of a set of keys */
+		public get keys(): string[] { return Object.keys(this._data); }
+
 		/** Stores the sorted array of keys for the collection */
 		private _sortedData: Array<string>; 
 

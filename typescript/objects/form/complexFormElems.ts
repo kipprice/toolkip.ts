@@ -17,6 +17,9 @@ namespace KIP.Forms {
         /** keep track of whether we are currently collapsed */
         protected _isCollapsed: boolean;
 
+        /** keep track of whether the title should be hidden */
+        protected _shouldHideTitle: boolean;
+
         /** keep track of shared elements for collapsible sections */
         protected _elems: {
             core: HTMLElement;
@@ -45,7 +48,13 @@ namespace KIP.Forms {
                 cursor: "pointer",
                 padding: "10px 10px",
                 borderRadius: "3px",
-                alignItems: "center"
+                alignItems: "center",
+                
+                nested: {
+                    "&.hidden": {
+                        display: "none"
+                    }
+                }
             },
 
             ".kipFormElem.collapsible .caret": {
@@ -69,6 +78,17 @@ namespace KIP.Forms {
 
         //#region CREATE ELEMENTS
 
+        constructor(id: string, template: IFormCollapsibleTemplate<T> | CollapsibleElement<T>) {
+            super(id, template);
+        }
+
+        protected _parseElemTemplate(template: IFormCollapsibleTemplate<T>): void {
+            super._parseElemTemplate(template);
+
+            this._isCollapsed = (!template.isExpanded || !template.hideTitle);
+            this._shouldHideTitle = template.hideTitle;
+        }
+
         /**...........................................................................
          * _createCollapsibleTitle
          * ...........................................................................
@@ -76,7 +96,10 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _createCollapsibleTitle(): void {
-            this._elems.titleContainer = createSimpleElement("", "sectionHeaderContainer", "", null, null, this._elems.core);
+            let titleCls: string = "sectionHeaderContainer";
+            if (this._shouldHideTitle) { titleCls += " hidden"; }
+
+            this._elems.titleContainer = createSimpleElement("", titleCls, "", null, null, this._elems.core);
             this._elems.title = createSimpleElement("", "sectionHeader", this._label, null, null, this._elems.titleContainer);
             this._elems.collapseElem = createSimpleElement("", "caret", "\u25B5", null, null, this._elems.titleContainer);
             this._elems.titleContainer.addEventListener("click", () => { this._onCaretClicked(); });
@@ -85,7 +108,9 @@ namespace KIP.Forms {
             addClass(this._elems.core, "collapsible");
 
             // start collapsed
-            this.collapse();
+            if (this._isCollapsed) {
+                this.collapse();
+            }
         }
         //#endregion
 
@@ -173,8 +198,20 @@ namespace KIP.Forms {
                 color: "<1>"
             },
 
-            ".kipFormElem.section .formChildren": {
+            ".kipFormElem.section > .formChildren": {
                 marginLeft: "25px"
+            },
+
+            ".kipFormElem.section > .formChildren.flex": {
+                display: "flex",
+                alignItems: "center",
+                marginLeft: "0",
+
+                nested: {
+                    "> .kipFormElem": {
+                        width: "auto"
+                    },
+                }
             }
         };
 
@@ -220,7 +257,7 @@ namespace KIP.Forms {
          * @param   children    All child elements of this section
          *........................................................................... 
          */
-        public constructor(id: string, template: IFormElemTemplate<T> | SectionElement<T>, children?: IFormElements<T> | FormElement<T>) {
+        public constructor(id: string, template: IFormCollapsibleTemplate<T> | SectionElement<T>, children?: IFormElements<T> | FormElement<T>) {
             super(id, template);
             if (isFormElement(template)) {
                 children = (template as SectionElement<T>).children;
@@ -242,6 +279,8 @@ namespace KIP.Forms {
             // Create the form children section
             this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.core);
             this._createStyles();
+
+            this._updateClsBasedOnLayout();
         }
 
         /** create a clone of this element */
@@ -449,6 +488,23 @@ namespace KIP.Forms {
 
             // add to the children's array and to the UI
             this._children[key] = this._parseChild(formElem);
+        }
+
+        private _updateClsBasedOnLayout(): void {
+            let cls: string;
+            switch(this._layout) {
+                case FormElementLayoutEnum.FLEX:
+                    cls = "flex";
+                    break;
+                case FormElementLayoutEnum.LABEL_AFTER:
+                case FormElementLayoutEnum.TABLE:
+                case FormElementLayoutEnum.MULTILINE:
+                default:
+                    cls = "multiline";
+                    break;
+            }
+
+            addClass(this._elems.childrenContainer, cls);
         }
         //#endregion
 
@@ -719,9 +775,7 @@ namespace KIP.Forms {
         /** handle clearing out the array */
         protected _onClear(): void {
             this._elems.childrenContainer.innerHTML = "";
-            this._children.map((elem: FormElement<T>, idx: number) => {
-                this._children[idx] = null;
-            });
+            this._children = [];
         }
 
         public onChangeOrder(child: ArrayChildElement<T>, direction: DirectionType, moveTo?: number): void {

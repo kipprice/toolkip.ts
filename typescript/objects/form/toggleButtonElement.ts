@@ -41,7 +41,11 @@ namespace KIP.Forms {
 
             ".toggleBtns .formChildren": {
                 display: "flex",
-                flexWrap: "wrap"
+                flexWrap: "wrap",
+                marginLeft: "0"
+            },
+
+            ".toggleBtns.flex .formChildren": {
             },
 
             ".toggleBtn": {
@@ -108,9 +112,34 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _onCreateElements(): void {
-            this._createStandardLabel(this._elems.core);
-            this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.core);
+            
+            this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null);
             this._createOptionsElements();
+
+            this._handleStandardLayout();
+        }
+
+        protected _flexLayout(): void {
+            addClass(this._elems.core, "flex");
+            this._createStandardLabel(this._elems.core);
+            this._elems.core.appendChild(this._elems.childrenContainer);
+        }
+
+        protected _multiLineLayout(): void {
+            addClass(this._elems.core, "multiline");
+            this._createStandardLabel(this._elems.core);
+            this._elems.core.appendChild(this._elems.childrenContainer);
+        }
+
+        protected _tableLayout(): void {
+            this._multiLineLayout();
+            //TODO: do a real table layout
+        }
+
+        protected _labelAfterLayout(): void {
+            addClass(this._elems.core, "labelLast");
+            this._elems.core.appendChild(this._elems.childrenContainer);
+            this._createStandardLabel(this._elems.core);
         }
 
         /**...........................................................................
