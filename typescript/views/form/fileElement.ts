@@ -252,7 +252,8 @@ namespace KIP.Forms {
                 left: "0",
                 top: "0",
                 justifyContent: "center",
-                alignItems: "center"
+                alignItems: "center",
+                borderRadius: "100%"
             },
 
             ".kipFormElem.photopath .photoWrapper:hover .photoOverlay": {

@@ -290,7 +290,7 @@ namespace KIP.Forms {
             // register the change listener if we created one
             if (this._elems.input) {
                 this._elems.input.addEventListener("input", () => {
-                    this._changeEventFired();
+                    this._changeEventFired(true);
                 });
 
                 this._elems.input.addEventListener("change", () => {
@@ -504,12 +504,12 @@ namespace KIP.Forms {
          * 
          * ...........................................................................
          */
-        protected _changeEventFired(): void {
+        protected _changeEventFired(fieldStillHasFocus?: boolean): void {
 
             this._clearErrors();
 
             // call the child's version of the validation
-            if (this._onChange()) {
+            if (this._onChange(fieldStillHasFocus)) {
 
                 // let the listeners know that this succeeded
                 this._dispatchChangeEvent();
@@ -645,7 +645,7 @@ namespace KIP.Forms {
          * _onChange
          * ...........................................................................
          */
-        protected abstract _onChange(): boolean;
+        protected abstract _onChange(fieldStillHasFocus: boolean): boolean;
 
         /**...........................................................................
          * _createClonedElement

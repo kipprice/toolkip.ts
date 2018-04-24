@@ -1,4 +1,4 @@
-///<reference path="../svg/svgDrawable.ts" />
+///<reference path="../views/svg/svgDrawable.ts" />
 
 namespace KIP.Old {
 

@@ -1,0 +1,243 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'update', '-g', 'typescript' ]
+2 info using npm@2.11.3
+3 info using node@v0.12.7
+4 silly mapToRegistry name typescript
+5 silly mapToRegistry using default registry
+6 silly mapToRegistry registry https://registry.npmjs.org/
+7 silly mapToRegistry uri https://registry.npmjs.org/typescript
+8 verbose request uri https://registry.npmjs.org/typescript
+9 verbose request no auth needed
+10 info attempt registry request try #1 at 2:01:39 PM
+11 verbose request id a5892b292b7d4e6b
+12 http request GET https://registry.npmjs.org/typescript
+13 http 200 https://registry.npmjs.org/typescript
+14 silly get cb [ 200,
+14 silly get   { 'content-type': 'application/json; charset=UTF-8',
+14 silly get     server: 'UploadServer',
+14 silly get     'cache-control': 'max-age=300',
+14 silly get     'last-modified': 'Thu, 8 Mar 2018 22:20:05 GMT',
+14 silly get     etag: '"5aa1b715-252707"',
+14 silly get     'x-npm-region': 'US-Central',
+14 silly get     'content-encoding': 'gzip',
+14 silly get     'content-length': '125349',
+14 silly get     'accept-ranges': 'bytes',
+14 silly get     date: 'Sun, 11 Mar 2018 19:01:39 GMT',
+14 silly get     via: '1.1 varnish',
+14 silly get     age: '1866',
+14 silly get     connection: 'keep-alive',
+14 silly get     'x-served-by': 'cache-mdw17331-MDW',
+14 silly get     'x-cache': 'HIT',
+14 silly get     'x-cache-hits': '5',
+14 silly get     'x-timer': 'S1520794899.242746,VS0,VE0',
+14 silly get     vary: 'Accept-Encoding, Accept' } ]
+15 verbose get saving typescript to /Users/kip/.npm/registry.npmjs.org/typescript/.cache.json
+16 info outdated updating [ [ '/usr/local/lib',
+16 info outdated     'typescript',
+16 info outdated     '2.2.1',
+16 info outdated     '2.7.2',
+16 info outdated     '2.7.2',
+16 info outdated     'latest' ] ]
+17 verbose install where, what [ '/usr/local/lib', [ 'typescript@2.7.2' ] ]
+18 verbose install initial load of /usr/local/lib/package.json
+19 verbose readDependencies loading dependencies from /usr/local/lib/package.json
+20 silly cache add args [ 'typescript@2.7.2', null ]
+21 verbose cache add spec typescript@2.7.2
+22 silly cache add parsed spec { raw: 'typescript@2.7.2',
+22 silly cache add   scope: null,
+22 silly cache add   name: 'typescript',
+22 silly cache add   rawSpec: '2.7.2',
+22 silly cache add   spec: '2.7.2',
+22 silly cache add   type: 'version' }
+23 silly addNamed typescript@2.7.2
+24 verbose addNamed "2.7.2" is a plain semver version for typescript
+25 silly mapToRegistry name typescript
+26 silly mapToRegistry using default registry
+27 silly mapToRegistry registry https://registry.npmjs.org/
+28 silly mapToRegistry uri https://registry.npmjs.org/typescript
+29 verbose addNameVersion registry:https://registry.npmjs.org/typescript not in flight; fetching
+30 verbose get https://registry.npmjs.org/typescript not expired, no request
+31 silly mapToRegistry name typescript
+32 silly mapToRegistry using default registry
+33 silly mapToRegistry registry https://registry.npmjs.org/
+34 silly mapToRegistry uri https://registry.npmjs.org/typescript
+35 verbose addRemoteTarball https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz not in flight; adding
+36 verbose addRemoteTarball [ 'https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz',
+36 verbose addRemoteTarball   '2d615a1ef4aee4f574425cdff7026edf81919836' ]
+37 info retry fetch attempt 1 at 2:01:39 PM
+38 info attempt registry request try #1 at 2:01:39 PM
+39 http fetch GET https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz
+40 http fetch 200 https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz
+41 silly fetchAndShaCheck shasum 2d615a1ef4aee4f574425cdff7026edf81919836
+42 verbose addTmpTarball /var/folders/7q/n7f38xp51_55t7x_tkm1dqmw0000gn/T/npm-69643-86f37502/registry.npmjs.org/typescript/-/typescript-2.7.2.tgz not in flight; adding
+43 verbose addTmpTarball already have metadata; skipping unpack for typescript@2.7.2
+44 silly cache afterAdd typescript@2.7.2
+45 verbose afterAdd /Users/kip/.npm/typescript/2.7.2/package/package.json not in flight; writing
+46 verbose afterAdd /Users/kip/.npm/typescript/2.7.2/package/package.json written
+47 silly install resolved [ { name: 'typescript',
+47 silly install resolved     author: { name: 'Microsoft Corp.' },
+47 silly install resolved     homepage: 'http://typescriptlang.org/',
+47 silly install resolved     version: '2.7.2',
+47 silly install resolved     license: 'Apache-2.0',
+47 silly install resolved     description: 'TypeScript is a language for application scale JavaScript development',
+47 silly install resolved     keywords: [ 'TypeScript', 'Microsoft', 'compiler', 'language', 'javascript' ],
+47 silly install resolved     bugs: { url: 'https://github.com/Microsoft/TypeScript/issues' },
+47 silly install resolved     repository:
+47 silly install resolved      { type: 'git',
+47 silly install resolved        url: 'git+https://github.com/Microsoft/TypeScript.git' },
+47 silly install resolved     main: './lib/typescript.js',
+47 silly install resolved     typings: './lib/typescript.d.ts',
+47 silly install resolved     bin: { tsc: './bin/tsc', tsserver: './bin/tsserver' },
+47 silly install resolved     engines: { node: '>=4.2.0' },
+47 silly install resolved     devDependencies:
+47 silly install resolved      { '@types/browserify': 'latest',
+47 silly install resolved        '@types/chai': 'latest',
+47 silly install resolved        '@types/convert-source-map': 'latest',
+47 silly install resolved        '@types/del': 'latest',
+47 silly install resolved        '@types/glob': 'latest',
+47 silly install resolved        '@types/gulp': '3.X',
+47 silly install resolved        '@types/gulp-concat': 'latest',
+47 silly install resolved        '@types/gulp-help': 'latest',
+47 silly install resolved        '@types/gulp-newer': 'latest',
+47 silly install resolved        '@types/gulp-sourcemaps': 'latest',
+47 silly install resolved        '@types/merge2': 'latest',
+47 silly install resolved        '@types/minimatch': 'latest',
+47 silly install resolved        '@types/minimist': 'latest',
+47 silly install resolved        '@types/mkdirp': 'latest',
+47 silly install resolved        '@types/mocha': 'latest',
+47 silly install resolved        '@types/node': '8.5.5',
+47 silly install resolved        '@types/q': 'latest',
+47 silly install resolved        '@types/run-sequence': 'latest',
+47 silly install resolved        '@types/through2': 'latest',
+47 silly install resolved        '@types/xml2js': '^0.4.0',
+47 silly install resolved        xml2js: '^0.4.19',
+47 silly install resolved        'browser-resolve': '^1.11.2',
+47 silly install resolved        browserify: 'latest',
+47 silly install resolved        chai: 'latest',
+47 silly install resolved        'convert-source-map': 'latest',
+47 silly install resolved        del: 'latest',
+47 silly install resolved        gulp: '3.X',
+47 silly install resolved        'gulp-clone': 'latest',
+47 silly install resolved        'gulp-concat': 'latest',
+47 silly install resolved        'gulp-help': 'latest',
+47 silly install resolved        'gulp-insert': 'latest',
+47 silly install resolved        'gulp-newer': 'latest',
+47 silly install resolved        'gulp-sourcemaps': 'latest',
+47 silly install resolved        'gulp-typescript': 'latest',
+47 silly install resolved        istanbul: 'latest',
+47 silly install resolved        jake: 'latest',
+47 silly install resolved        merge2: 'latest',
+47 silly install resolved        minimist: 'latest',
+47 silly install resolved        mkdirp: 'latest',
+47 silly install resolved        mocha: 'latest',
+47 silly install resolved        'mocha-fivemat-progress-reporter': 'latest',
+47 silly install resolved        q: 'latest',
+47 silly install resolved        'run-sequence': 'latest',
+47 silly install resolved        sorcery: 'latest',
+47 silly install resolved        'source-map-support': 'latest',
+47 silly install resolved        through2: 'latest',
+47 silly install resolved        'travis-fold': 'latest',
+47 silly install resolved        'ts-node': 'latest',
+47 silly install resolved        tslint: 'latest',
+47 silly install resolved        vinyl: 'latest',
+47 silly install resolved        chalk: 'latest',
+47 silly install resolved        typescript: '^2.7' },
+47 silly install resolved     scripts:
+47 silly install resolved      { pretest: 'jake tests',
+47 silly install resolved        test: 'jake runtests-parallel light=false',
+47 silly install resolved        build: 'npm run build:compiler && npm run build:tests',
+47 silly install resolved        'build:compiler': 'jake local',
+47 silly install resolved        'build:tests': 'jake tests',
+47 silly install resolved        start: 'node lib/tsc',
+47 silly install resolved        clean: 'jake clean',
+47 silly install resolved        gulp: 'gulp',
+47 silly install resolved        jake: 'jake',
+47 silly install resolved        lint: 'jake lint',
+47 silly install resolved        'setup-hooks': 'node scripts/link-hooks.js' },
+47 silly install resolved     browser: { fs: false, os: false, path: false },
+47 silly install resolved     gitHead: '90e6f4984a52c6e403d2b799492ea81fd5d9dd71',
+47 silly install resolved     _id: 'typescript@2.7.2',
+47 silly install resolved     _npmVersion: '5.5.1',
+47 silly install resolved     _nodeVersion: '9.2.0',
+47 silly install resolved     _npmUser: { name: 'typescript', email: 'typescript@microsoft.com' },
+47 silly install resolved     dist:
+47 silly install resolved      { integrity: 'sha512-p5TCYZDAO0m4G344hD+wx/LATebLWZNkkh2asWUFqSsD2OrDNhbAHuSjobrmsUmdzjJjEeZVU9g1h3O6vpstnw==',
+47 silly install resolved        shasum: '2d615a1ef4aee4f574425cdff7026edf81919836',
+47 silly install resolved        tarball: 'https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz',
+47 silly install resolved        fileCount: 73,
+47 silly install resolved        unpackedSize: 36366737 },
+47 silly install resolved     maintainers: [ [Object] ],
+47 silly install resolved     directories: {},
+47 silly install resolved     _npmOperationalInternal:
+47 silly install resolved      { host: 's3://npm-registry-packages',
+47 silly install resolved        tmp: 'tmp/typescript_2.7.2_1518720313356_0.35853084358629217' },
+47 silly install resolved     _shasum: '2d615a1ef4aee4f574425cdff7026edf81919836',
+47 silly install resolved     _resolved: 'https://registry.npmjs.org/typescript/-/typescript-2.7.2.tgz',
+47 silly install resolved     _from: 'typescript@2.7.2' } ]
+48 info install typescript@2.7.2 into /usr/local/lib
+49 info installOne typescript@2.7.2
+50 verbose installOne of typescript to /usr/local/lib not in flight; installing
+51 verbose lock using /Users/kip/.npm/_locks/typescript-5355178f5d1a073f.lock for /usr/local/lib/node_modules/typescript
+52 warn engine typescript@2.7.2: wanted: {"node":">=4.2.0"} (current: {"node":"0.12.7","npm":"2.11.3"})
+53 silly install write writing typescript 2.7.2 to /usr/local/lib/node_modules/typescript
+54 verbose unbuild lib/node_modules/typescript
+55 info preuninstall typescript@2.2.1
+56 info uninstall typescript@2.2.1
+57 verbose unbuild rmStuff typescript@2.2.1 from /usr/local/lib/node_modules
+58 silly gentlyRm /usr/local/bin/tsc is being gently removed
+59 silly gentlyRm verifying /usr/local is an npm working directory
+60 silly gentlyRm /usr/local/bin/tsserver is being gently removed
+61 silly gentlyRm verifying /usr/local is an npm working directory
+62 silly gentlyRm containing path /usr/local is under npm's control, in /usr/local
+63 silly gentlyRm deletion target /usr/local/bin/tsc is under /usr/local
+64 verbose gentlyRm vacuuming from /usr/local/bin/tsc up to /usr/local
+65 silly gentlyRm containing path /usr/local is under npm's control, in /usr/local
+66 silly gentlyRm deletion target /usr/local/bin/tsserver is under /usr/local
+67 verbose gentlyRm vacuuming from /usr/local/bin/tsserver up to /usr/local
+68 info postuninstall typescript@2.2.1
+69 silly gentlyRm /usr/local/lib/node_modules/typescript is being purged from base /usr/local
+70 verbose gentlyRm don't care about contents; nuking /usr/local/lib/node_modules/typescript
+71 silly vacuum-fs purging /usr/local/lib/node_modules/typescript
+72 verbose unlock done using /Users/kip/.npm/_locks/typescript-5355178f5d1a073f.lock for /usr/local/lib/node_modules/typescript
+73 verbose stack Error: EACCES, rmdir '/usr/local/lib/node_modules/typescript'
+73 verbose stack     at Error (native)
+74 verbose cwd /Users/kip/Dropbox/Kip Code/toolkip.ts/typescript
+75 error Darwin 16.7.0
+76 error argv "node" "/usr/local/bin/npm" "update" "-g" "typescript"
+77 error node v0.12.7
+78 error npm  v2.11.3
+79 error path /usr/local/lib/node_modules/typescript
+80 error code EACCES
+81 error errno -13
+82 error Error: EACCES, rmdir '/usr/local/lib/node_modules/typescript'
+82 error     at Error (native)
+82 error  { [Error: EACCES, rmdir '/usr/local/lib/node_modules/typescript']
+82 error   errno: -13,
+82 error   code: 'EACCES',
+82 error   path: '/usr/local/lib/node_modules/typescript' }
+83 error Please try running this command again as root/Administrator.
+84 verbose exit [ -13, true ]
+85 verbose unbuild lib/node_modules/typescript
+86 info preuninstall typescript@2.2.1
+87 info uninstall typescript@2.2.1
+88 verbose unbuild rmStuff typescript@2.2.1 from /usr/local/lib/node_modules
+89 silly gentlyRm /usr/local/bin/tsc is being gently removed
+90 silly gentlyRm verifying /usr/local is an npm working directory
+91 silly gentlyRm /usr/local/bin/tsserver is being gently removed
+92 silly gentlyRm verifying /usr/local is an npm working directory
+93 silly gentlyRm containing path /usr/local is under npm's control, in /usr/local
+94 silly gentlyRm deletion target /usr/local/bin/tsc is under /usr/local
+95 verbose gentlyRm vacuuming from /usr/local/bin/tsc up to /usr/local
+96 silly gentlyRm containing path /usr/local is under npm's control, in /usr/local
+97 silly gentlyRm deletion target /usr/local/bin/tsserver is under /usr/local
+98 verbose gentlyRm vacuuming from /usr/local/bin/tsserver up to /usr/local
+99 info postuninstall typescript@2.2.1
+100 silly gentlyRm /usr/local/lib/node_modules/typescript is being purged from base /usr/local
+101 verbose gentlyRm don't care about contents; nuking /usr/local/lib/node_modules/typescript
+102 silly vacuum-fs purging /usr/local/lib/node_modules/typescript
+103 error error rolling back Error: EACCES, rmdir '/usr/local/lib/node_modules/typescript'
+103 error error rolling back     at Error (native)
+103 error error rolling back  { [Error: EACCES, rmdir '/usr/local/lib/node_modules/typescript']
+103 error error rolling back   errno: -13,
+103 error error rolling back   code: 'EACCES',
+103 error error rolling back   path: '/usr/local/lib/node_modules/typescript' }

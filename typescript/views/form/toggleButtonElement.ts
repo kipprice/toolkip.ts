@@ -34,10 +34,6 @@ namespace KIP.Forms {
 
         /** static styles for the toggle buttons */
         protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
-        
-            ".toggleBtns": {
-                width: "800px"
-            },
 
             ".toggleBtns .formChildren": {
                 display: "flex",

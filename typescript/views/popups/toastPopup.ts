@@ -4,20 +4,29 @@ namespace KIP {
         private _showFor: number;
 
         protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
+            ".toast": {
+                pointerEvents: "none"
+            },
+
             ".toast .overlay": {
                 display: "none",
                 pointerEvents: "none"
             },
 
             ".toast .closeBtn": {
-                display: "none"
+                display: "none",
+            },
+
+            ".toast .popupButton": {
+                pointerEvents: "auto"
             },
 
             ".toast .frame": {
                 width: "15%",
-                height: "75px",
+                height: "auto",
                 boxSizing: "border-box",
-                left: "85%"
+                left: "85%",
+                
             }
         }
 

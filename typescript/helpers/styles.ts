@@ -36,6 +36,7 @@ namespace KIP.Styles {
         from?: TypedClassDefinition;
         to?: TypedClassDefinition;
         objectFit?: string;
+        src?: string;
     }
 
     /**...........................................................................
@@ -50,6 +51,15 @@ namespace KIP.Styles {
 
     interface ICreatedStyles {
         [key: string]: boolean;
+    }
+
+    export interface IFontFaceDefinition {
+        url: string;
+        format: string;
+    }
+
+    export interface ICustomFonts {
+        [fontName: string]: IFontFaceDefinition[];
     }
 
     /**...........................................................................
@@ -77,6 +87,9 @@ namespace KIP.Styles {
         /** keep track of the styles we've already created */
         private static _createdStyles: ICreatedStyles = {};
 
+        /** keep track of the custom fonts for the page */
+        private static _customPageFonts: ICustomFonts = {};
+
         //#endregion
 
         //#region INSTANCE PROPERTIES
@@ -92,6 +105,16 @@ namespace KIP.Styles {
         /** overridable function to grab the appropriate styles for this particular class */
         protected _getUncoloredStyles(): IStandardStyles {
             return (this.constructor as typeof Stylable)._uncoloredStyles;
+        }
+
+        /** keep track of the fonts defined by this element */
+        protected static _customFonts: ICustomFonts = {};
+        private get _customFonts(): ICustomFonts { return (this.constructor as typeof Stylable)._customFonts; }
+        public get customFonts(): ICustomFonts { return this._getCustomFonts(); }
+
+        /** overridable function to grab the appropriate fonts for this particular class */
+        protected _getCustomFonts(): ICustomFonts {
+            return (this.constructor as typeof Stylable)._customFonts;
         }
 
         /** keep track of the initial set of colors */
@@ -198,6 +221,13 @@ namespace KIP.Styles {
             return this._combineThemes.apply(this, flatStyles);
         }
 
+        /**...........................................................................
+         * _combineThemes
+         * ...........................................................................
+         * @param   themes  The themes to combine
+         * @returns The merged themes
+         * ...........................................................................
+         */
         private static _combineThemes(...themes: IStandardStyles[]): IStandardStyles {
             let out: IStandardStyles = {};
 
@@ -221,15 +251,6 @@ namespace KIP.Styles {
             return out;
         }
 
-        // protected static _mergeAndCleanThemes(...themes: IStandardStyles[]): IStandardStyles {
-        //     let cleanedThemes: IStandardStyles[] = [];
-        //     themes.map((style: IStandardStyles) => {
-        //         let cleanedTheme: IStandardStyles = this._cleanStyles(style, "");
-        //         cleanedThemes.push(cleanedTheme);
-        //     });
-        //     return this._mergeThemes.apply(cleanedThemes);
-        // }
-
         /**...........................................................................
          * _mergeThemes
          * ...........................................................................
@@ -244,8 +265,6 @@ namespace KIP.Styles {
             return Stylable._mergeThemes.apply(Stylable, themes);
         }
 
-
-
         /**...........................................................................
          * _mergeIntoStyles
          * ...........................................................................
@@ -257,6 +276,18 @@ namespace KIP.Styles {
         protected static _mergeIntoStyles(styles: IStandardStyles): void {
             this._uncoloredPageStyles = this._mergeThemes(this._uncoloredPageStyles, styles);
             this._updateAllThemeColors();
+        }
+
+        /**...........................................................................
+         * _mergeIntoFonts
+         * ...........................................................................
+         * @param fonts 
+         * ...........................................................................
+         */
+        protected static _mergeIntoFonts(fonts: ICustomFonts): void {
+            map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
+                this._customPageFonts[fontName] = fontDef;
+            });
         }
 
         /**...........................................................................
@@ -348,6 +379,7 @@ namespace KIP.Styles {
 
             // grab our updated colors
             let styles: IStandardStyles = Stylable._pageStyles;
+            let fonts: ICustomFonts = Stylable._customPageFonts;
 
             // If we don't have any styles, just quit
             if (!styles) { return; }
@@ -360,7 +392,12 @@ namespace KIP.Styles {
                 this._styleElem.innerHTML = "";
             }
 
-            // Determine 
+            // add the font-family pieces
+            map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
+                let tmpElem: HTMLStyleElement = createFontDefinition(fontName, fontDef);
+            });
+
+            // create all of the individual styles
             map(styles, (cssDeclaration: Styles.TypedClassDefinition, selector: string) => {
                 let tmpElem: HTMLStyleElement = Styles.createClass(selector, cssDeclaration, true, forceOverride);
                 if (!tmpElem) { return; }
@@ -390,7 +427,13 @@ namespace KIP.Styles {
             Stylable._handleUpdatingThemeColor(tmpStyles, (this.constructor as any).name);
 
             // Merge into the static styles
-            Stylable._mergeIntoStyles(tmpStyles);    
+            Stylable._mergeIntoStyles(tmpStyles);  
+            
+            // Handle the fonts as well
+            let customFonts: ICustomFonts = cloneObject(this._customFonts);
+            Stylable._mergeIntoFonts(customFonts);
+
+            // create all styles for the element
             Stylable._createStyles(forceOverride);
 
             Stylable._createdStyles[(this.constructor as any).name] = true;
@@ -684,5 +727,28 @@ namespace KIP.Styles {
                 }
             }
         }
+    }
+
+    /**...........................................................................
+     * createFontDefinition
+     * ...........................................................................
+     * Adds a font to the CSS styles 
+     * @param   fontName    The referencable name for the font
+     * @param   srcFiles    The source files for this font
+     * @returns The updated style element
+     * ...........................................................................
+     */
+    export function createFontDefinition(fontName: string, srcFiles: IFontFaceDefinition[], noAppend?: boolean, forceOverride?: boolean) : HTMLStyleElement {
+        let src: string[] = [];
+        for (let srcFile of srcFiles) {
+            src.push(format("url({0}) format({1})", srcFile.url, srcFile.format));
+        }
+
+        let attr: TypedClassDefinition = {
+            fontFamily: fontName,
+            src: src.join(",")
+        };
+
+        return createClass("@font-face", attr, noAppend, forceOverride);
     }
 }

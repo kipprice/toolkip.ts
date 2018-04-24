@@ -47,6 +47,9 @@ namespace KIP {
         /** any additional attributes that should be applied to this element */
         attr?: IAttributes;
 
+        /** any specific styles to apply to this element */
+        style?: Styles.TypedClassDefinition;
+
         /** any children that should be added for this element */
         children?: IChildren;
 
@@ -201,6 +204,13 @@ namespace KIP {
 
                 }
             }
+        }
+
+        // add style properties
+        if (obj.style) {
+            map(obj.style, (val: any, key: string) =>{
+                elem.style[key] = val;
+            });
         }
 
         // Add any after html

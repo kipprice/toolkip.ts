@@ -139,7 +139,7 @@ namespace KIP.Forms {
             this._handleStandardLayout();
         }
 
-        protected _onChange(): boolean {
+        protected _onChange(fieldStillHasFocis: boolean): boolean {
             let value: string = this._elems.input.value;
             return this._standardValidation(value);
         }
