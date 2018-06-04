@@ -8,7 +8,10 @@ namespace KIP.Forms {
      */
     export function isFormElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is FormElement<T> {
         if (!elem) { return false; }
-        return ((elem as FormElement<T>).id !== undefined) && ((elem as FormElement<T>).type !== undefined);
+        
+        return ((elem as FormElement<T>).id !== undefined) && 
+            ((elem as FormElement<T>).type !== undefined) &&
+            ((elem as FormElement<T>).template !== undefined);
     }
 
     /** create the general form element class that all others extend */

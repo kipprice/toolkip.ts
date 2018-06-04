@@ -13,8 +13,9 @@ namespace KIP.SVG {
 	export abstract class PathExtensionElement extends PathElement {
 
 		protected _setAttributes(attr: IPathSVGAttributes, ...addlArgs: any[]): IPathSVGAttributes {
-			this._points = this._generatePoints.apply(this, addlArgs);
-			return attr;
+
+			let pts = this._generatePoints.apply(this, addlArgs);
+			return super._setAttributes(attr, pts);
 		}
 
 		protected abstract _generatePoints(...addlArgs: any[]): IPathPoint[];
@@ -148,7 +149,7 @@ namespace KIP.SVG {
 	export class PolygonElement extends PathExtensionElement {
 
 		constructor(centerPt: IPoint, sides: number, radius: number, attr: IPathSVGAttributes, innerRadius?: number) {
-			super(null, attr, centerPt, sides, radius);
+			super(null, attr, centerPt, sides, radius, innerRadius);
 		}
 
 		protected _generatePoints(centerPt: IPoint, sides: number, radius: number, innerRadius?: number): IPathPoint[] {
@@ -187,6 +188,7 @@ namespace KIP.SVG {
 		protected _generatePoints(centerPt: IPoint, numberOfPoints: number, radius: number, innerRadius: number): IPathPoint[] {
 			let curAngle: number = 0;
 			let intAngle: number = (Trig.calculatePolygonInternalAngle(numberOfPoints) / 2);
+
 			let points: IPathPoint[] = [];
 
 			for (let i = 0; i < numberOfPoints; i += 1) {
@@ -212,7 +214,7 @@ namespace KIP.SVG {
 	 * ...........................................................................
 	 */
     export class CheckElement extends PathExtensionElement {
-		protected _generatePoints(): IPathPoint[] {
+		protected _generatePoints(centerPt: IPoint): IPathPoint[] {
 			let pts: IPathPoint[] = [
 				{x: -0.15, y: 2.95},
 				{x: 1, y: 4},
@@ -225,6 +227,11 @@ namespace KIP.SVG {
 				{x: 0.3, y: 2.3}
 			];
 
+			for (let pt of pts) {
+				pt.x += centerPt.x;
+				pt.y += centerPt.y;
+			}
+
 			return pts;
 		}
 	}
@@ -234,7 +241,7 @@ namespace KIP.SVG {
 	 * ...........................................................................
 	 */
     export class ExElement extends PathExtensionElement {
-		protected _generatePoints(): IPathPoint[] {
+		protected _generatePoints(centerPt: IPoint): IPathPoint[] {
 			let pts: IPathPoint[] = [
 				{x: 0.25, y: 0.6},
 				{x: 1, y: 0},
@@ -253,6 +260,11 @@ namespace KIP.SVG {
 				{x: 1.33, y: 1.75}
 			];
 
+			for (let pt of pts) {
+				pt.x += centerPt.x;
+				pt.y += centerPt.y;
+			}
+
 			return pts;
 		}
 	}
@@ -262,7 +274,7 @@ namespace KIP.SVG {
 	 * ...........................................................................
 	 */
     export class PlusElement extends PathExtensionElement {
-		protected _generatePoints(): IPathPoint[] {
+		protected _generatePoints(centerPt: IPoint): IPathPoint[] {
 			let pts: IPathPoint[] = [
 				{x: 2, y: 2},
 				{x: 2, y: 0},
@@ -280,6 +292,11 @@ namespace KIP.SVG {
 				{x: 0, y: 3},
 				{x: 0, y: 2}
 			];
+
+			for (let pt of pts) {
+				pt.x += centerPt.x;
+				pt.y += centerPt.y;
+			}
 
 			return pts;
 		}

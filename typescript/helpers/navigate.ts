@@ -24,7 +24,7 @@ namespace KIP {
      * @version 1.0
      * ...........................................................................
      */
-    export interface IBrowserHistoryEntry<T> {
+    export interface IHistoryEntry<T> {
 		
 		/** keep track of what the path to navigation is */
 		navigationPath: T;
@@ -72,6 +72,14 @@ namespace KIP {
 		/** allow the implementer to determine what type of transition is used */
 		protected abstract get _transitionType(): INavTransitionType;
 
+		/** keep track of what view is currently showing */
+		protected _currentView: ICollectionElement<Drawable>;
+		public get currentView(): ICollectionElement<Drawable> { return this._currentView; }
+
+		/** keep track of the historical changes to the navigation */
+		protected _history: HistoryChain<IHistoryEntry<T>>;
+		public get history(): HistoryChain<IHistoryEntry<T>> { return this._history; }
+
 		//#endregion
 
 		/**...........................................................................
@@ -79,6 +87,10 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		public constructor() {
+
+			// keep track of our internal history
+			this._history = new HistoryChain();
+
 			// register the listener when the user presses the back button
 			window.addEventListener("popstate", () => {
 				this._handleState();
@@ -101,6 +113,7 @@ namespace KIP {
 		 */
 
 		public navigateTo<D extends Drawable, M>(navigationPath: T, constructor?: IConstructor<D>, addlData?: INavigationData<M>): void {
+
 			// initialize the additional data array if unpassed
 			if (!addlData) { addlData = {}; }
 
@@ -122,6 +135,9 @@ namespace KIP {
 
 			// draw the view on the appropriate parent
 			this._handleTransition(view);
+
+			// update our internal view tracking
+			this._currentView = this._views.getElement(navigationPath);
 
 			// update the browser history
 			this._updateHistory(navigationPath, addlData);
@@ -169,13 +185,16 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		private _updateHistory(navigationPath: T, addlArgs: INavigationData<any>): void {
-			let history: IBrowserHistoryEntry<T> = {
+			let history: IHistoryEntry<T> = {
 				navigationPath: navigationPath,
 				url: addlArgs.url || "",
 				title: addlArgs.title || navigationPath,
 				data: addlArgs
 			};
 			this._pushHistoryState(history);
+
+			// also push to our internal history
+			this._history.push(history);
 		}
 
 		/**...........................................................................
@@ -247,7 +266,7 @@ namespace KIP {
 		 * @param   history     The page to return to when hitting the back button
 		 * ...........................................................................
 		 */
-    	protected _pushHistoryState(history: IBrowserHistoryEntry<T>): void {
+    	protected _pushHistoryState(history: IHistoryEntry<T>): void {
 			window.history.pushState(
 				history,
 				history.title,
@@ -262,11 +281,10 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _handleState(): void {
-			let state: IBrowserHistoryEntry<T> = window.history.state;
+			let state: IHistoryEntry<T> = window.history.state;
 			if (!state) { return; }
 			this.navigateTo(state.navigationPath, null, state.data);
 		}
-
 		
 	}
 

@@ -56,15 +56,32 @@ namespace KIP.SVG {
         //#endregion
 
         constructor(points: IPathPoint[], attr: IPathSVGAttributes, ...addlArgs: any[]) {
-            addlArgs.splice(0, 0, points);
-            super(attr, addlArgs);
+            if (points) { addlArgs.splice(0, 0, points); }
+            super(attr, ...addlArgs);
         }
 
+		/**...........................................................................
+		 * _setAttributes
+		 * ...........................................................................
+		 * Make sure the attributes are updated for a path
+		 * @param 	attributes 	The attriutes to update
+		 * @param 	points 		Points for the path
+		 * ...........................................................................
+		 */
         protected _setAttributes(attributes: ISVGAttributes, points: IPathPoint[]): ISVGAttributes {
+			attributes.type = "path";
+			attributes.d = "";
+
             this._points = points || [];
             return attributes;
         }
 
+		/**...........................................................................
+		 * _createElements
+		 * ...........................................................................
+		 * Create elements for this path
+		 * ...........................................................................
+		 */
         protected _createElements(): void {
             let path: SVGPathElement = this._startPath(this._attributes);
 
@@ -72,7 +89,7 @@ namespace KIP.SVG {
             let points: IPathPoint[] = this._points;
 
 			for (let pathPt of points) {
-
+				
 				if (firstPt) {
 					this.moveTo(pathPt);
 					firstPt = false;
@@ -96,7 +113,13 @@ namespace KIP.SVG {
 			else { this.finishPathWithoutClosing(); }
         }
 
-        //#region HANDLE EXTREMA
+		//#region HANDLE EXTREMA
+		/**...........................................................................
+		 * _updateExtrema
+		 * ...........................................................................
+		 * Make sure we know the extrema of this path
+		 * ...........................................................................
+		 */
         protected _updateExtrema(): void {
             this._extrema = {
                 max: null,
@@ -108,12 +131,19 @@ namespace KIP.SVG {
             }
         }
 
+		/**...........................................................................
+		 * _updateExtremaFromPoint
+		 * ...........................................................................
+		 * Make sure our extrema are up to date
+		 * @param 	pt	The point that may potentially update our extrema 
+		 * ...........................................................................
+		 */
         private _updateExtremaFromPoint(pt: IPoint): void {
 
             // handle the base case
             if (!this._extrema.max || !this._extrema.min) {
-                this._extrema.max = pt;
-                this._extrema.min = pt;
+                this._extrema.max = cloneObject(pt);
+                this._extrema.min = cloneObject(pt);
                 return;
             }
 
@@ -129,7 +159,7 @@ namespace KIP.SVG {
         /**...........................................................................
 		 * _checkForCurrentPath
 		 * ...........................................................................
-		 * 
+		 * Verify that we have a current path
 		 * ...........................................................................
 		 */
 		private _checkForCurrentPath () : void {
@@ -141,8 +171,9 @@ namespace KIP.SVG {
         /**...........................................................................
 		 * _constructPathAttribute
 		 * ...........................................................................
-		 * @param prefix 
-		 * @param point 
+		 * Create the atribute to set the path
+		 * @param 	prefix 	The type of action being created
+		 * @param 	point 	The point to add
 		 * @returns	The appropriate path string
 		 * ...........................................................................
 		 */
@@ -152,31 +183,64 @@ namespace KIP.SVG {
 			return out;
 		}
 
+		/**...........................................................................
+		 * _pointToAttribute
+		 * ...........................................................................
+		 * Turn a point into a string recgnizable as a point in the path attribute
+		 * @param 	point 	The point to convert
+		 * @returns	The created string
+		 * ...........................................................................
+		 */
 		private _pointToAttributeString (point: IPoint) : string {
 			let out: string = point.x + " " + point.y;
 			return out;
 		}
 
+		/**...........................................................................
+		 * _addToPathAttribute
+		 * ...........................................................................
+		 * @param 	suffix 	What to add to the atribute string
+		 * @returns	True if we were able to add the string
+		 * ...........................................................................
+		 */
 		private _addToPathAttribute (suffix: string) : boolean {
             this._checkForCurrentPath();
             
-			let d: string = this._elems.base.getAttribute("d");
+			let d: string = this._elems.base.getAttribute("d") || "";
             d += suffix;
             
 			this._elems.base.setAttribute("d", d);
 			return true;
 		}
 
+		/**...........................................................................
+		 * _startPath
+		 * ...........................................................................
+		 * @param attr 
+		 * ...........................................................................
+		 */
 		protected _startPath (attr?: ISVGAttributes) : SVGPathElement {
 			super._createElements(this._attributes);
 			return this._elems.base;
 		}
 
+		/**...........................................................................
+		 * lineTo
+		 * ...........................................................................
+		 * @param	point	The point to draw a line to
+		 * ...........................................................................
+		 */
 		public lineTo (point: IPoint) : void {
 			this._checkForCurrentPath();
 			this._addToPathAttribute(this._constructPathAttribute("L", point));
 		}
 
+		/**...........................................................................
+		 * moveTo
+		 * ...........................................................................
+		 * @param 	point 	
+		 * ...........................................................................
+		 */
 		public moveTo (point: IPoint) : void {
 			this._checkForCurrentPath();
 			this._addToPathAttribute(this._constructPathAttribute("M", point));

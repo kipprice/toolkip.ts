@@ -1,13 +1,13 @@
-namespace KIP {
-    export class TimelineEvent extends PathElement implements ITimelineElement{
+namespace KIP.Timeline {
+    export class TimelineEvent extends PathElement {
 
         private _date: Date;
 
-        public get startDate(): Date { return this._date; }
-        public set startDate(dt: Date) {}
-
-        public get endDate(): Date { return this._date; }
-        public set endDate (dt: Date) {}
+        protected _model: TimedElement;
+        public get model(): TimedElement { return this._model; }
+        public set model(data: TimedElement) { this._model = data; }
+        
+        
 
         protected _canvas: Timeline;
 

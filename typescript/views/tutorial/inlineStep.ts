@@ -11,16 +11,20 @@ namespace KIP {
 	 * ...........................................................................
 	 */
 	export class TutorialTip extends TutorialStep {
-		
+		//#region PROPERTIES
 		protected _defaultDetailsClass: string = "inlineDetails"; 
 		private point: IPoint;
 		private _options: TutorialStepOptions;
+		//#endregion
 
-		//==================================
-		// CREATE ELEMENTS FOR INLINE HELP
-		//==================================
+		//#region CREATE ELEMENTS FOR INLINE HELP
 
-		/** create the elements for this particular step */
+		/**...........................................................................
+		 * _createElements
+		 * ...........................................................................
+		 * create the elements for this particular step 
+		 * ...........................................................................
+		 */
 		protected _createElements(): void {
 			this._createTitle();
 			this._createDetailContainer();
@@ -28,44 +32,70 @@ namespace KIP {
 			this._createCloseButton();
 		}
 
-		/** create the close button for inline help */
+		/**...........................................................................
+		 * _createCloseButton
+		 * ...........................................................................
+		 * create the close button for inline help 
+		 * ...........................................................................
+		 */
 		private _createCloseButton(): void {
 			let closeBtn: HTMLElement = createSimpleElement("", "close btn", "X");
 			this.base.appendChild(closeBtn);
 		}
 
-		/** create the container for the buttons */
+		/**...........................................................................
+		 * _createButtonContainer
+		 * ...........................................................................
+		 * create the container for the buttons 
+		 * ...........................................................................
+		 */
 		private _createButtonContainer(): void {
 			let btns: HTMLElement = createSimpleElement("", "buttonContainer");
 			this.base.appendChild(btns);
 
-			this.__createPreviousButton(btns);
-			this.__createNextButton(btns);
+			this._createPreviousButton(btns);
+			this._createNextButton(btns);
 		}
 
-		/** create the next button for the inline help step */
-		private __createNextButton(parent: HTMLElement): void {
-			let nextBtn: HTMLElement = createSimpleElement("", "next btn", "NEXT");
-			parent.appendChild(nextBtn);
-
-			nextBtn.addEventListener("click", () => {
-				this._parentTutorial.nextStep();
+		/**...........................................................................
+		 * _createNextButton
+		 * ...........................................................................
+		 * create the next button for the inline help step 
+		 * @param	parent	The parent element to add this to
+		 * ...........................................................................
+		 */
+		private _createNextButton(parent: HTMLElement): void {
+			let nextBtn: HTMLElement = createElement({
+				cls: "next btn",
+				content: "NEXT",
+				parent: parent,
+				eventListeners: {
+					click: () => {this._parentTutorial.nextStep(); }
+				}
 			});
 		}
 
-		/** create the previous button for the inline help step */
-		private __createPreviousButton(parent: HTMLElement): void {
-			let prevBtn: HTMLElement = createSimpleElement("", "prev btn", "PREVIOUS");
-			parent.appendChild(prevBtn);
-
-			prevBtn.addEventListener("click", () => {
-				this._parentTutorial.previousStep();
+		/**...........................................................................
+		 * _createPreviousButton
+		 * ...........................................................................
+		 * create the previous button for the inline help step 
+		 * @param	parent	The parent element to add this to
+		 * ...........................................................................
+		 */
+		private _createPreviousButton(parent: HTMLElement): void {
+			let prevBtn: HTMLElement = createElement({
+				cls: "prev btn",
+				content: "PREVIOUS",
+				parent: parent,
+				eventListeners: {
+					click: () => { this._parentTutorial.previousStep(); }
+				}
 			});
 		}
+
+		//#endregion
 		
-		//=======================
 		//#region ADD DETAILS
-		//=======================
 
 		/** add a particular element to hilite */
 		public addHilitedElement(elem: HTMLElement): void { 
@@ -74,7 +104,7 @@ namespace KIP {
 			// Resize the 
 		}
 
-		private __findAppropriatePoint(): void {
+		private _findAppropriatePoint(): void {
 			var srcBox, pt, needsSourceMeasure, max, bblPt;
 			//TODO: fix
 			// Measure the hilited element

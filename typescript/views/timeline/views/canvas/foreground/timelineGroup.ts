@@ -1,4 +1,4 @@
-namespace KIP {
+namespace KIP.Timeline {
 
     export interface ITimelineGroupOptions {
         HORIZONTAL?: boolean;
@@ -6,26 +6,26 @@ namespace KIP {
         ELEM_HEIGHT?: number;
     }
 
-    /** create an item on the project plan */
-    export class TimelineGroup extends CanvasGroup implements ITimelineElement {
+    /**...........................................................................
+     * @class   TimelineGroup
+     * ...........................................................................
+     * create an item on the project plan 
+     * @author  Kip Price
+     * @version 1.0.0
+     * ...........................................................................
+     */
+    export class TimelineGroup extends CanvasGroup {
 
         //#region PROPERTIES
 
         /** the canvas upon which to draw the group */
         protected _canvas: Timeline;
 
-        /** elements that make up this group */
-        protected _elements: Collection<TimelineElement>;
-
-        /** track the start date of the group */
-        private _startDate: Date;
-        public get startDate(): Date { return this._startDate; }
-        public set startDate (start: Date) { this._startDate = start; }
-
-        /** track the end date of the group */
-        private _endDate: Date;
-        public get endDate(): Date { return this._endDate; }
-        public set endDate (end: Date) { this._endDate = end; }
+        protected _model: TimedGroup;
+        public get model(): TimedGroup { return this._model; }
+        public set model(data: TimedGroup) { this._model = data; }
+        
+        
 
         /** keep track of whether this group is collapsed */
         protected _isCollapsed: boolean = false;
@@ -83,25 +83,25 @@ namespace KIP {
          * @param   elem    The element to add
          * ...........................................................................
          */
-        public addElement (elem: TimelineElement): void {
-            // handle extreme dates
-            this._reconcileDates(elem);
+        // public addElement (elem: TimelineElement): void {
+        //     // handle extreme dates
+        //     this._reconcileDates(elem);
 
-            // Set the height if it hasn't been set yet & its not a group
-            if ((elem.dimensions.h === 0) && (elem.type !== ElementType.Group)) {
-                elem.dimensions.h = this._options.ELEM_HEIGHT;
-            }
+        //     // Set the height if it hasn't been set yet & its not a group
+        //     if ((elem.dimensions.h === 0) && (elem.type !== ElementType.Group)) {
+        //         elem.dimensions.h = this._options.ELEM_HEIGHT;
+        //     }
 
-            // Horizontal groups don't get their y-position adjusted
-            if (!this._options.HORIZONTAL) {
-                elem.adjustDimensions({
-                    x: 0,
-                    y: this._dimensions.h + this._options.ELEMENT_GAP
-                });
-            }
+        //     // Horizontal groups don't get their y-position adjusted
+        //     if (!this._options.HORIZONTAL) {
+        //         elem.adjustDimensions({
+        //             x: 0,
+        //             y: this._dimensions.h + this._options.ELEMENT_GAP
+        //         });
+        //     }
             
-            super.addElement(elem);
-        }
+        //     super.addElement(elem);
+        // }
 
         /**...........................................................................
          * _reconcileDates
@@ -111,28 +111,28 @@ namespace KIP {
          * @param   elem    The element we are reconciling dates for
          * ...........................................................................
          */
-        private _reconcileDates(elem: TimelineElement) : void {
+        // private _reconcileDates(elem: TimelineElement) : void {
 
-            // If the element is missing dates, assign them
-            if (!elem.startDate) {
-                elem.startDate = this._startDate;
-                return;
-            }
+        //     // If the element is missing dates, assign them
+        //     if (!elem.startDate) {
+        //         elem.startDate = this._startDate;
+        //         return;
+        //     }
 
-            let needsUpdate: boolean;
+        //     let needsUpdate: boolean;
 
-            // Otherwise check if our extrema need updating
-            if (!this._startDate || (elem.startDate < this._startDate)) {
-                this._startDate = elem.startDate;
-                needsUpdate = true;
-            }
+        //     // Otherwise check if our extrema need updating
+        //     if (!this._startDate || (elem.startDate < this._startDate)) {
+        //         this._startDate = elem.startDate;
+        //         needsUpdate = true;
+        //     }
 
-            if (!this._endDate || (elem.endDate > this._endDate)) {
-                this._endDate = elem.endDate;
-            }
+        //     if (!this._endDate || (elem.endDate > this._endDate)) {
+        //         this._endDate = elem.endDate;
+        //     }
 
-            if (needsUpdate) { this._updateLabels(); }
-        }
+        //     if (needsUpdate) { this._updateLabels(); }
+        // }
 
         /**...........................................................................
          * _setCanvas
@@ -158,11 +158,11 @@ namespace KIP {
          * ...........................................................................
          */
         private _updateLabels (): void {
-            this._elements.map((elem: TimelineElement) => {
-                if (elem.type === ElementType.Text) {
-                    elem.startDate = this._startDate;
-                }
-            });
+            // this._elements.map((elem: TimelineElement) => {
+            //     if (elem.type === ElementType.Text) {
+            //         elem.startDate = this._startDate;
+            //     }
+            // });
         }
 
     }

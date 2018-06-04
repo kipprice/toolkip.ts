@@ -42,8 +42,8 @@ namespace KIP {
    * generic interface for key value pairs
    * ...........................................................................
    */
-  export interface IDictionary {
-    [key: string]: any;
+  export interface IDictionary<T> {
+    [key: string]: T;
   }
 
   /**...........................................................................
@@ -236,7 +236,7 @@ namespace KIP {
    * @returns The reconciled option list
    * ...........................................................................
    */
-  export function reconcileOptions<T extends IDictionary>(options: T, defaults: T): T {
+  export function reconcileOptions<T extends IDictionary<any>>(options: T, defaults: T): T {
     "use strict";
     let key: string;
     let opt: string;

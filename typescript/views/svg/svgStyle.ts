@@ -18,6 +18,10 @@ namespace KIP.SVG {
 		strokeOpacity?: number;
 		strokeLinecap?: string;
 		strokeLinejoin?: string;
+
+		filter?: string;
+		transform?: string;
+		transition?: string;
 	}
 	
     /**...........................................................................
@@ -82,6 +86,19 @@ namespace KIP.SVG {
 		/** stroke linejoin */
 		public set strokeLinejoin(linejoin: string) { this._setStyle("strokeLinejoin", linejoin); }
 
+		/** filter */
+		public set filter(filter: string) { 
+			if (filter.substr(0,4) !== "url(") {
+				filter = "url(" + filter + ")";
+			}
+			this._setStyle("filter", filter); 
+		}
+
+		protected _transform: string;
+		public set transform(transform: string) { this._transform = transform; }
+
+		public set transition(transition: string) { this._setStyle("transition", transition); }
+
 		/** keep track of how the line should be dashed */
 		protected _strokeDashArray: string;
 		public set strokeDashArray(dashArray: string) { this._strokeDashArray = dashArray; }
@@ -93,6 +110,29 @@ namespace KIP.SVG {
 		constructor() {
 			this.clear();
 			this._needsNewString = true;
+		}
+
+		/**...........................................................................
+		 * merge
+		 * ...........................................................................
+		 * Merge another style object into this 
+		 * @param 	style 	The style to merge in
+		 * ...........................................................................
+		 */
+		public merge<K extends keyof ISVGStyle>(style: SVGStyle): void {
+			map(style._innerStyle, (value: ISVGStyle[K], key: K) => {
+				if (!this._innerStyle[key] || (this._innerStyle[key] === "None")) { 
+					this._innerStyle[key] = value; 
+				}
+			});
+
+			if (!this._strokeDashArray) {
+				this._strokeDashArray = style._strokeDashArray;
+			}
+
+			if (!this._transform) {
+				this._transform = style._transform;
+			}
 		}
 
 		/**...........................................................................
@@ -120,7 +160,11 @@ namespace KIP.SVG {
 			element.setAttribute("style", this._generatedStyleString); 
 
 			if (this._strokeDashArray) { 
-				element.setAttribute
+				element.setAttribute("stroke-dasharray", this._strokeDashArray);
+			}
+
+			if (this._transform) {
+				element.setAttribute("transform", this._transform);
 			}
 		}
 

@@ -69,7 +69,10 @@ namespace KIP.SVG {
 
 			// create the global gradient element
 			let gradient: SVGGradientElement;
-			gradient = createSVGElem(SVGGradientTypeEnum[type] + "Gradient", attr) as SVGGradientElement;
+			gradient = createSVGElem({
+				type: SVGGradientTypeEnum[type] + "Gradient", 
+				attr: attr
+			}) as SVGGradientElement;
 			this._elems.base = gradient;
 
 			// Apply the points
@@ -93,7 +96,7 @@ namespace KIP.SVG {
 		 */
 		private _createPoints(parent: SVGGradientElement, points: IGradientPoint[]): void {
 			for (let point of points) {
-				let ptElem: SVGStopElement = createSVGElem("stop") as SVGStopElement;
+				let ptElem: SVGStopElement = createSVGElem({type: "stop"}) as SVGStopElement;
 				ptElem.style.stopColor = point.color;
 				ptElem.style.stopOpacity = point.opacity.toString();
 				ptElem.setAttribute("offset", point.offset);
@@ -114,7 +117,7 @@ namespace KIP.SVG {
 			//let tID: string = "gradient" + this.__gradients.length;
 			let tID: string = ""; 			//TODO: create real ID
 			let type: string = "linear";	//TODO: create real
-			let tGrad: SVGGradientElement = createSVGElem(type + "Gradient", {id: tID}) as SVGGradientElement;
+			let tGrad: SVGGradientElement = createSVGElem({type: type + "Gradient", id: tID}) as SVGGradientElement;
 
 			tGrad.setAttribute("x1", transforms.start.x.toString());
 			tGrad.setAttribute("x2", transforms.end.x.toString());

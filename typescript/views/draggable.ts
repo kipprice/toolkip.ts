@@ -67,7 +67,8 @@ namespace KIP {
 	 * @class Draggable
 	 * ...........................................................................
 	 * A visual element that can be dragged about the screen
-	 * @version 1.0
+	 * @author	Kip Price
+	 * @version 1.0.1
 	 * ...........................................................................
 	 */
 	export abstract class Draggable extends Drawable {
@@ -146,15 +147,13 @@ namespace KIP {
 				this._targets.push(document.body);
 			}
 
-			// Make sure the element is positionable
-			addClass(this._elems.base, "draggable");
-
-			// Add the default event handlers
-			this._addDefaultEventFunctions();
-
 			// Add the appropriate listeners after the current stack is empty
 			this._isDragging = false;
 			window.setTimeout(() => {
+
+				// Make sure the element is positionable
+				addClass(this._elems.base, "draggable");
+
 				if (!useNonStandard) {
 					this._addStandardDragEventListeners();
 				} else {
@@ -163,53 +162,36 @@ namespace KIP {
 			}, 0);
 		}
 
-		/**...........................................................................
-		 * _addDefaultEventFunctions
-		 * ...........................................................................
-		 * Add handlers for each of these elements
-		 * ...........................................................................
-		 */
-		private _addDefaultEventFunctions() {
-			let base: StandardElement = this._elems.base;
-
-			// MOVE FUNCTION
-			this._moveFunc = (delta: IPoint) => {
-				// Default implementation : adjust position
-				let new_pt: IPoint = {
-					x: ((parseInt(base.style.left) || 0) + delta.x),
-					y: ((parseInt(base.style.top) || 0) + delta.y)
-				}
-
-				base.style.left = new_pt.x + "px";
-				base.style.top = new_pt.y + "px";
+		protected _defaultMoveFunc (delta: IPoint): void {
+			// Default implementation : adjust position
+			let new_pt: IPoint = {
+				x: ((parseInt(this.base.style.left) || 0) + delta.x),
+				y: ((parseInt(this.base.style.top) || 0) + delta.y)
 			}
 
-			// DRAG ENTER FUNCTION
-			this._dragEnterFunc = (target: HTMLElement, e: Event) => {
-				e.preventDefault();
+			this.base.style.left = new_pt.x + "px";
+			this.base.style.top = new_pt.y + "px";
+		}
+
+		protected _defaultDragEnterFunc(target: HTMLElement, e: Event): void {
+			e.preventDefault();
+		}
+
+		protected _defaultDragLeaveFunc(target: HTMLElement, e: Event): void {
+			e.preventDefault();
+		}
+
+		protected _defaultDropFunc(target: HTMLElement, e: Event): void {
+			// Prevent the default
+			e.preventDefault();
+
+			//Default implementation - add to the target
+			if (this.base.parentNode === target) { return; }
+			if (this.base.parentNode) {
+				this.base.parentNode.removeChild(this.base);
 			}
 
-			// DRAG LEAVE FUNCTION
-			this._dragLeaveFunc = (target: HTMLElement, e: Event) => {
-				e.preventDefault();
-			}
-
-			// DROP FUNCTION
-			this._dropFunc = (target: HTMLElement, e: Event) => {
-
-				// Prevent the default
-				e.preventDefault();
-
-				//Default implementation - add to the target
-				if (base.parentNode === target) { return; }
-				if (base.parentNode) {
-					base.parentNode.removeChild(base);
-				}
-
-				target.appendChild(base);
-
-			}
-
+			target.appendChild(this.base);
 		}
 
 		/**...........................................................................
@@ -283,16 +265,16 @@ namespace KIP {
 			};
 
 			let mouseup = (e: MouseEvent) => {
-				__stopDragging();
+				_stopDragging();
 			};
 
 			let mouseout = (e: MouseEvent) => {
 				if (e.relatedTarget) return;
-				__stopDragging();
+				_stopDragging();
 			}
 
 			// Remove all listeners & reset our var
-			let __stopDragging = () => {
+			let _stopDragging = () => {
 
 				// Quit if we've already removed these events
 				if (!this._isDragging) { return; }
@@ -380,7 +362,11 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _onDragEnterTarget(target: HTMLElement, e: Event): void {
-			this._dragEnterFunc(target, e);
+			if (this._dragEnterFunc) {
+				this._dragEnterFunc(target, e);
+			} else {
+				this._defaultDragEnterFunc(target, e);
+			}
 		}
 
 		/**...........................................................................
@@ -391,7 +377,11 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _onDragLeaveTarget(target: HTMLElement, e: Event): void {
-			this._dragLeaveFunc(target, e)
+			if (this._dragLeaveFunc) {
+				this._dragLeaveFunc(target, e);
+			} else {
+				this._defaultDragLeaveFunc(target, e);
+			}
 		}
 
 		/**...........................................................................
@@ -401,7 +391,11 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _onMove(delta: IPoint): void {
-			this._moveFunc(delta);
+			if (this._moveFunc) {
+				this._moveFunc(delta);
+			} else {
+				this._defaultMoveFunc(delta);
+			}
 		}
 
 		/**...........................................................................
@@ -412,34 +406,38 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _onDropOnTarget(target: HTMLElement, e: Event): void {
-			this._dropFunc(target, e);
+			if (this._dropFunc) {
+				this._dropFunc(target, e);
+			} else {
+				this._defaultDropFunc(target, e);
+			}
 		}
 
 		/**...........................................................................
 		 * _overrideFunctions
 		 * ...........................................................................
-		 * @param dragEnter 
-		 * @param dragLeave 
-		 * @param drop 
-		 * @param move 
-		 * @param noReplace 
+		 * @param 	dragEnter 
+		 * @param 	dragLeave 
+		 * @param 	drop 
+		 * @param 	move 
+		 * @param 	noReplace 
 		 * ...........................................................................
 		 */
 		public overrideFunctions(handlers: IDraggableHandlers, noReplace?: boolean): void {
 			if (handlers.onDragEnter) {
-				this._overrideFunction(DraggableFunctions.DragEnter, this._dragEnterFunc, handlers.onDragEnter, noReplace);
+				this._overrideFunction(DraggableFunctions.DragEnter, handlers.onDragEnter, noReplace);
 			}
 
 			if (handlers.onDragLeave) {
-				this._overrideFunction(DraggableFunctions.DragLeave, this._dragLeaveFunc, handlers.onDragLeave, noReplace);
+				this._overrideFunction(DraggableFunctions.DragLeave, handlers.onDragLeave, noReplace);
 			}
 
 			if (handlers.onDrop) {
-				this._overrideFunction(DraggableFunctions.Drop, this._dropFunc, handlers.onDrop, noReplace);
+				this._overrideFunction(DraggableFunctions.Drop, handlers.onDrop, noReplace);
 			}
 
 			if (handlers.onMove) {
-				this._overrideFunction(DraggableFunctions.Move, this._moveFunc, handlers.onMove, noReplace);
+				this._overrideFunction(DraggableFunctions.Move, handlers.onMove, noReplace);
 			}
 		}
 
@@ -449,10 +447,10 @@ namespace KIP {
 		 * @param func 
 		 * @param def 
 		 * @param override 
-		 * @param no_replace 
+		 * @param noReplace 
 		 * ...........................................................................
 		 */
-		private _overrideFunction(func: DraggableFunctions, def: DraggableFunction, override: DraggableFunction, no_replace?: boolean) {
+		private _overrideFunction(func: DraggableFunctions, override: DraggableFunction, noReplace?: boolean) {
 			let wrapper: DraggableFunction;
 
 			switch (func) {
@@ -460,7 +458,7 @@ namespace KIP {
 				//override or augment the drag enter function
 				case DraggableFunctions.DragEnter:
 					wrapper = (target: HTMLElement, e: Event) => {
-						if (no_replace) { def.call(this, target, e); }
+						if (noReplace) { this._defaultDragEnterFunc(target, e); }
 						override.call(this, target, e);
 					};
 					this._dragEnterFunc = wrapper as OnDragEnterFunction;
@@ -469,7 +467,7 @@ namespace KIP {
 				// override or augment the drag leave function
 				case DraggableFunctions.DragLeave:
 					wrapper = (target: HTMLElement, e: Event) => {
-						if (no_replace) { def.call(this, target, e); }
+						if (noReplace) { this._defaultDragLeaveFunc(target, e); }
 						override.call(this, target, e);
 					}
 					this._dragLeaveFunc = wrapper as OnDragLeaveFunction;
@@ -478,7 +476,7 @@ namespace KIP {
 				// Override or augment the drop function
 				case DraggableFunctions.Drop:
 					wrapper = (target: HTMLElement, e: Event) => {
-						if (no_replace) { def.call(this, target, e); }
+						if (noReplace) { this._defaultDropFunc(target, e); }
 						override.call(this, target, e);
 					}
 					this._dropFunc = wrapper as OnDropFunction;
@@ -487,7 +485,7 @@ namespace KIP {
 				// Override or augment the move function
 				case DraggableFunctions.Move:
 					wrapper = (delta: IPoint) => {
-						if (no_replace) { def.call(this, delta); }
+						if (noReplace) { this._defaultMoveFunc(delta); }
 						override.call(this, delta);
 					}
 					this._moveFunc = wrapper as OnMoveFunction;

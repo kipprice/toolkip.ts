@@ -1,4 +1,4 @@
-namespace KIP {
+namespace KIP.Timeline {
 
     export interface ProjectLineSegmentOptions {
         COLOR?: string;
@@ -15,18 +15,13 @@ namespace KIP {
         };
     }
 
-    export class Timespan extends RectangleElement implements ITimelineElement {
+    export class Timespan extends RectangleElement {
         //#region PROPERTIES
 
         /** track the start date of this segment */
-        private _startDate: Date;
-        public get startDate(): Date { return this._startDate; }
-        public set startDate (dt: Date) { }
-
-        /** track the end date of this segment */
-        private _endDate: Date;
-        public get endDate(): Date { return this._endDate; }
-        public set endDate(dt: Date) { }
+       protected _model: TimedElement;
+       public get model(): TimedElement { return this._model; }
+       public set model(data: TimedElement) { this._model = data; }
 
         /** canvas for the timespan */
         protected _canvas: Timeline;
@@ -35,8 +30,6 @@ namespace KIP {
 
         constructor(id: string, start: Date, end: Date) {
             super(id, _createEmptyDimensions());
-            this._startDate = start;
-            this._endDate = end;
         }
 
         /** create the default set of options */
@@ -61,8 +54,8 @@ namespace KIP {
             if (!this._canvas) { return; }
 
             // Calculate the date positions
-            let startPt: IPoint = this._canvas.convertDateToPoint(this._startDate);
-            let endPt: IPoint = this._canvas.convertDateToPoint(this._endDate);
+            let startPt: IPoint = this._canvas.convertDateToPoint(this._model.start);
+            let endPt: IPoint = this._canvas.convertDateToPoint(this._model.end);
 
             // Create the appropriately sized rect
             let dim: IBasicRect = {

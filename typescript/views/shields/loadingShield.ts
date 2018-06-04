@@ -17,13 +17,18 @@ namespace KIP {
      * @class LoadingShield
      * ...........................................................................
      * Show a loading indication
-     * @version 1.0
+     * @version 1.0.0
+     * @author  Kip Price
      * ...........................................................................
      */
     export class LoadingShield extends Shield{
 
+        //#region PROPERTIES
+
+        /** elements that make up this shield */
         protected _elems: ILoadingShieldElements;
 
+        /** text to display as we display the shield */
         protected _loadingText: string;
 
         /** styles for the loading shield */
@@ -49,8 +54,19 @@ namespace KIP {
                 height: "25px",
                 animation: "rotate infinite linear 1s",
                 margin: "auto"
+            },
+
+            "@keyframes rotate" : {
+                from: {
+                    transform: "rotate(0deg)"
+                },
+                to: {
+                    transform: "rotate(360deg)"
+                }
             }
         }
+
+        //#endregion
 
         /** make sure we return the right set of styles */
         protected _getUncoloredStyles(): Styles.IStandardStyles { return this._mergeThemes(LoadingShield._uncoloredStyles, Shield._uncoloredStyles); }
@@ -69,6 +85,12 @@ namespace KIP {
         /** skip creating elements before data is set */
         protected _shouldSkipCreateElements(): boolean { return true; }
 
+        /**...........................................................................
+         * _createShieldDetails
+         * ...........................................................................
+         * Create 
+         * ...........................................................................
+         */
         protected _createShieldDetails(): void {
             this._elems.wrapper = createElement({
                 cls: "loadingContainer",

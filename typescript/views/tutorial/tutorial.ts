@@ -3,33 +3,39 @@
 
 namespace KIP {
 
-	/** create the class for the actual tutorial */
+	/**...........................................................................
+	 * @class	Tutorial
+	 * ...........................................................................
+	 * create the class for the actual tutorial 
+	 * @version	1.0.1
+	 * @author	Kip Price
+	 * ...........................................................................
+	 */
 	export abstract class Tutorial extends Drawable {
 
-		//===========================
-		// TUTORIAL PROPERTIES
-		//===========================
+		//#region PROPERTIES
 
 		/** keep track of various tips / screens */
 		private _steps: TutorialStep[];
 		private _currentStep: number;
 		private _options: TutorialOptions;
 
-		/** HTML element to add steps to */
-		private _stepContainer: HTMLElement;
-
 		/** allow a listener to listen to the tutorial closing */
 		public onTutorialHidden: Function;
 
 		protected _elems: {
 			base: HTMLElement;
+			stepContainer: HTMLElement;
 		}
+		//#endregion
 
-		//========================
-		// INITIALIZE THE CLASS
-		//========================
+		//#region INITIALIZE THE CLASS
 
-		/** create the actual tutorial class */
+		/**...........................................................................
+		 * create the actual tutorial class 
+		 * @param	options		Options with which to configure this particular tutorial
+		 * ...........................................................................
+		 */
 		constructor(options: TutorialOptions) {
 			super({ cls: "tutorial"});
 			this._initializeVariables();
@@ -37,13 +43,23 @@ namespace KIP {
 			this._createElements();
 		}
 
-		/** initiailize our properties */
+		/** ...........................................................................
+		 * _initializeVariables
+		 * ...........................................................................
+		 * initiailize our properties 
+		 * ...........................................................................
+		 */
 		private _initializeVariables(): void {
 			this._steps = [];
 			this._currentStep = -1;
 		}
 
-		/** take options passed to the tutorial & reconcile with our defaults */
+		/**...........................................................................
+		 * _reconcileOptions
+		 * ...........................................................................
+		 * take options passed to the tutorial & reconcile with our defaults 
+		 * ...........................................................................
+		 */
 		private _reconcileOptions(options: TutorialOptions): void {
 			let defaults: TutorialOptions = {
 				loopAround: true,
@@ -54,45 +70,84 @@ namespace KIP {
 			reconcileOptions(options, defaults);
 		}
 
-		//===========================
-		// CREATE STANDARD STYLES
-		//===========================
+		//#endregion
 
-		/** create the HTML pieces of the tutorial */
+		//#region CREATE ELEMENTS
+
+		/**...........................................................................
+		 * _createElements
+		 * ...........................................................................
+		 * create the HTML pieces of the tutorial 
+		 * ...........................................................................
+		 */
 		protected _createElements() : void {
-			// Each individual implementation should implement this
+			this._elems = {} as any;
+			this._elems.base = KIP.createElement({ cls: "tutorial" });
+			this._elems.stepContainer = KIP.createElement({ cls: "tutorialSteps", parent: this._elems.base });
+			this._createAdditionalElements();
 		};
 
-		/** create the container for the individual steps */
-		protected _createStepContainer(): void {
-			this._stepContainer = createSimpleElement("", "tutorialSteps");
-			this.base.appendChild(this._stepContainer);
-		}
+		/**...........................................................................
+		 * _createAdditionalElements
+		 * ...........................................................................
+		 * Overridable function to create more elements for the tutorial
+		 * ...........................................................................
+		 */
+		protected _createAdditionalElements(): void {}
 
-		//=============================
-		// ADD A STEP TO THE TUTORIAL
-		//=============================
+		//#endregion
 
-		/** adds a step to the tutorial */
+		//#region ADD A STEP TO THE TUTORIAL
+
+		/**...........................................................................
+		 * addStep
+		 * ...........................................................................
+		 * adds a step to the tutorial 
+		 * @param	title	The title for the step
+		 * @param	details	Details to show in the step
+		 * @returns	The created tutorial step
+		 * ...........................................................................
+		 */
 		public addStep (title: string, details?: string): TutorialStep {
-			// This should be overridden by a child class
-			return null;
+			let step: TutorialStep = this._createStep(title, details);
+			this._addStepToCollection(step);
+			return step;
 		}
 
-		/** add the step we created to our internal collection */
+		/**...........................................................................
+		 * _createStep
+		 * ...........................................................................
+		 * Create aparticular tutorial step
+		 * @param 	title 		The title of the step
+		 * @param 	details 	Any details about this step
+		 * @returns The created tutorial step
+		 * ...........................................................................
+		 */
+		protected abstract _createStep(title: string, details?: string): TutorialStep;
+
+		/**...........................................................................
+		 * _addStepToCollection
+		 * ...........................................................................
+		 * add the step we created to our internal collection 
+		 * ...........................................................................
+		 */
 		protected _addStepToCollection (step: TutorialStep): number {
-			
 			// Add to our collection
 			let idx: number = this._steps.length;
 			this._steps[idx] = step;
 			return idx;
 		}
+		//#endregion
 
-		//==========================
-		// SHOW A PARTICULAR STEP
-		//==========================
+		//#region SHOW A PARTICULAR STEP
 
-		/** show a particular step in this tutorial */
+		/**...........................................................................
+		 * showStep
+		 * ...........................................................................
+		 * show a particular step in this tutorial 
+		 * @param	idx		The step number to show
+		 * ...........................................................................
+		 */
 		public showStep (idx: number) : void {
 			let curStep: TutorialStep;
 
@@ -120,7 +175,12 @@ namespace KIP {
 			this._currentStep = idx;
 		}
 
-		/** show the next step in the tutorial */
+		/**...........................................................................
+		 * nextStep
+		 * ...........................................................................
+		 * show the next step in the tutorial 
+		 * ...........................................................................
+		 */
 		public nextStep (): void {
 			let idx: number = this._currentStep;
 			idx += 1;
@@ -128,7 +188,12 @@ namespace KIP {
 			this.showStep(idx);
 		}
 
-		/** show the previous step in the tutorial */
+		/**...........................................................................
+		 * previousStep
+		 * ...........................................................................
+		 * show the previous step in the tutorial 
+		 * ...........................................................................
+		 */
 		public previousStep(): void {
 			let idx: number = this._currentStep;
 			idx -= 1;
@@ -136,11 +201,16 @@ namespace KIP {
 			this.showStep(idx);
 		}
 
-		//===========================
-		// SHOW / HIDE THE TUTORIAL
-		//===========================
+		//#endregion
 
-		/** show the tutorial */
+		//#region SHOW / HIDE THE TUTORIAL
+
+		/**...........................................................................
+		 * show
+		 * ...........................................................................
+		 * show the tutorial 
+		 * ...........................................................................
+		 */
 		public show(): void {
 
 			// Make sure we show at least one step
@@ -155,7 +225,12 @@ namespace KIP {
 			addClass(this._elems.base, "visible");
 		}
 
-		/** remove the tutorial from view */
+		/**...........................................................................
+		 * hide
+		 * ...........................................................................
+		 * remove the tutorial from view 
+		 * ...........................................................................
+		 */
 		public hide(): void {
 			if (!this.base.parentNode) { return; }
 			removeClass(this._elems.base, "visible");
@@ -165,6 +240,8 @@ namespace KIP {
 				this.onTutorialHidden();
 			}
 		}
+
+		//#endregion
 
 	}
 	

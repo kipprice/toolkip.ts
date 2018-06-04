@@ -221,15 +221,15 @@ namespace KIP.Forms {
         }
 
         /** update the appropriate theme color for the form */
-        public setThemeColor(idx: number, color: string): void {
+        public setThemeColor(idx: number, color: string, noReplace: boolean): void {
             super.setThemeColor(idx, color);
 
             if (!this._children) { return; }
             if (isFormElement(this._children)) {
-                this._children.setThemeColor(idx, color);
+                this._children.setThemeColor(idx, color, noReplace);
             } else {
                 map(this._children, (child: FormElement<any>) => {
-                    child.setThemeColor(idx, color);
+                    child.setThemeColor(idx, color, noReplace);
                 });
             }
         }
@@ -590,22 +590,22 @@ namespace KIP.Forms {
         protected _newLabel: string;
 
         /** update the appropriate theme color for the form */
-        public setThemeColor(idx: number, color: string): void {
+        public setThemeColor(idx: number, color: string, noReplace?: boolean): void {
             super.setThemeColor(idx, color);
 
             // if there are no children yet, apply to the child template
             if (!this._children || this._children.length === 0) {
                 if (isFormElement(this._childTemplate)) {
-                    this._childTemplate.setThemeColor(idx, color);
+                    this._childTemplate.setThemeColor(idx, color, noReplace);
                 } else {
                     map(this._childTemplate, (child: FormElement<any>) => {
-                        child.setThemeColor(idx, color);
+                        child.setThemeColor(idx, color, noReplace);
                     });
                 }
             }
 
             map(this._children, (child: FormElement<any>) => {
-                child.setThemeColor(idx, color);
+                child.setThemeColor(idx, color, noReplace);
             });
         }
         //#endregion

@@ -30,7 +30,7 @@ namespace KIP {
 	 * ...........................................................................
 	 */
 	export function indexOf<T> (arr: T[], value: T, equalityFunction?: IEqualityFunction<T>): number {
-
+		if (!arr) { return -1; }
 		for (let idx = 0; idx < arr.length; idx += 1) {
 			if (equalityFunction) {
 				if (equalityFunction(arr[idx], value)) { return idx; }

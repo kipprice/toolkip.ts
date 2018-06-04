@@ -24,6 +24,11 @@ namespace KIP {
     return (typeof test === "boolean");
   }
 
+  /** check if the element is a function */
+  export function isFunction (test: any): test is Function {
+    return (typeof test === "function");
+  }
+
   /** check if the element is a client rectangle */
   export function isClientRect (test: any) : test is ClientRect {
     let rect: ClientRect = {
@@ -172,6 +177,30 @@ namespace KIP {
    */
   export function isUpdatable (test: any): test is IUpdatable {
     return !!((test as any).update);
+  }
+
+  /**...........................................................................
+   * isArray
+   * ...........................................................................
+   * Check if some data is an array
+   * @param   test  The data to check
+   * @returns True (with type safety) if the data is an array
+   * ........................................................................... 
+   */
+  export function isArray(test: any): test is Array<any> {
+    return (test instanceof Array);
+  }
+
+  /**...........................................................................
+   * isObject
+   * ...........................................................................
+   * Checks if some data is a complex object
+   * @param   test  The data to check
+   * @returns True (with type safety) if the data is an object
+   * ........................................................................... 
+   */
+  export function isObject (test: any): test is Object {
+    return (typeof test === typeof {});
   }
 
 }

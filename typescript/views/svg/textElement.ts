@@ -1,59 +1,99 @@
 ///<reference path="svgElement.ts" />
 namespace KIP.SVG {
 	export class TextElement extends SVGElem {
+
+		protected _text: string;
+		protected _originPt: IPoint;
+
+		public get style(): SVGStyle {
+			window.setTimeout(() => {
+				this._style.assignStyle(this._elems.base);
+				if (!this._originPt) {
+					this._notifyUpdateListeners();
+				}
+			});
+
+			return this._style;
+		}
+
+		protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
+			".unselectable": {
+				userSelect: "none",
+      			MozUserSelect: "none",
+      			WebkitUserSelect: "none",
+      			khtmlUserSelect: "none",
+      			oUserSelect: "none"
+			}
+		};
 		
-		protected _setAttributes(attr: ISVGAttributes): ISVGAttributes {
+		constructor(text: string, point: IPoint, originPt: IPoint, attr: ISVGAttributes) {
+			super(attr, text, point, originPt);
+		}
+
+		protected _setAttributes(attr: ISVGAttributes, text: string, point: IPoint, originPt: IPoint): ISVGAttributes {
+			attr.type = "text";
+			attr.x = point.x;
+			attr.y = point.y;
+
+			// store the pieces that have to be added post-creation
+			this._text = text;
+			this._originPt = originPt;
+
 			return attr;
 		}
 
-		protected _updateExtrema(): void {}
+		protected _createElements(attr: ISVGAttributes): void {
+			super._createElements(attr);
 
-		/**...........................................................................
-		 * addtext
-		 * ...........................................................................
-		 * Adds a text element to the SVG canvas
-		 * @param   text     The text to add
-		 * @param   point    The point at which to add the point
-		 * @param   originPt If provided, the origin point within the text element that defines where the text is drawn
-		 * @param   attr     Any attributes that should be applied to the element
-		 * @param   group    The group to add this element to
-		 * @returns The text element added to the SVG
-		 * ...........................................................................
-		 */
-		public addText (text: string, point: IPoint, originPt: IPoint, attr: IAttributes, group: SVGElement) : SVGElement {
-			//TODO: actually use
-			return null;
-			// if (!attr) { attr = {}; }
-			// attr["x"] = point.x;
-			// attr["y"] = point.y;
+			addClass(this._elems.base, "unselectable");
 
-			// let textElem: SVGElement = this._addChild("text", attr, group);
-			// textElem.innerHTML = text;
+			// update the text
+			this._elems.base.innerHTML = this._text;
 
-			// let box: IBasicRect;
-			// if (originPt) {
-			// 	box = this.measureElement(textElem);
-			// 	let newPt: IPoint = {
-			// 		x: box.w * originPt.x,
-			// 		y: (box.h * originPt.y) - box.h
-			// 	};
-
-			// 	textElem.setAttribute("x", newPt.x.toString());
-			// 	textElem.setAttribute("y", newPt.y.toString());
-
-			// 	box.x = newPt.x;
-			// 	box.y = newPt.y;
-			// }
-
-			// if (this._options.auto_resize) {
-			// 	if (!box) { this.measureElement(textElem); }
-			// 	this._updateExtrema({ min: {x: box.x, y: box.y}, max: {x: box.x + box.w, y: box.y + box.h} });
-			// }
-
-			// // Make sure we add the unselectable class
-			// addClass(textElem as any as HTMLElement, "unselectable");
-
-			// return textElem;
+			// update the origin point if provided
+			if (this._originPt) {
+				this._elems.base.style.display = "none";
+				window.setTimeout(() => {
+					this._handleOriginPoint(attr);
+					this._elems.base.style.display = "default";
+				}, 10);
+			}
 		}
+
+		protected _handleOriginPoint(attr: ISVGAttributes): void {
+			let box: IBasicRect = this.measureElement();
+
+			let newPt: IPoint = {
+				x: attr.x - (box.w * this._originPt.x),
+				y: attr.y - ((box.h - ((attr.y - box.y) * 2)) * this._originPt.y)
+			};
+
+			console.log("box: (" + box.x + ", " + box.y + ") -> (" + box.w + ", " + box.h + ")");
+
+			this._elems.base.setAttribute("x", newPt.x.toString());
+			this._elems.base.setAttribute("y", newPt.y.toString());
+
+			box.x = newPt.x;
+			box.y = newPt.y;
+
+			console.log("box: (" + box.x + ", " + box.y + ") -> (" + box.w + ", " + box.h + ")");
+
+			this._updateExtrema(box);
+			this._notifyUpdateListeners();
+		}
+
+		protected _updateExtremaAndNotifyListeners(attr: ISVGAttributes) {
+			this._updateExtrema(attr);
+		}
+
+		protected _updateExtrema(attr: ISVGAttributes): void {
+			let rect: IBasicRect = this.measureElement();
+
+			this._extrema = {
+				min: {x: rect.x, y: rect.y},
+				max: {x: rect.x + rect.w, y: rect.y + rect.h}
+			};
+		}
+
 	}
 }

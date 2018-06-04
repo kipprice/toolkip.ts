@@ -54,10 +54,13 @@ namespace KIP {
         children?: IChildren;
 
         /** the parent element that this should be added to */
-        parent?: HTMLElement;
+        parent?: StandardElement;
 
         /** allow callers to add event listeners while creating elements */
         eventListeners?: IEventListeners;
+
+        /** if we're creating a namespaced element, allow for specifying it */
+        namespace?: string;
     }
 
     /**
@@ -111,18 +114,35 @@ namespace KIP {
      * ...........................................................................
      */
     export function createElement(obj: IElemDefinition): HTMLElement {
+        if (!obj) { return; }
+        return _createElementCore(obj) as HTMLElement;
+    }
+
+    export function createSVGElement(obj: IElemDefinition): SVGElement {
+        if (!obj) { return; }
+        if (!obj.namespace) { obj.namespace = "http://www.w3.org/2000/svg"; }
+        return _createElementCore(obj) as SVGElement;
+    }
+
+    function _createElementCore(obj: IElemDefinition): StandardElement {
 
         // #region Variable declaration
-        let elem: HTMLElement;
+        let elem: StandardElement;
         let a: string;
         let c: string;
         let selector: string;
-        let child: HTMLElement;
+        let child: StandardElement;
         let type: string;
+        let namespace: string;
         // #endregion
 
         type = obj.type || "div";
-        elem = document.createElement(type);
+        namespace = obj.namespace;
+        if (namespace) {
+            elem = document.createElementNS(namespace, type) as StandardElement;
+        } else {
+            elem = document.createElement(type);
+        }
 
         if (obj.id) {
             elem.setAttribute("id", obj.id);
@@ -173,7 +193,9 @@ namespace KIP {
                     if ((obj.children[c] as HTMLElement).setAttribute) {
                         elem.appendChild(obj.children[c] as HTMLElement);
                     } else {
-                        child = createElement(obj.children[c]);
+                        let subArray: IElemDefinition = obj.children[c];
+                        if (namespace) { subArray.namespace = namespace; }
+                        child = createElement(subArray);
                         elem.appendChild(child);
                     }
 
@@ -285,7 +307,7 @@ namespace KIP {
 
         obj.children = [cLbl, cContent];
 
-        return createElement(obj);
+        return createElement(obj) as HTMLElement;
     };
 
     export interface ILabeledElement {
@@ -310,14 +332,14 @@ namespace KIP {
         if (!dataElem || !labelElem) { return; }
 
         // create the actual element
-        let data: HTMLElement = createElement(dataElem);
+        let data: HTMLElement = createElement(dataElem) as HTMLElement;
 
         // create the labeled element
         labelElem.cls = Styles.buildClassString(labelElem.cls as string, "lbl");
-        let lbl: HTMLElement = createElement(labelElem);
+        let lbl: HTMLElement = createElement(labelElem) as HTMLElement;
 
         // craete the wrapper element
-        let container: HTMLElement = createElement({ cls: "wrapper", children: [lbl, data] });
+        let container: HTMLElement = createElement({ cls: "wrapper", children: [lbl, data] }) as HTMLElement;
 
         return {
             data: data,

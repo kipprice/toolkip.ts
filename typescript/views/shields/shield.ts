@@ -7,7 +7,12 @@ namespace KIP {
     }
 
     export abstract class Shield extends Drawable {
+
         protected _elems: IShieldElements;
+
+        protected _showElementTimeout: number;
+
+        protected _showingAtInstant: Date;
 
         protected static _uncoloredStyles: Styles.IStandardStyles = {
             ".kipShield": {
@@ -50,7 +55,22 @@ namespace KIP {
 
         public draw(parent?: HTMLElement): void {
             if (!parent) { parent = document.body; }
-            super.draw(parent);
+
+            // make sure the shield only shows if we are showing for long enough
+            // for a human brain to process it
+            this._showElementTimeout = window.setTimeout(() => {
+                super.draw(parent);
+                this._showElementTimeout = null;
+            }, 200);
         }
+
+        public erase(): void {
+            if (this._showElementTimeout) {
+                window.clearTimeout(this._showElementTimeout);
+                return;
+            }
+            super.erase();
+        }
+
     }
 }

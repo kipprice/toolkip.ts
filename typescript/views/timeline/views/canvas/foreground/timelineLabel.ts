@@ -1,4 +1,4 @@
-namespace KIP {
+namespace KIP.Timeline {
 
     /**...........................................................................
      * createEmptyPoint
@@ -18,22 +18,12 @@ namespace KIP {
      * @version 1.0
      * ...........................................................................
      */
-    export class TimelineLabel extends TextElement implements ITimelineElement{
-
-        /** where to draw this particular label */
-        private _startDate: Date;
-        public get startDate(): Date { return this._startDate; }
-        public set startDate(start: Date) { 
-            this._startDate = start; 
-            this._updatePoint();
-        }
-
-        /** we don't have an end date, so just return the start date */
-        public get endDate(): Date { return this._startDate; }
-        public set endDate(dt: Date) { }
+    export class TimelineLabel extends TextElement{
 
         /** the canvas we are drawing upon */
         protected _canvas: Timeline;
+
+        protected _model: TimedElement;
 
         /**...........................................................................
          * Create a TimelineLabel
@@ -65,8 +55,7 @@ namespace KIP {
          */
         protected _updatePoint (): void {
             if (!this._canvas) { return; }
-            if (!this._startDate) { return; }
-            let startPt: IPoint = this._canvas.convertDateToPoint(this._startDate);
+            let startPt: IPoint = this._canvas.convertDateToPoint(this._model.start);
             this._dimensions.x = startPt.x;
         }
 

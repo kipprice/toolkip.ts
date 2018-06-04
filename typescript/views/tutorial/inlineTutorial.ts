@@ -2,9 +2,11 @@
 namespace KIP {
 
 	/**...........................................................................
-	 * @class HelpTipTutorial
+	 * @class	HelpTipTutorial
+	 * ...........................................................................
 	 * Creates a helptip version of a tutorial (as opposed to a full screen one
-	 * @version 1.0
+	 * @version 1.0.1
+	 * @author	Kip Price
 	 * ...........................................................................
 	 */
 	export class HelpTipTutorial extends Tutorial {
@@ -72,27 +74,21 @@ namespace KIP {
 			}
 		}
 		//#endregion
-		
-		//#region CREATE ALL ELEMENTS
-
-		/** create the elements to actually show the tutorial */
-		protected _createElements(): void {
-			this._createStepContainer();
-		 }
-		//#endregion
+	
 
 		//#region ADD A PARTICULAR STEP
 
-		/** add a particular step to the the tutorial */
-		public addStep (title: string, details?: string): TutorialStep {
-
+		/**...........................................................................
+		 * _createStep
+		 * ...........................................................................
+		 * Create a particular inline step
+		 * @param 	title 		Title of the step
+		 * @param 	details 	Details for the step
+		 * ...........................................................................
+		 */
+		protected _createStep (title: string, details?: string): TutorialTip {
 			let tip: TutorialTip = new TutorialTip(this, title);
 			tip.addDetails(details);
-
-			// Add to our collection of steps
-			this._addStepToCollection(tip);
-
-			// Return the help tip we created
 			return tip;
 		}
 

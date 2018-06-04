@@ -46,9 +46,8 @@ namespace KIP {
 		//#region CREATE ALL ELEMENTS
 
 		/** create the elements to actually show the tutorial */
-		protected _createElements(): void {
+		protected _createAdditionalElements(): void {
 			this._createOverlay();
-			this._createStepContainer();
 			this._createCloseButton();
 			this._createNavigationalElements();
 		};
@@ -109,8 +108,7 @@ namespace KIP {
 
 		/** add a particular step to the tutorial */
 		public addStep (title: string, details?: string): TutorialStep {
-			let screen: TutorialScreen = new TutorialScreen(this, title);
-			screen.addDetails(details);
+			let screen: TutorialStep = this._createStep(title, details);
 
 			// Add to our collection of steps
 			let idx: number = this._addStepToCollection(screen);
@@ -119,6 +117,12 @@ namespace KIP {
 			this.__addStepNavigator(idx);
 
 			// Return the screen we created
+			return screen;
+		}
+
+		protected _createStep(title: string, details?: string): TutorialStep {
+			let screen: TutorialScreen = new TutorialScreen(this, title);
+			screen.addDetails(details);
 			return screen;
 		}
 

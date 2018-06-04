@@ -7,6 +7,10 @@ namespace KIP.Forms {
         btn: HTMLElement;
     }
 
+    export interface IToggleButtonElems extends IFormHTMLElements {
+        postChildrenContainer: HTMLElement;
+    }
+
     /**...........................................................................
      * @class   ToggleButtonElement
      * ...........................................................................
@@ -16,6 +20,9 @@ namespace KIP.Forms {
      * ...........................................................................
      */
     export abstract class ToggleButtonElement<T> extends FormElement<T> {
+
+        /** keep track of elements for this element */
+        protected _elems: IToggleButtonElems;
 
         /** the button options toggle button type */
         protected _options: IToggleBtnOption<any>[];
@@ -118,13 +125,13 @@ namespace KIP.Forms {
         protected _flexLayout(): void {
             addClass(this._elems.core, "flex");
             this._createStandardLabel(this._elems.core);
-            this._elems.core.appendChild(this._elems.childrenContainer);
+            this._appendChildren();
         }
 
         protected _multiLineLayout(): void {
             addClass(this._elems.core, "multiline");
             this._createStandardLabel(this._elems.core);
-            this._elems.core.appendChild(this._elems.childrenContainer);
+            this._appendChildren();
         }
 
         protected _tableLayout(): void {
@@ -132,9 +139,16 @@ namespace KIP.Forms {
             //TODO: do a real table layout
         }
 
+        protected _appendChildren(): void {
+            this._elems.core.appendChild(this._elems.childrenContainer);
+            if (this._elems.postChildrenContainer) { 
+                this._elems.core.appendChild(this._elems.postChildrenContainer); 
+            }
+        }
+
         protected _labelAfterLayout(): void {
             addClass(this._elems.core, "labelLast");
-            this._elems.core.appendChild(this._elems.childrenContainer);
+            this._appendChildren();
             this._createStandardLabel(this._elems.core);
         }
 
@@ -200,6 +214,7 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         public update(data: T): void {
+            if (this._data === data) { return; }
             this._data = data;
             let btn: HTMLElement = this._getButtonToUpdate(data);
             window.setTimeout(() => {

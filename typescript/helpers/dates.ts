@@ -1,10 +1,11 @@
 namespace KIP.Dates {
 
-	/**
+	/**...........................................................................
 	 * @file Helper functions for working with dates
 	 * @author Kip Price
 	 * @version 1.0
 	 * @since 1.1
+	 * ...........................................................................
 	 */
 
 	export interface IDateDifferences {
@@ -17,13 +18,22 @@ namespace KIP.Dates {
 		milliseconds?: number;
 	}
 
-	/**
+	/**...........................................................................
+	 * dateDiff
+	 * ...........................................................................
 	 *	Finds the difference in days between two date objects
-	 *	@param {Date} a - The first date to compare
-	 *	@param {Date} b - The second date to compare
-	 *	@param {Boolean} [signed] - If true, will take the difference in order passed in (e.g. A - B)
-	 *	@param {Boolean} [includeTime] - If true, will take the ms difference instead of the day difference
-	 *  @param {boolean} [returnMilli] - If true, returns a value in milliseconds even if milliseconds weren't compared
+	 *
+	 *	@param 	a 				The first date to compare
+	 *	@param 	b 				The second date to compare
+	 *	@param 	signed			If true, will take the difference in order 
+	 *								passed in (e.g. A - B)
+	 *	@param 	includeTime 	If true, will take the ms difference instead of 
+	 *								the day difference
+	 *  @param 	returnMilli		If true, returns a value in milliseconds even if 
+	 * 								milliseconds weren't compared
+	 * 
+	 * @returns	The difference between dates
+	 * ...........................................................................
 	 **/
 	export function dateDiff(a: Date, b: Date, signed?: boolean, includeTime?: boolean, returnMilli?: boolean): number {
 		let ms: number;
@@ -53,10 +63,47 @@ namespace KIP.Dates {
 		return diff;
 	};
 
-	/**
+	export enum InclusivityEnum {
+		EXCLUSIVE = -1,
+		DEFAULT = 0,
+		INCLUSIVE = 1
+	}
+
+	/**...........................................................................
+	 * monthDiff
+	 * ...........................................................................
+	 * Determine how far apart (in months)
+	 * @param	a				The first date to compare
+	 * @param	b				The second date to compare
+	 * @param	signed			If true
+	 * @param	inclusivity		Should this diff be inclusive or exclusive
+	 * ...........................................................................
+	 */
+	export function monthDiff(a: Date, b: Date, signed?: boolean, inclusivity?: InclusivityEnum): number {
+		let monthDiff: number;
+		let yearDiff: number;
+
+		if ((a > b) || signed) {
+			monthDiff = (a.getMonth()) - (b.getMonth());			// 3-12 = -9mo
+			yearDiff = (a.getFullYear()) - (b.getFullYear());		// 18 - 17 = 1yr
+		} else {
+			monthDiff = (b.getMonth()) - (a.getMonth());
+			yearDiff = (b.getFullYear()) - (a.getFullYear());
+		}
+
+		let diff: number = yearDiff * 12 + monthDiff;
+		diff += +inclusivity;
+
+		return diff;	// 1 * 12 - 9 => 3
+	}
+
+	/**...........................................................................
+	 * getToday
+	 * ...........................................................................
 	 * Grabs the current day, default without any time data
-	 * @param  {boolean} include_time - True if we shouldn't exclude time data
-	 * @return {Date}                 Today's date
+	 * @param 	include_time	True if we shouldn't exclude time data
+	 * @returns Today's date
+	 * ...........................................................................
 	 */
 	export function getToday(include_time?: boolean): Date {
 		"use strict";
@@ -72,10 +119,13 @@ namespace KIP.Dates {
 		return ret;
 	};
 
-	/**
+	/**...........................................................................
+	 * clearTimeInfo
+	 * ...........................................................................
 	 * Clear out all time info associated with the date, including the timezone
 	 * @param date - the original date to clear data from
 	 * @returns The time-agnostic date
+	 * ...........................................................................
 	 */
 	export function clearTimeInfo (date: Date, clearTZ?: boolean): Date {
 		let dateStr: string = shortDate(date);
@@ -88,14 +138,19 @@ namespace KIP.Dates {
 		return outDate;
 	}
 
-	/**
+	/**...........................................................................
+	 * businessDateDiff
+	 * ...........................................................................
 	 * Compares two dates to determine the business day difference between them
-	 * @param a - The first date to compare
-	 * @param b - The second date to compare
-	 * @param signed - True if we should compare the dates in order (e.g. Date A - Date B)
-	 * @param includeTime - If true, also compares the time
-	 * @param returnMilli - Returns the date difference in milliseconds instead of days
+	 * @param 	a 				The first date to compare
+	 * @param 	b 				The second date to compare
+	 * @param 	signed 			True if we should compare the dates in order 
+	 * 								(e.g. Date A - Date B)
+	 * @param 	includeTime 	If true, also compares the time
+	 * @param 	returnMilli 	Returns the date difference in milliseconds 
+	 * 								instead of days
 	 * @returns The business-date diff between the 2 dates
+	 * ...........................................................................
 	 */
 	export function businessDateDiff(a: Date, b: Date, signed?: boolean, includeTime?: boolean, returnMilli?: boolean): number {
 		"use strict";
@@ -137,9 +192,13 @@ namespace KIP.Dates {
 
 	};
 
-	/**
+	/**...........................................................................
+	 * shortDate
+	 * ...........................................................................
 	 * Gets the display string of the date in a short format (MM/DD/YYYY)
-	 * @param {Date} dt - The date to get the short date for
+	 * @param 	dt 	The date to get the short date for
+	 * @returns	The short version of this date
+	 * ...........................................................................
 	 */
 	export function shortDate(dt: Date): string {
 		"use strict";
@@ -149,12 +208,12 @@ namespace KIP.Dates {
 		return (dt.getMonth() + 1) + "/" + dt.getDate() + "/" + yr;
 	};
 
-
-	// InputDateFmt
-	//-------------------------------------------
-	/**
+	/**...........................................................................
+	 * inputDateFmt
+	 * ...........................................................................
 	 * Converts the date into the format used by date inputs
 	 * @param {Date} dt - The date to convert
+	 * ...........................................................................
 	 */
 	export function inputDateFmt(dt: Date): string {
 		"use strict";
@@ -356,11 +415,14 @@ namespace KIP.Dates {
 		return "";
 	};
 
-	/**
-	 * Get Day Of Week
-	 * @param date - the date to grab the d.o.w. from
-	 * @param [short] - If true, returns the short version of the month name
+	/**...........................................................................
+	 * getDayOfWeek
+	 * ...........................................................................
+	 * Get the name of a day of the week
+	 * @param 	date 	the date to grab the d.o.w. from
+	 * @param 	short 	If true, returns the short version of the month name
 	 * @returns string of day-of-week name
+	 * ...........................................................................
 	 */
 	export function getDayOfWeek(date: Date, short?: boolean): string {
 		"use strict";
@@ -390,6 +452,43 @@ namespace KIP.Dates {
 		return "";
 	};
 
+	export function getLengthOfMonthInDays(date: Date): number {
+		if (!date) { return -1; }
+
+		let month: number = date.getMonth();
+		switch (month) {
+
+			case 0:		// JANUARY
+			case 2:		// MARCH
+			case 4:		// MAY
+			case 6:		// JULY
+			case 7: 	// AUGUST
+			case 9: 	// OCTOBER
+			case 11:	// DECEMBER
+				return 31;
+			case 1:		// FEBRUARY
+				if (isLeapYear(date)) {
+					return 29;
+				} else {
+					return 28;
+				}
+			default:
+				return 30;
+		}	
+	}
+
+	export function isLeapYear(date: Date): boolean { 
+		if (!date) { return false; }
+		let year: number = date.getFullYear();
+		// leap years are always divisble by 4
+		if (year % 4 !== 0) { return false; }
+
+		// but only century markers that are divisible by 400 are leap years
+		if ((year % 100 === 0) && (year % 400 !== 0)) { return false; }
+
+		return true;
+	}
+
 	/** grab the short version of the year */
 	export function getShortYear(date: Date): number {
 		return (+date.getFullYear() % 100);
@@ -413,13 +512,13 @@ namespace KIP.Dates {
 		return false;
 	}
 
-	/**
+	/**...........................................................................
 	 * getDisplayDuration
-	 * 
+	 * ...........................................................................
 	 * Create a display string for a time duration
 	 * @param 	counts	The duration to stringify
 	 * @returns	The display duration string 
-	 * 
+	 * ...........................................................................
 	 */
 	export function getDisplayDuration(counts: IDateDifferences): string {
 		// update up to the highest available range for dates

@@ -31,6 +31,11 @@ namespace KIP.Styles {
      */
     export interface TypedClassDefinition extends IMappedType<CSSStyleDeclaration> {
         WebkitAppearance?: string;
+        WebkitUserSelect?: string;
+        MozUserSelect?: string;
+        WebkitFilter?: string;
+        khtmlUserSelect?: string;
+        oUserSelect?: string;
         appearance?: string;
         nested?: IStandardStyles;
         from?: TypedClassDefinition;
@@ -47,6 +52,10 @@ namespace KIP.Styles {
      */
     export interface IThemeColors {
         [id: string]: string;
+    }
+
+    export interface IThemeMap {
+        [id: string]: string[];
     }
 
     interface ICreatedStyles {
@@ -80,6 +89,9 @@ namespace KIP.Styles {
 
         /** keep track of all of the theme colors for each of the classes */
         private static _themeColors: IThemeColors = {};
+
+        /** map theme colors back to the affected classes so we don't over-aggressively update */
+        private static _themeMap: IThemeMap = {};
 
         /** hold the style tag containing our css class */
         private static _styleElem: HTMLStyleElement;
@@ -160,11 +172,14 @@ namespace KIP.Styles {
             // Quit if the color is already set to any value
             if (noReplace && Stylable._themeColors[colorId]) { return; }
 
+            // Quit if this is already the color set for this element
+            if (Stylable._themeColors[colorId] === color) { return; }
+
             // Replace the color stored in our array
             Stylable._themeColors[colorId] = color;
 
-            // update the styles 
-            Stylable._updateAllThemeColors();
+            // update the styles related to this particular theme
+            Stylable._updateThemeColor(colorId);
 
             // Create the appropriate style classes out of it
             Stylable._createStyles(true);
@@ -198,7 +213,147 @@ namespace KIP.Styles {
          * ...........................................................................
          */
         protected _buildThemeColorId (idx: number, uniqueId?: string): string {
-            return Stylable._buildThemeColorId(idx, uniqueId || (this.constructor as any).name);
+            return Stylable._buildThemeColorId(idx, uniqueId || this._getUniqueThemeName());
+        }
+
+        protected _getUniqueThemeName(): string {
+            return (this.constructor as any).name;
+        }
+
+        /**...........................................................................
+         * _updateAllThemeColors
+         * ...........................................................................
+         * Make sure we have an updated version of our styles
+         * ...........................................................................
+         */
+        protected static _updateAllThemeColors(): void {
+            let styles: IStandardStyles = cloneObject(this._uncoloredPageStyles);
+            let updateAll: boolean = Stylable._handleUpdatingThemeColors(styles);
+
+            this._pageStyles = styles;
+
+            if (!updateAll) { return; }
+            this._createStyles();
+        }
+
+        protected static _updateThemeColor(colorId: string): void {
+            let affectedSelectors: string[] = this._themeMap[colorId];
+            if (!affectedSelectors) { return; }
+
+            for (let selector of affectedSelectors) {
+                let def: TypedClassDefinition = cloneObject(this._uncoloredPageStyles[selector]);
+                if (!def) { return; }
+                let replaced: boolean = this._updateColorInClassDefinition(def, colorId);
+                if (!replaced) { return; }
+
+                this._pageStyles[selector] = this._mergeDefinition(this._pageStyles[selector], def);
+            }
+        }
+
+        /**...........................................................................
+         * _handleUpdatingThemeColor
+         * ...........................................................................
+         * Make sure any changes to theme colors are handled elegantly
+         * 
+         * @param   styles  The styles to update 
+         * 
+         * @returns True if an update was made
+         * ...........................................................................
+         */
+        protected static _handleUpdatingThemeColors(styles: IStandardStyles, updatedPlaceholder?: string): boolean {
+            // Only update the full classes if something actually changed
+            let updateAll: boolean = false;
+            
+            // loop through each of the style definitions
+            map(styles, (cssDeclaration: TypedClassDefinition, selector: string) => {
+
+                // loop through each property on this particular class
+                map(cssDeclaration, (value: any, key: string) => {
+
+                    if (typeof value === "object") { return; }
+
+                    // Split each value & assume we won't replace anything
+                    let valArray: string[] = value.split(" ");
+                    let replaced: boolean = false;
+
+                     // Loop through the split value
+                    valArray.map((val: string, idx: number) => {                     
+
+                        // Check if this is a placeholder & quit if it isn't
+                        let placeholder: string = this._matchesPlaceholder(val);      
+                        if (placeholder === "") { return; }                           
+
+                        // If we have an appropriate color, replace it
+                        if (this._themeColors["<" + placeholder + ">"]) {                         
+                            valArray[idx] = this._themeColors["<" + placeholder + ">"];          
+                            replaced = true;                                         
+                            updateAll = true;
+
+                        // otherwise, if we're updating placeholders and this needs updating, do so
+                        } else if (updatedPlaceholder) {                                
+                            if (!isNaN(+placeholder)) {
+                                let colorId: string = this._buildThemeColorId(+placeholder, updatedPlaceholder);
+                                valArray[idx] = colorId;
+                                if (!this._themeMap[colorId]) { this._themeMap[colorId] = []; }
+                                this._themeMap[colorId].push(selector);
+                                replaced = true;
+                                updateAll = true;
+                            }
+                        }
+                    }); 
+
+                    // Quit if we didn't replace anything
+                    if (!replaced) { return; }                                        
+
+                    // Replace the value with the new color
+                    styles[selector][key] = valArray.join(" ");                       
+                });
+
+            });
+
+            return updateAll;
+        }
+
+        protected static _updateColorInClassDefinition(def: TypedClassDefinition, colorId: string): boolean {
+            let color: string = this._themeColors[colorId];
+            if (!color) { return; }
+
+            let replacedAny: boolean = false;
+
+            // loop through each property on this particular class
+            map(def, (value: any, key: string) => {
+
+                // skip transition values
+                if (typeof value === "object") { return; }
+                let replaced: boolean = false;
+
+                // Split each value & assume we won't replace anything
+                let valArray: string[] = value.split(" ");
+
+                 // Loop through the split value
+                valArray.map((val: string, idx: number) => {                     
+
+                    if (val !== colorId) { return; }                     
+                      
+                    valArray[idx] = color;          
+                    replaced = true; 
+            
+                }); 
+
+                // Quit if we didn't replace anything
+                if (!replaced) { 
+                    delete def[key];
+                    return; 
+                }                                        
+
+                // Replace the value with the new color
+                def[key] = valArray.join(" ");     
+                
+                // let the return value that we replaced something
+                replacedAny = true;
+            });
+
+            return replacedAny;
         }
 
         /**...........................................................................
@@ -233,22 +388,29 @@ namespace KIP.Styles {
 
             // Go through each of the themes
             themes.map((style: IStandardStyles) => {
-
                 // then through each of the selectors
                 map(style, (def: TypedClassDefinition, selector: string) => {
-
                     // initialise the properties for this selector if not already created
                     if (!out[selector]) { out[selector] = {}; }
 
-                    // and last through all of the properties
-                    map(def, (val: string, property: string) => {
-                        out[selector][property] = val;
-                    });
-                    
+                    out[selector] = this._mergeDefinition(def, out[selector]);
                 });
             });
 
             return out;
+        }
+
+        private static _mergeDefinition(...definitions: TypedClassDefinition[]): TypedClassDefinition {
+            let mergedDef: TypedClassDefinition = {}
+            
+            for (let def of definitions) {
+                // and last through all of the properties
+                map(def, (val: string, property: string) => {
+                    mergedDef[property] = val;
+                });
+            }
+            
+            return mergedDef;
         }
 
         /**...........................................................................
@@ -288,83 +450,6 @@ namespace KIP.Styles {
             map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
                 this._customPageFonts[fontName] = fontDef;
             });
-        }
-
-        /**...........................................................................
-         * _updateAllThemeColors
-         * ...........................................................................
-         * Make sure we have an updated version of our styles
-         * ...........................................................................
-         */
-        protected static _updateAllThemeColors(): void {
-            let styles: IStandardStyles = cloneObject(this._uncoloredPageStyles);
-            let updateAll: boolean = Stylable._handleUpdatingThemeColor(styles);
-
-            this._pageStyles = styles;
-
-            if (!updateAll) { return; }
-            this._createStyles();
-        }
-
-        /**...........................................................................
-         * _handleUpdatingThemeColor
-         * ...........................................................................
-         * Make sure any changes to theme colors are handled elegantly
-         * 
-         * @param   styles  The styles to update 
-         * 
-         * @returns True if an update was made
-         * ...........................................................................
-         */
-        protected static _handleUpdatingThemeColor(styles: IStandardStyles, updatedPlaceholder?: string): boolean {
-            // Only update the full classes if something actually changed
-            let updateAll: boolean = false;
-            
-            // loop through each of the style definitions
-            map(styles, (cssDeclaration: TypedClassDefinition, selector: string) => {
-
-                // loop through each property on this particular class
-                map(cssDeclaration, (value: any, key: string) => {
-
-                    if (typeof value === "object") { return; }
-
-                    // Split each value & assume we won't replace anything
-                    let valArray: string[] = value.split(" ");
-                    let replaced: boolean = false;
-
-                     // Loop through the split value
-                    valArray.map((val: string, idx: number) => {                     
-
-                        // Check if this is a placeholder & quit if it isn't
-                        let placeholder: string = this._matchesPlaceholder(val);      
-                        if (placeholder === "") { return; }                           
-
-                        // If we have an appropriate color, replace it
-                        if (this._themeColors["<" + placeholder + ">"]) {                         
-                            valArray[idx] = this._themeColors["<" + placeholder + ">"];          
-                            replaced = true;                                         
-                            updateAll = true;
-
-                        // otherwise, if we're updating placeholders and this needs updating, do so
-                        } else if (updatedPlaceholder) {                                
-                            if (!isNaN(+placeholder)) {
-                                valArray[idx] = this._buildThemeColorId(+placeholder, updatedPlaceholder);
-                                replaced = true;
-                                updateAll = true;
-                            }
-                        }
-                    }); 
-
-                    // Quit if we didn't replace anything
-                    if (!replaced) { return; }                                        
-
-                    // Replace the value with the new color
-                    styles[selector][key] = valArray.join(" ");                       
-                });
-
-            });
-
-            return updateAll;
         }
 
         /**...........................................................................
@@ -424,7 +509,7 @@ namespace KIP.Styles {
             // Copy our styles & replace the wrong tags
             let tmpStyles: IStandardStyles = cloneObject(this.uncoloredStyles);
             tmpStyles = this._cleanStyles(tmpStyles);
-            Stylable._handleUpdatingThemeColor(tmpStyles, (this.constructor as any).name);
+            Stylable._handleUpdatingThemeColors(tmpStyles, this._getUniqueThemeName());
 
             // Merge into the static styles
             Stylable._mergeIntoStyles(tmpStyles);  
@@ -547,7 +632,7 @@ namespace KIP.Styles {
                 if (!otherElem) {
                     this.setThemeColor(idx, this._colors[idx], true);
                 } else {
-                    otherElem.setThemeColor(idx, this._colors[idx]);
+                    otherElem.setThemeColor(idx, this._colors[idx], true);
                 }
             }
         }
@@ -750,5 +835,12 @@ namespace KIP.Styles {
         };
 
         return createClass("@font-face", attr, noAppend, forceOverride);
+    }
+
+    export function preemptivelyCreateStyles(constructor: IConstructor<Stylable>): void {
+        window.addEventListener("load", () => {
+            new constructor();
+        });
+        
     }
 }

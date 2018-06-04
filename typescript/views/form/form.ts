@@ -132,6 +132,10 @@ namespace KIP.Forms {
             }
         };
 
+        protected _getUniqueThemeName(): string {
+            return "Form";
+        }
+
         /** get the appropriate data out of this form */
         public get data(): F {
             return this._coreFormElem.save(true);
