@@ -71,6 +71,10 @@ namespace KIP.Styles {
         [fontName: string]: IFontFaceDefinition[];
     }
 
+    export interface IMediaQueries {
+        [screenSize: string]: IStandardStyles;
+    }
+
     /**...........................................................................
      * @class Stylable
      * Creates an element that can additionally add CSS styles
@@ -656,7 +660,8 @@ namespace KIP.Styles {
         let cls: HTMLStyleElement;
         let a: string;
         let styleString: string = "";
-        let isGeneratingAnimation: boolean = (selector.indexOf("@keyframes") !== -1)
+        let isGeneratingAnimation: boolean = (selector.indexOf("@keyframes") !== -1);
+        let containsCurlyBrace: boolean = (selector.indexOf("{") !== -1);
 
         // If this style already exists, append to it
         let cssRule: CSSStyleRule = _getExistingSelector(selector);
@@ -672,7 +677,7 @@ namespace KIP.Styles {
                 if (attr[propertyName] === "theme") { return; }
                 if (attr[propertyName] === "subTheme") { return; }
 
-                if (selector.indexOf("@keyframes") !== -1) {
+                if (isGeneratingAnimation) {
                     styleString += "\t" + propertyName + " {\n";
                     map(attr[propertyName], (pValue: any, pName: string) => {
                         styleString += "\t\t" + pName + " : " + pValue + ";\n"
@@ -685,6 +690,7 @@ namespace KIP.Styles {
                 }
         });
         styleString += "\n}";
+        if (containsCurlyBrace) { styleString += "\n}"; }       // allow for irregular formations, like media queries
 
         // If we created an empty class, just return nothing
         if (!addedSomething && !forceOverride) { return null; }

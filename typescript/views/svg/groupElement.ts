@@ -22,9 +22,14 @@ namespace KIP.SVG {
         }
         //#endregion
         
-        //#region PROPERTIES
-        protected _svgElems: Collection<SVGElem>;
-        protected _nonScaled: SVGElem[];
+		//#region PROPERTIES
+		
+		/** all SVG elements in this group */
+		protected _svgElems: Collection<SVGElem>;
+		
+		/** all elements that should not be scaled in this group */
+		protected _nonScaled: SVGElem[];
+		public get nonScaled(): SVGElem[] { return this._nonScaled; }
 
         /** override the default style getter; we don't need to apply anything */
         public get style(): SVGStyle { return this._style; }
@@ -258,16 +263,16 @@ namespace KIP.SVG {
 		
 
 		//#region ADD SHAPES
-		/**
+		/**...........................................................................
          * addShape
-         * 
+         * ...........................................................................
 		 * Adds a particular shape to the SVG canvas
 		 * @param   shapeType The type of shape to add
 		 * @param   scale     What scale the shape should be drawn at
 		 * @param   attr      Any attributes that should be applied to the element
 		 * @param   group     What group the element should be added to
 		 * @returns The created shape
-         * 
+         * ...........................................................................
 		 */
 		public addShape (shapeType: SVGShapeEnum, scale?: number, centerPt?: IPoint, attr?: IAttributes) : PathExtensionElement {
 
@@ -286,8 +291,9 @@ namespace KIP.SVG {
 			}
 		}
 
-		/**
+		/**...........................................................................
 		 * Adds a checkmark to the canvas with the provided scale
+		 * ...........................................................................
 		 */
 		private _addCheckShape (scale: number, centerPt: IPoint, attr?: IPathSVGAttributes): CheckElement {
 			attr = this._initializeAttributes(attr) as IPathSVGAttributes;
@@ -297,8 +303,9 @@ namespace KIP.SVG {
 			return checkmark;
 		}
 
-		/**
+		/**...........................................................................
 		 * Adds an 'ex' to the canvas with the provided scale
+		 * ...........................................................................
 		 */
 		private _addExShape (scale: number, centerPt: IPoint, attr?: IPathSVGAttributes): ExElement {
 			attr = this._initializeAttributes(attr) as IPathSVGAttributes;
@@ -308,8 +315,9 @@ namespace KIP.SVG {
 			return exElem;
 		}
 
-		/**
+		/**...........................................................................
 		 * Adds a plus to the canvas with the provided scale
+		 * ...........................................................................
 		 */
 		private _addPlusShape (scale: number, centerPt: IPoint, attr?: IPathSVGAttributes): PlusElement {
 			attr = this._initializeAttributes(attr) as IPathSVGAttributes;
@@ -340,6 +348,17 @@ namespace KIP.SVG {
 			if (!attr.id) { attr.id = GroupElement._nextId; }
 
 			return attr;
+		}
+
+		/**...........................................................................
+		 * clear
+		 * ...........................................................................
+		 * Clear the contents of this group
+		 * ...........................................................................
+		 */
+		public clear(): void {
+			this._elems.base.innerHTML = "";
+			this._svgElems.clear();
 		}
     }
 }

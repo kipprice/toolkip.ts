@@ -1,14 +1,14 @@
-namespace KIP {
+// namespace KIP {
 
-    /**...........................................................................
-     * @class   TimelineBackground
-     * ...........................................................................
-     * Create the background needed for a timeline
-     * @author  Kip Price
-     * @version 1.0.0
-     * ...........................................................................
-     */
-    export class TimelineBackground extends CanvasGroup {
+//     /**...........................................................................
+//      * @class   TimelineBackground
+//      * ...........................................................................
+//      * Create the background needed for a timeline
+//      * @author  Kip Price
+//      * @version 1.0.0
+//      * ...........................................................................
+//      */
+//     export class TimelineBackground extends CanvasGroup {
 
 //         //#region PROPERTIES
 
@@ -359,10 +359,6 @@ namespace KIP {
 //         }
 //         //#endregion
 
-        
-
-        
-
 //         /**...........................................................................
 //          * _getMonthColor
 //          * ...........................................................................
@@ -377,5 +373,5 @@ namespace KIP {
 //             return this._options.MONTH_COLORS[monthID];
 //         }
 //         //#endregion
-    }
-}
+//     }
+// }

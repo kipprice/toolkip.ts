@@ -407,7 +407,11 @@ namespace KIP.SVG {
 		/**...........................................................................
 		 * _convertCoordinates
 		 * ...........................................................................
-		 * 
+		 * Convert one set of coordinates to another
+		 * @param	pt			The point to convert
+		 * @param	numerator	The ratio to consider the numerator
+		 * @param	denominator	The ratio to consider the denominator
+		 * @returns	The converted point
 		 * ...........................................................................
 		 */
 		private _convertCoordinates (pt: IPoint, numerator: IBasicRect, denominator: IBasicRect) : IPoint {
@@ -424,15 +428,43 @@ namespace KIP.SVG {
 			return out;
 		}
 
+		/**...........................................................................
+		 * _convertDistance
+		 * ...........................................................................
+		 * 
+		 * ...........................................................................
+		 */
 		private _convertDistance (measure: number, numerator: number, denominator: number) : number {
 			let ratio: number = numerator / denominator;
 			return (measure * ratio);
 		}
 
+		/**...........................................................................
+		 * calculateSVGWidth
+		 * ...........................................................................
+		 * Calculate how wide something is in SVG coordinates when measured in real
+		 * coordinates.
+		 * 
+		 * @param	width	The width to convert
+		 * 
+		 * @returns	The SVG equivalent of the width
+		 * ...........................................................................
+		 */
 		public calculateSVGWidth (width: number) : number {
 			return this._convertDistance(width, this._view.w, this._bounds.w);
 		}
 
+		/**...........................................................................
+		 * calculateSVGHeight
+		 * ...........................................................................
+		 * Calculate how high something is in SVG coordinates from the real 
+		 * measurement.
+		 * 
+		 * @param	height	The height to convert
+		 * 
+		 * @returns	The converted height
+		 * ........................................................................... 
+		 */
 		public calculateSVGHeight (height: number) : number {
 			return this._convertDistance(height, this._view.h, this._bounds.h);
 		}
@@ -448,12 +480,35 @@ namespace KIP.SVG {
 		//#endregion
 
 		//#region ADD CHILDREN
+
+		/**...........................................................................
+		 * addPath
+		 * ...........................................................................
+		 * Add a path to our SVG canvas
+		 * @param 	points 	The points in the path to add
+		 * @param 	noFinish 	True if this path should be left unfinished
+		 * @param 	attr 		Any attributes that should be set for the path
+		 * @returns	The created PathElement
+		 * ...........................................................................
+		 */
 		public addPath (points: IPathPoint[], noFinish?: boolean, attr?: IPathSVGAttributes) : PathElement {
 			let path = this._group.addPath(points, noFinish, attr);
 			this._addElementListener(path);
 			return path;
 		}
 
+		/**...........................................................................
+		 * addRectangle
+		 * ...........................................................................
+		 * Add a rectangle to our SVG canvas
+		 * @param 	x 		X coordinate for the rect
+		 * @param 	y 		y coordinate for the rect
+		 * @param 	width 	Width for the rect
+		 * @param 	height 	Height for the rect
+		 * @param 	attr 	Any attributes that should be set for the rect
+		 * @returns	The created rectangke
+		 * ...........................................................................
+		 */
 		public addRectangle (x: number, y: number, width: number, height: number, attr?: ISVGAttributes) : RectangleElement {
 			let rect = this._group.addRectangle(x, y, width, height, attr);
 			this._addElementListener(rect);
@@ -563,21 +618,16 @@ namespace KIP.SVG {
 			return elem;
 		}
 
-		//TODO: add SVG ANIMATIONS
-		public animateElement () {}
-
-		/**
-		 * _saveOriginalView
+		/**...........................................................................
+		 * clear
+		 * ...........................................................................
+		 * Clear everything off the canvas
+		 * ...........................................................................
 		 */
-		protected _saveOriginalView = function () {
-			if (!this.originalView) {
-				this.originalView = {
-					x: this.viewX,
-					y: this.viewY,
-					w: this.viewW,
-					h: this.viewH
-				};
-			}
-		};
+		public clear(): void {
+			this._group.clear();
+		}
+
+
 	}
 }

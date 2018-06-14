@@ -340,7 +340,7 @@ namespace KIP.Forms {
             this._applyColors(elem);
             elem.render(this._elems.childrenContainer);
             Events.addEventListener(FORM_ELEM_CHANGE, {
-                func: (event: Events.Event) => {
+                func: (event: FormElemChangeEvent<any>) => {
                     let key: string = event.context.key;
                     if (key !== elem.id) { return; }
 
@@ -691,7 +691,7 @@ namespace KIP.Forms {
 
             Events.addEventListener(FORM_ELEM_CHANGE,
                 {
-                    func: (event: Events.Event) => {
+                    func: (event: FormElemChangeEvent<any>) => {
 
                         let key: string = event.context.key;
                         if (key !== elem.id) { return; }

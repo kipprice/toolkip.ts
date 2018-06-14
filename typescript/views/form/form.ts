@@ -316,7 +316,7 @@ namespace KIP.Forms {
             // add the event listener to the section changing
             Events.addEventListener(FORM_ELEM_CHANGE,
                 {
-                    func: (event: Events.Event) => {
+                    func: (event: FormElemChangeEvent<any>) => {
                         let key: string = event.context.key;
                         if (key !== this._id) { return; }
                         this._hasChanges = true;
@@ -335,7 +335,7 @@ namespace KIP.Forms {
 
         protected _addSaveButtonUpdater(): void {
             Events.addEventListener(FORM_SAVABLE_CHANGE, {
-                func: (event: Events.Event) => {
+                func: (event: FormSavableEvent) => {
                     let canSave = this._canSave();
                     if (!canSave) {
                         this._elems.saveButton.title = this._getCannotSaveMessage();

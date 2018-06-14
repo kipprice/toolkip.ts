@@ -231,7 +231,7 @@ namespace KIP.Forms {
             // determine whether we need this element to submit
             this._isRequired = template.required;
             if (this._isRequired) {
-                Events.dispatchEvent(FORM_SAVABLE_CHANGE, {hasErrors: false, hasMissingRequired: true});
+                Events.dispatchEvent(new FormSavableEvent({hasErrors: false, hasMissingRequired: true}));
             }
 
             // ensure a particular order of elements
@@ -249,7 +249,7 @@ namespace KIP.Forms {
             this._onOtherChange = template.onOtherChange;
             if (this._onOtherChange) {
                 Events.addEventListener(FORM_ELEM_CHANGE, {
-                    func: (ev: Events.Event) => { this._handleOtherChange(ev); },
+                    func: (ev: FormElemChangeEvent<any>) => { this._handleOtherChange(ev); },
                     uniqueId: this._id
                 });
             }
@@ -607,7 +607,7 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _dispatchSavableChangeEvent(): void {
-            Events.dispatchEvent(FORM_SAVABLE_CHANGE, {});
+            Events.dispatchEvent(new FormSavableEvent({}));
         }
 
         /**...........................................................................
@@ -617,11 +617,11 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _dispatchChangeEvent(subkey?: string): void {
-            Events.dispatchEvent(FORM_ELEM_CHANGE, {
+            Events.dispatchEvent(new FormElemChangeEvent({
                 key: this._id,
                 subkey: subkey,
                 data: this._data
-            });
+            }));
         }
 
         /**...........................................................................
@@ -630,7 +630,7 @@ namespace KIP.Forms {
          * wrapper around our listener to ensure the data gets parsed appropriately
          * ...........................................................................
          */
-        protected _handleOtherChange(ev: Events.Event): void {
+        protected _handleOtherChange(ev: FormElemChangeEvent<any>): void {
             if (!this._onOtherChange) { return; }
             this._onOtherChange(ev.context.key, ev.context.data, this);
         }

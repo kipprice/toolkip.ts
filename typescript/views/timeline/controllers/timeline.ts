@@ -1,5 +1,4 @@
 ///<reference path="../../canvas/canvas.ts" />
-///<reference path="../views/shared/timelineElement.ts" />
 
 namespace KIP.Timeline {
 
@@ -71,6 +70,12 @@ namespace KIP.Timeline {
         TODAY = 3
     };
 
+    /**...........................................................................
+     * TimelineLayers
+     * ...........................................................................
+     * Keep track of the elements needed in the canvas
+     * ...........................................................................
+     */
     export interface TimelineLayers {
         background: CanvasGroup;
         elements: CanvasGroup;
@@ -272,13 +277,13 @@ namespace KIP.Timeline {
          */
         public addTimelineElement(item: TimelineElementView): boolean {
 
-            // calculate the appropriate height for the element
-            item.adjustDimensions({
-                x: 0,
-                y: this._timelineLayers.elements.dimensions.h + this._options.BETWEEN_GROUP_GAP
-            });
+            // // calculate the appropriate height for the element
+            // item.adjustDimensions({
+            //     x: 0,
+            //     y: this._timelineLayers.elements.dimensions.h + this._options.BETWEEN_GROUP_GAP
+            // });
 
-            this._timelineLayers.elements.addElement(item);
+            //this._timelineLayers.elements.addElement(item);
 
             return true;
         }
@@ -300,7 +305,7 @@ namespace KIP.Timeline {
          * ...........................................................................
          */
         private _createVisibleBackground(): void {
-            this._timelineLayers.background = new TimelineBackground("background");
+           // this._timelineLayers.background = new TimelineBackground("background");
         }
 
     }

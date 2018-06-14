@@ -89,7 +89,7 @@ namespace KIP {
             }
 
             // otherwise, just set our internal property to have this value
-            let privateName: string = "_" + capitalizedName;
+            let privateName: string = "_" + key;
             this[privateName] = savableValue;
         }
 
@@ -101,10 +101,11 @@ namespace KIP {
          */
         public saveData<K extends keyof T>(): T {
             let out: T = {} as T;
-            
             map(this, (val: any, key: string) => {
-                if (typeof key === "function") { return; }
-                out[key] = this._savePiece(key as keyof T, val);
+                if (typeof val === "function") { return; }
+                let fmtKey: string = key;
+                if (fmtKey[0] === "_") { fmtKey = KIP.rest(fmtKey, 1); }
+                out[fmtKey] = this._savePiece(fmtKey as keyof T, val);
             });
             return out;
         }
@@ -126,7 +127,7 @@ namespace KIP {
                 return this[saveFuncName]();
             }
 
-            let privateName: string = "_" + capitalizedName;
+            let privateName: string = "_" + key;
             return this[privateName];
         }
     }
@@ -151,6 +152,17 @@ namespace KIP {
         public serialize(): string {
             let data: T = this.saveData();
             return JSON.stringify(data);
+        }
+
+        /**...........................................................................
+         * toString
+         * ...........................................................................
+         * Override to allow for native javascript stringification
+         * @returns String version of this data
+         * ...........................................................................
+         */
+        public toString(): string {
+            return this.serialize();
         }
 
         /**...........................................................................

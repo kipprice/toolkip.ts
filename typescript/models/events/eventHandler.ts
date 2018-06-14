@@ -14,7 +14,7 @@ namespace KIP.Events {
 		}
 
 		/** keep track of all the events that are registered to this event handler */
-		protected static _events: Collection<Event> = new Collection<Event>();
+		protected static _events: Collection<EventDefinition<any>> = new Collection<EventDefinition<any>>();
 
 		/**...........................................................................
 		 * createEvent
@@ -26,8 +26,8 @@ namespace KIP.Events {
 		 * @returns	True if a new event was created
 		 * ...........................................................................
 		 */
-		public static createEvent(details: IEvent): boolean {
-			let evt: Event = new Event(details);
+		public static createEvent<C extends IEventContext>(details: IEventDefinition): boolean {
+			let evt: EventDefinition<C> = new EventDefinition<C>(details);
 			return (this._events.addElement(details.key, evt) !== -1);
 		}
 
@@ -40,10 +40,10 @@ namespace KIP.Events {
 		 * @param	context		THe additional context to use for the event
 		 * ...........................................................................
 		 * */
-		public static dispatchEvent(key: string, context: IEventContext): void {
-			let evt: Event = this._events.getValue(key);
-			if (!evt) { return; }
-			evt.notifyListeners(context);
+		public static dispatchEvent<C extends IEventContext>(event: Event<C>): void {
+			let evtDef: EventDefinition<C> = this._events.getValue(event.key);
+			if (!evtDef) { return; }
+			evtDef.notifyListeners(event);
 		}
 
 		/**...........................................................................
@@ -55,8 +55,8 @@ namespace KIP.Events {
 		 * @param	listenerData	The data to use for the listener being added
 		 * ...........................................................................
 		 */
-		public static addEventListener(key: string, listenerData: IListenerData): void {
-			let evt: Event = this._events.getValue(key);
+		public static addEventListener<C extends IEventContext>(key: string, listenerData: IListenerData<C>): void {
+			let evt: EventDefinition<C> = this._events.getValue(key);
 			if (!evt) { return; }
 			evt.addListener(listenerData);
 		}
@@ -75,14 +75,14 @@ namespace KIP.Events {
 
 			// If it's only a particular type of event that is being removed, do so
 			if (key) {
-				let evt: Event = this._events.getValue(key);
+				let evt: EventDefinition<any> = this._events.getValue(key);
 				if (!evt) { return; }
 
 				evt.removeEventListener(uniqueID);
 			
 			// Otherwise, remove this uniqueID from all events
 			} else {
-				this._events.map((evt: Event) => {
+				this._events.map((evt: EventDefinition<any>) => {
 					evt.removeEventListener(uniqueID);
 				});
 			}
@@ -102,7 +102,7 @@ namespace KIP.Events {
 	 * @returns	True if the event was created
 	 * ...........................................................................
 	 */
-	export function createEvent(details: IEvent): boolean {
+	export function createEvent(details: IEventDefinition): boolean {
 		return EventHandler.createEvent(details); 
 	}
 
@@ -115,8 +115,8 @@ namespace KIP.Events {
 	 * @param 	context 	Any additional context needed by listeners of the event
 	 * ...........................................................................
 	 */
-	export function dispatchEvent(key: string, context: IEventContext): void { 
-		EventHandler.dispatchEvent(key, context); 
+	export function dispatchEvent<C extends IEventContext>(event: Event<C>): void { 
+		EventHandler.dispatchEvent(event); 
 	}
 
 	/**...........................................................................
@@ -126,7 +126,7 @@ namespace KIP.Events {
 	 * @param 	listenerData	Context for the event listener
 	 * ...........................................................................
 	 */
-	export function addEventListener(key: string, listenerData: IListenerData): void {
+	export function addEventListener<C extends IEventContext>(key: string, listenerData: IListenerData<C>): void {
 		EventHandler.addEventListener(key, listenerData); 
 	}
 
