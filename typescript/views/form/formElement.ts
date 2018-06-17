@@ -695,7 +695,12 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _createStandardInput(): void {
-            this._elems.input = createInputElement(this._id + "|input", "input", FormElementTypeEnum[this.type], this._data);
+            let attr: IAttributes = {};
+            
+            if (this._template.useGhostText) {
+                attr.placeholder = this._template.lbl;
+            }
+            this._elems.input = createInputElement(this._id + "|input", "input", FormElementTypeEnum[this.type], this._data, attr);
         }
 
         /**...........................................................................
@@ -705,7 +710,9 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _createStandardLabel(embedIn?: HTMLElement): void {
-            this._elems.lbl = createLabelForInput(this._label, this._id, "lbl", embedIn);
+            let lbl: string = this._label;
+            if (this._template.useGhostText) { lbl = ""; }
+            this._elems.lbl = createLabelForInput(lbl, this._id, "lbl", embedIn);
         }
 
         /**...........................................................................

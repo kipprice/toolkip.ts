@@ -85,7 +85,7 @@ namespace KIP.Forms {
         protected _parseElemTemplate(template: IFormCollapsibleTemplate<T>): void {
             super._parseElemTemplate(template);
 
-            this._isCollapsed = (!template.isExpanded || !template.hideTitle);
+            this._isCollapsed = (!template.isExpanded && !template.hideTitle);
             this._shouldHideTitle = template.hideTitle;
         }
 

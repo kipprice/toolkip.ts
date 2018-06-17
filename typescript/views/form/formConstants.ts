@@ -44,6 +44,8 @@ namespace KIP.Forms {
             label?: string;
             cls?: string;
             layout?: FormElementLayoutEnum;
+            hideTitle?: boolean;
+            useGhostText?: boolean;
         }
 
         export interface IFormOptions extends IFormDisplay {

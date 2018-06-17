@@ -301,11 +301,12 @@ namespace KIP.Forms {
         protected _createCoreElem(options: IFormOptions, elems: IFormElements<F>): void {
 
             // create the template that will render the section
-            let template: IFormElemTemplate<F> = {
+            let template: IFormCollapsibleTemplate<F> = {
                 type: FormElementTypeEnum.SECTION,
                 label: options.label,
                 cls: options.cls,
                 layout: options.layout,
+                hideTitle: options.hideTitle
             };
 
             // create the core section
