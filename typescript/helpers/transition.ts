@@ -82,6 +82,21 @@ namespace KIP {
         return "gencls" + _lastClsID;
     }
 
+    /** keep track of the style element used for generated classes */
+    let styleElem: HTMLStyleElement;
+
+    /**...........................................................................
+     * _createTransitionClass
+     * ...........................................................................
+     * Create a CSS class that will be one end of a transition
+     * 
+     * @param   className   Selector to use for the class
+     * @param   classDef    Definition for the class
+     * @param   elem        Element this class will be applied to
+     * 
+     * @returns The updated CSS class
+     * ...........................................................................
+     */
     function _createTransitionClass(className: string, classDef: ITransitionStyle, elem: HTMLElement): HTMLStyleElement {
 
         // replace any transition specific terms
@@ -95,7 +110,16 @@ namespace KIP {
             classDef[key] = value;
         });
 
-        return Styles.createClass("." + className, classDef);
+        // create our style element if it doesn't exist
+        if (!styleElem) { 
+            styleElem = Styles.createStyleElement(false); 
+            document.head.appendChild(styleElem);
+        }
+
+        // generate the style element and add to our style element
+        let tmpElem: HTMLStyleElement = Styles.createClass("." + className, classDef, true);
+        styleElem.innerHTML += tmpElem.innerHTML;
+        return tmpElem;
     }
 
     //#endregion

@@ -102,7 +102,7 @@ namespace KIP.Events {
 	 * @returns	True if the event was created
 	 * ...........................................................................
 	 */
-	export function createEvent(details: IEventDefinition): boolean {
+	export function createEvent<C extends IEventContext>(details: IEventDefinition): boolean {
 		return EventHandler.createEvent(details); 
 	}
 

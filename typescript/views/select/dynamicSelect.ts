@@ -257,7 +257,7 @@ namespace KIP {
 
         //#region EVENT LISTENERS
 
-        public addEventListener(type: "select" | "change" | "search", func: Function): void {
+        public addEventListener(type: "select" | "change" | "search" | keyof WindowEventMap, func: Function): void {
             switch (type) {
                 case "select":
                     if (!this._selectListeners) { this._selectListeners = []; }
@@ -270,6 +270,9 @@ namespace KIP {
                 case "change":
                     if (!this._changeListeners) { this._changeListeners = []; }
                     this._changeListeners.push(func);
+                    break;
+                default:
+                    super.addEventListener(type, func);
                     break;
             }
         }

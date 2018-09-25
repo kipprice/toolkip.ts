@@ -47,4 +47,14 @@ namespace KIP {
 
         return outputStr;
     }
+
+    /**...........................................................................
+     * printCallStack
+     * ...........................................................................
+     * Print out the current callstack
+     * ...........................................................................
+     */
+    export function printCallStack(): void {
+        console.log(new Error().stack);
+    }
 }

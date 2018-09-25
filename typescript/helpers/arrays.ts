@@ -1,74 +1,79 @@
 namespace KIP {
 
+	
 	export interface IEqualityFunction<T> {
-		(a: T, b: T) : boolean;
+
+		/**
+		 * IEqualityFunction<T>
+		 * ----------------------------------------------------------------------------
+		 * Given two values of T, determine whether they are equivalent
+		 * @param	a	The first value to compare
+		 * @param	b	The second value to compare
+		 * 
+		 * @returns	True if the two values are equivalent, false otherwise
+		 */
+		(a: T, b: T): boolean;
 	}
-	/**...........................................................................
+	/**
 	 * contains
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Determine whether a particular element is contained in an array
-	 * 
 	 * @param 	arr		The array to check 
 	 * @param 	value 	The value to check for
 	 * 
 	 * @returns	True if the value is contained in the array
-	 * ...........................................................................
 	 */
-	export function contains<T> (arr: T[], value: T): boolean {
-		return (indexOf(arr, value) !== -1);
+	export function contains<T>(arr: T[], value: T, equalityFunction?: IEqualityFunction<T>): boolean {
+		return (indexOf(arr, value, equalityFunction) !== -1);
 	}
 
-	/**...........................................................................
+	/**
 	 * indexOf
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Find the index of a particular value in the array
-	 * 
 	 * @param	arr		The array to search
 	 * @param	value	The value to look for
 	 * 
 	 * @returns	The first index of the value in the array or -1 if it doesn't exist
-	 * ...........................................................................
 	 */
-	export function indexOf<T> (arr: T[], value: T, equalityFunction?: IEqualityFunction<T>): number {
+	export function indexOf<T>(arr: T[], value: T, equalityFunction?: IEqualityFunction<T>): number {
 		if (!arr) { return -1; }
 		for (let idx = 0; idx < arr.length; idx += 1) {
 			if (equalityFunction) {
 				if (equalityFunction(arr[idx], value)) { return idx; }
 			} else if (arr[idx] === value) {
-				 return idx; 
+				return idx;
 			}
 		}
 
 		return -1;
 	}
 
-	/**...........................................................................
-	 * remove
-	 * ...........................................................................
-	 * Remove a value (or all instances of a value) from the array
-	 * 
-	 * @param	arr			The array to remove from
-	 * @param	value		The value to search for
-	 * @param	removeAll	If true, finds all instances of the value in the array
-	 * 
-	 * @returns	The array with all instances of the value removed
-	 * ...........................................................................
-	 */
-	export function remove<T> (arr: T[], value: T, removeAll?: boolean, equalityFunction?:IEqualityFunction<T>): T[] {
-		let idx: number = indexOf(arr, value, equalityFunction);
+	/**
+	* removeElemFromArr
+	* ----------------------------------------------------------------------------
+	* Finds & removes an element from the array if it exists.
+	* @param   arr     The array to remove from
+	* @param   elem    The element to remove
+	* @param   equal   The function that is used to test for equality
+	* 
+	* @returns The updated array
+	*/
+	export function removeElemFromArr<T>(arr: T[], elem: T, equal?: Function): T[] {
+		let idx: number;
+		let outArr: T[];
+		// If we didn't get a function to test for equality, set it to the default
+		if (!equal) {
+			equal = function (a, b) { return (a === b); };
+		}
 
-		// loop until we've removed all of the elements we intend to
-		while (idx !== -1) {
-			arr.splice(idx, 1);
-
-			if (removeAll) {
-				idx = indexOf(arr, value);
-			} else {
-				idx = -1;
+		// Loop through the array and remove all equal elements
+		for (idx = (arr.length - 1); idx >= 0; idx -= 1) {
+			if (equal(arr[idx], elem)) {
+				outArr = arr.splice(idx, 1);
 			}
 		}
 
-		// return the spliced array
-		return arr;
-	}
+		return outArr;
+	};
 }

@@ -51,7 +51,7 @@ namespace KIP {
    * @param {string}      newClass  The class to remove from the element
    * ...........................................................................
    */
-  export function removeClass(elem: HTMLElement | Drawable, oldClass: string): void {
+  export function removeClass(elem: DrawableElement, oldClass: string): void {
     "use strict";
     let cls: string;
     let len: number;
@@ -217,7 +217,7 @@ namespace KIP {
 
     // Grab the style node of this document (or create it if it doesn't exist)
     styles = document.getElementsByTagName("style");
-    if (styles.length > 0) {
+    if (noAppend || styles.length > 0) {
       cls = (<HTMLElement>styles[0]);
     } else {
       cls = document.createElement("style");
@@ -238,7 +238,7 @@ namespace KIP {
     cls.innerHTML += "\n}";
 
     // Append the class to the head of the document
-    if (!noAppend) document.head.appendChild(cls);
+    if (!noAppend) { document.head.appendChild(cls); }
 
     // Return the style node
     return cls;
@@ -297,7 +297,7 @@ namespace KIP {
   }
 
    /** Adds the "unselectable" class definition to the document */
-  export function addUnselectableClass(): void {
+  export function addUnselectableClass(): HTMLStyleElement {
     let cls: IClassDefinition;
     cls = {
       "user-select": "none",
@@ -306,7 +306,7 @@ namespace KIP {
       "khtml-user-select": "none",
       "o-user-select": "none"
     };
-    createClass(".unselectable", cls);
+    return createClass(".unselectable", cls, true) as HTMLStyleElement;
 
   }
 }

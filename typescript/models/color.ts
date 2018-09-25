@@ -137,7 +137,7 @@ namespace KIP.Colors {
 		// Calculate the new color
 		col.getApparentColor(backColor);
 
-		return col.hexString();
+		return col.toHexString();
 	}
 
 	/**...........................................................................
@@ -169,7 +169,7 @@ namespace KIP.Colors {
 		}
 		col.generateRgbValues();
 
-		return col.rgbaString();
+		return col.toRgbaString();
 	}
 
 	/**...........................................................................
@@ -184,7 +184,7 @@ namespace KIP.Colors {
 	 */
 	export function hexToRgb(hex: string): string {
 		let c: HexColor = new HexColor(hex);
-		return c.rgbString();
+		return c.toRgbString();
 	};
 
 	/**...........................................................................
@@ -200,7 +200,7 @@ namespace KIP.Colors {
 	 */
 	export function hexToRgba(hex: string, alpha: number): string {
 		let c: HexColor = new HexColor(hex, alpha);
-		return c.rgbaString();
+		return c.toRgbaString();
 	};
 
 	/**...........................................................................
@@ -215,7 +215,7 @@ namespace KIP.Colors {
 	 */
 	export function hslToRgb(hsl: string): string {
 		let c: HSLColor = new HSLColor(hsl);
-		return c.rgbString();
+		return c.toRgbString();
 	};
 
 	/**...........................................................................
@@ -231,7 +231,7 @@ namespace KIP.Colors {
 	 */
 	export function hslaToRgba(hsl: string, alpha: number): string {
 		let c: HSLColor = new HSLColor(hsl, alpha);
-		return c.rgbaString();
+		return c.toRgbaString();
 	};
 
 	/**...........................................................................
@@ -343,6 +343,12 @@ namespace KIP.Colors {
 		protected _startLightness: number;
 		//#endregion
 
+		/** perceived luminance of the color */
+		protected _luminance: number;
+		public get luminance(): number { 
+			if (isNullOrUndefined(this._luminance)) { this._calculateLuminance(); }
+			return this._luminance;
+		}
 		//#endregion
 
 		//#region CONSTRUCTOR
@@ -372,9 +378,9 @@ namespace KIP.Colors {
 		 * @returns {string} RGBA string for the color
 		 * ...........................................................................
 		 */
-		public rgbaString(): string {
+		public toRgbaString(): string {
 			"use strict";
-			return this.rgbString(true);
+			return this.toRgbString(true);
 		};
 
 		/**...........................................................................
@@ -387,7 +393,7 @@ namespace KIP.Colors {
 		 * @returns {string} The appropriate color string
 		 * ...........................................................................
 		 */
-		public rgbString(with_alpha?: boolean): string {
+		public toRgbString(with_alpha?: boolean): string {
 			"use strict";
 			let out: string;
 
@@ -414,7 +420,7 @@ namespace KIP.Colors {
 		 * @returns	The HSL string version of this color
 		 * ...........................................................................
 		 */
-		public hslString(with_alpha?: boolean): string {
+		public toHslString(with_alpha?: boolean): string {
 			"use strict";
 			let out: string;
 
@@ -442,9 +448,9 @@ namespace KIP.Colors {
 		 * @returns A string for the color
 		 * ...........................................................................
 		 */
-		public hslaString(): string {
+		public toHslaString(): string {
 			"use strict";
-			return this.hslString(true);
+			return this.toHslString(true);
 		};
 
 		/**...........................................................................
@@ -457,7 +463,7 @@ namespace KIP.Colors {
 		 * @returns The appropriate hex string
 		 * ...........................................................................
 		 */
-		public hexString(with_alpha?: boolean): string {
+		public toHexString(with_alpha?: boolean): string {
 			"use strict";
 			let out: string;
 			out = "#";
@@ -933,7 +939,7 @@ namespace KIP.Colors {
 
 			// Update the RGB values too
 			this.generateRgbValues();
-			return this.hexString(withAlpha);
+			return this.toHexString(withAlpha);
 		};
 
 		/**...........................................................................
@@ -1200,7 +1206,7 @@ namespace KIP.Colors {
 		 * ........................................................................... 
 		 */
 		public equals (other: Color): boolean {
-			return (this.hexString(true) === other.hexString(true));
+			return (this.toHexString(true) === other.toHexString(true));
 		}
 
 		//#endregion
@@ -1215,10 +1221,9 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public isDark(): boolean {
-			"use strict";
 			if (!this._hue) this.generateHslValues();
 
-			return (this._lightness <= 50);
+			return (this.luminance <= 70);
 		};
 
 		/**...........................................................................
@@ -1230,10 +1235,9 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public isLight(): boolean {
-			"use strict";
 			if (!this._hue) this.generateHslValues();
 
-			return (this._lightness > 50);
+			return (this.luminance > 70);
 		};
 
 		/**...........................................................................
@@ -1245,10 +1249,20 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getLightness(): number {
-			"use strict";
 			if (!this._hue) this.generateHslValues();
 
 			return this._lightness;
+		}
+
+		/**...........................................................................
+		 * _calculateLuminance
+		 * ...........................................................................
+		 * Determine the perceived luminosity of the color
+		 * ...........................................................................
+		 */
+		protected _calculateLuminance(): void {
+			if (!this._red) { this.generateRgbValues(); }
+			this._luminance = ((0.2126 * this._red) + (0.7152 * this._green) + (0.0722 * this._blue)) / 2.55;
 		}
 		//#endregion
 	}
@@ -1314,7 +1328,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getCurrentColor (withAlpha?: boolean): string {
-			return this.rgbString(withAlpha);
+			return this.toRgbString(withAlpha);
 		}
 
 	}
@@ -1378,7 +1392,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getCurrentColor (withAlpha?: boolean): string {
-			return this.hslString(withAlpha);
+			return this.toHslString(withAlpha);
 		}
 	}
 	//#endregion
@@ -1410,7 +1424,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getCurrentColor (withAlpha?: boolean) : string {
-			return this.hexString(withAlpha);
+			return this.toHexString(withAlpha);
 		}
 	}
 	//#endregion
@@ -1448,7 +1462,7 @@ namespace KIP.Colors {
 		 * ........................................................................... 
 		 */
 		public getCurrentColor (withAlpha?: boolean): string {
-			return this.hexString(withAlpha);
+			return this.toHexString(withAlpha);
 		}
 	}
 

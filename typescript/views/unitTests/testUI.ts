@@ -193,7 +193,7 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		public startGroup(groupName: string): void {
-			console.log("\n=== " + groupName + " ===");
+			console.log("\n\t=== " + groupName + " ===");
 
 			// Create the group
 			let group: HTMLElement = createElement({ cls: "group", parent: this._elems.testContainer });
@@ -308,7 +308,7 @@ namespace KIP {
 
 			content += this._passToString(pass).toUpperCase();
 			content += ": " + name;
-			content += (!pass ? " [" + value_string + "]" : "");
+			content += (!!value_string ? " [" + value_string + "]" : "");
 			content += (message ? " - " + message : "");
 
 			return content;

@@ -1,7 +1,12 @@
 namespace KIP {
 
   //#region INTERFACES AND CONSTANTS
-
+  export enum SortOrderEnum {
+    INCORRECT_ORDER = -1,
+    SAME = 0,
+    CORRECT_ORDER = 1 
+  }
+  
   export interface IKeyValPair<T> {
     key?: string;
     val?: T;
@@ -33,7 +38,8 @@ namespace KIP {
    */
   export interface IToggleBtnOption<T> {
     label: string;
-    value: T
+    value: T;
+    imageURL?: string;
   }
 
   /**...........................................................................
@@ -52,8 +58,8 @@ namespace KIP {
 	 * allow for map function, similar to Array.map 
 	 * ...........................................................................
 	 */
-	export interface IMapFunction<T> {
-		(elem: T, key: string | number, idx: number) : void;
+	export interface IMapFunction<T,> {
+		(elem: T, key: string | number | keyof any, idx: number) : void;
 	}
 
 	/**...........................................................................
@@ -145,35 +151,18 @@ namespace KIP {
     return "";
   }
 
+  export function keyCount(object: any): number {
+    let cnt: number = 0;
+    map(object, () => {
+      cnt += 1;
+    });
+    return cnt;
+  }
+
+  export function isEmptyObject(object: any): boolean {
+    return (!getNextKey(object));
+  }
   //#endregion
-
-  /**...........................................................................
-   * removeElemFromArr
-   * ...........................................................................
-   * Finds & removes an element from the array if it exists.
-   * 
-   * @param   arr     The array to remove from
-   * @param   elem    The element to remove
-   * @param   equal   The function that is used to test for equality
-   * ...........................................................................
-   */
-  export function removeElemFromArr<T>(arr: T[], elem: T, equal?: Function): T[] {
-    let idx: number;
-    let outArr: T[];
-    // If we didn't get a function to test for equality, set it to the default
-    if (!equal) {
-      equal = function(a, b) { return (a === b); };
-    }
-
-    // Loop through the array and remove all equal elements
-    for (idx = (arr.length - 1); idx >= 0; idx -= 1) {
-      if (equal(arr[idx], elem)) {
-        outArr = arr.splice(idx, 1);
-      }
-    }
-
-    return outArr;
-  };
 
   /**...........................................................................
    * combineObjects
@@ -187,42 +176,65 @@ namespace KIP {
    * @returns The combined object
    * ...........................................................................
    */
-  export function combineObjects(objA: {}, objB: {}, deep?: boolean): {} {
-    "use strict";
+  export function combineObjects(objA: any, objB: any, deep?: boolean): any {
     let ret: {};
     let tmp: any;
     let loopThru: Function;
-    ret = {};
+    ret = objA || {};
 
-    // Define a function that will pull in relevant details from
-    loopThru = function(array, retArr) {
-      let key: string;
-
-      // Loop thru each key in the array
-      for (key in array) {
-        if (array.hasOwnProperty(key)) {
-
-          // If doing a deep copy, make sure we recurse
-          if (deep && (typeof (array[key]) === "object")) {
-            tmp = {};
-            tmp.prototype = Object.create(array[key].prototype);
-            tmp = combineObjects(tmp, array[key]);
-            retArr[key] = tmp;
-
-            // Otherwise copy directly
-          } else {
-            retArr[key] = array[key];
-          }
-        }
-      }
-    }
-
-    // Write the array copies for A & B
-    loopThru(objA, ret);
-    loopThru(objB, ret);
+    // Write the array copies for B
+    //if (objA) { _loopThru(objA, ret, deep); }
+    if (objB) { _loopThru(objB, ret, deep); }
 
     // Return the appropriate output array
     return ret;
+  }
+
+  /**...........................................................................
+   * _loopThru
+   * ...........................................................................
+   * Combine an object into an output array
+   * 
+   * @param   objToCombine  The ibject to merge into the output
+   * @param   outputObj     The object to output
+   * @param   deep          True if we should recurse on this object
+   * 
+   * @returns The merged object
+   * ...........................................................................
+   */
+  function _loopThru(objToCombine: any, outputObj: any, deep?: boolean): any {
+
+    if (!objToCombine) { return outputObj; }
+
+    if (objToCombine.__proto__) { outputObj.__proto__ = Object.create(objToCombine.__proto__); }
+
+    // Loop thru each key in the array
+    map(objToCombine, (value: any, key: string) => {
+
+      // skip any values that aren't set
+      if (isNullOrUndefined(value)) {
+        return;
+      }
+
+      // If doing a deep copy, make sure we recurse
+      if (deep && (typeof (value) === "object")) {
+        let tmp: any = outputObj[key];
+
+        // if there's nothing to merge, just take the existing object
+        if (!tmp) { 
+          outputObj[key] = value;
+          return; 
+        }
+
+        tmp = combineObjects(tmp, value, deep);
+        outputObj[key] = tmp;
+
+      // Otherwise copy directly
+      } else {
+        outputObj[key] = value;
+      }
+      
+    });
   }
 
   /**...........................................................................
@@ -237,7 +249,6 @@ namespace KIP {
    * ...........................................................................
    */
   export function reconcileOptions<T extends IDictionary<any>>(options: T, defaults: T): T {
-    "use strict";
     let key: string;
     let opt: string;
 

@@ -6,7 +6,8 @@ namespace KIP.Forms {
      * @class CheckElement
      * ...........................................................................
      * create a checkbox form element
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class CheckElement extends FormElement<boolean> {
@@ -33,7 +34,7 @@ namespace KIP.Forms {
                 height: "18px",
                 margin: "0",
                 marginRight: "5px",
-                border: "1px solid <0>"
+                border: "1px solid <formTheme>"
             },
 
             ".kipFormElem input[type='checkbox'] + label": {
@@ -45,7 +46,7 @@ namespace KIP.Forms {
                 height: "18px",
                 margin: "0",
                 marginRight: "5px",
-                border: "1px solid <0>",
+                border: "1px solid <formTheme>",
                 position: "relative",
                 boxSizing: "content-box",
                 flexShrink: "0",
@@ -58,7 +59,7 @@ namespace KIP.Forms {
                 height: "0",
                 left: "9px",
                 top: "9px",
-                backgroundColor: "<0>",
+                backgroundColor: "<formTheme>",
                 transition: "all ease-in-out .1s"
             },
 
@@ -96,8 +97,23 @@ namespace KIP.Forms {
 
             // Create the custom UI for the checkbox
             this._elems.lbl = createLabelForInput("", this._id + "|input", "", this._elems.core);
-            this._elems.inputBox = createSimpleElement("", "inputBox", "", null, null, this._elems.lbl);
-            this._elems.inputInnerBox = createSimpleElement("", "innerInputBox", "", null, null, this._elems.inputBox);
+            this._elems.inputBox = createElement({
+                cls: "inputBox", 
+                parent: this._elems.lbl,  
+                attr: {tabindex: 0},
+                eventListeners: {
+                    keypress: (event: KeyboardEvent) => {
+                        if (event.keyCode !== 13 && event.keyCode !== 32) { return; }
+
+                        this._elems.input.checked = !this._elems.input.checked;
+                    }
+                }
+            });
+
+            this._elems.inputInnerBox = createElement({ 
+                cls: "innerInputBox", 
+                parent: this._elems.inputBox
+            });
 
             this._elems.innerLbl = createSimpleElement("", "innerLbl", this._label, null, null, this._elems.lbl);
 
@@ -126,7 +142,8 @@ namespace KIP.Forms {
      * @class TextElement
      * ...........................................................................
      * create a text element for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class TextElement extends FormElement<string> {
@@ -153,7 +170,8 @@ namespace KIP.Forms {
      * @class TextAreaElement
      * ...........................................................................
      * create a text area element for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class TextAreaElement extends FormElement<string> {
@@ -164,7 +182,7 @@ namespace KIP.Forms {
         protected _onCreateElements(): void {
             let input: HTMLInputElement = createInputElement(this._id, "input", "textarea", this._data);
             this._elems.input = input;
-            this._elems.lbl = createLabelForInput(this._label, this._id, "lbl");
+            this._createStandardLabel();
             this._handleStandardLayout();
         }
 
@@ -192,7 +210,8 @@ namespace KIP.Forms {
      * @class DateElement
      * ...........................................................................
      * create a date element for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class DateElement extends FormElement<Date> {
@@ -232,7 +251,8 @@ namespace KIP.Forms {
      * @class TimeElement
      * ...........................................................................
      * create a time element for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class TimeElement extends FormElement<Date> {
@@ -268,7 +288,8 @@ namespace KIP.Forms {
      * @class DateTimeElement
      * ...........................................................................
      * create an element to collect date and time for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class DateTimeElement extends FormElement<Date> {
@@ -361,7 +382,8 @@ namespace KIP.Forms {
      * @class SelectElement
      * ...........................................................................
      * create a dropdown for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class SelectElement extends FormElement<number> {
@@ -412,7 +434,8 @@ namespace KIP.Forms {
      * @class NumberElement
      * ...........................................................................
      * create a number element for a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class NumberElement extends FormElement<number> {
@@ -439,7 +462,7 @@ namespace KIP.Forms {
      * @class   ColorElement
      * ...........................................................................
      * Creates a form element for collecting colors
-     * @version 18.2.25
+     * @version 1.0.0
      * @author  Kip Price
      * ...........................................................................
      */
@@ -492,7 +515,8 @@ namespace KIP.Forms {
      * @class HiddenElement
      * ...........................................................................
      * handle a data element that will be set, but not displayed to the user 
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
      * ...........................................................................
      */
     export class HiddenElement<T> extends FormElement<T> {

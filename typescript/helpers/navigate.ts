@@ -9,9 +9,9 @@ namespace KIP {
 	 * ...........................................................................
 	 */
 	export interface INavigationData<M> {
-		model?:M;
 		url?: string;
 		title?: string;
+		isCancel?: boolean;
 		[key: string]: any;
 	}
 
@@ -62,8 +62,9 @@ namespace KIP {
 		//#region PROPERTIES
 
 		/** keep track of the views */
-		private _views: Collection<Drawable> = new Collection<Drawable>();
+		private _views: Collection<View> = new Collection<View>();
 
+		/** allow for navigation headers to be tied to our navigation */
 		protected abstract get _headerView(): NavigationHeader<T>;
 
 		/** keep track of the parent element */
@@ -73,8 +74,8 @@ namespace KIP {
 		protected abstract get _transitionType(): INavTransitionType;
 
 		/** keep track of what view is currently showing */
-		protected _currentView: ICollectionElement<Drawable>;
-		public get currentView(): ICollectionElement<Drawable> { return this._currentView; }
+		protected _currentView: ICollectionElement<View>;
+		public get currentView(): ICollectionElement<View> { return this._currentView; }
 
 		/** keep track of the historical changes to the navigation */
 		protected _history: HistoryChain<IHistoryEntry<T>>;
@@ -112,14 +113,17 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 
-		public navigateTo<D extends Drawable, M>(navigationPath: T, constructor?: IConstructor<D>, addlData?: INavigationData<M>): void {
+		public navigateTo<D extends View, M>(navigationPath: T, constructor?: IConstructor<D>, addlData?: INavigationData<M>, fromHistoryNavigation?: boolean): boolean {
 
 			// initialize the additional data array if unpassed
 			if (!addlData) { addlData = {}; }
 
+			// check that we can navigate away from the current screen
+			if (!this._handleCurrentViewOnNavigate(addlData.isCancel)) { return false; }
+
 			// try to grab the view from our collection (quit if it doesn't exist and we can't create it)
-			let view: Drawable = this._views.getValue(navigationPath);
-			if (!view && !constructor) { return; }
+			let view: View = this._views.getValue(navigationPath);
+			if (!view && !constructor) { return false; }
 
 			// if we couldn't find it, create it
 			if (!view) {
@@ -140,10 +144,41 @@ namespace KIP {
 			this._currentView = this._views.getElement(navigationPath);
 
 			// update the browser history
-			this._updateHistory(navigationPath, addlData);
+			if (!fromHistoryNavigation) {
+				this._updateHistory(navigationPath, addlData);
+			}
 
 			// make sure to also update the header
 			this._headerView.update(navigationPath, addlData);
+
+			return true;
+		}
+
+		/**...........................................................................
+		 * _handleCurrentViewOnNavigate
+		 * ...........................................................................
+		 * Update the current view in the history as needed on navigate away
+		 * @param 	isCancel 	True if we are 
+		 * ...........................................................................
+		 */
+		protected _handleCurrentViewOnNavigate<M>(isCancel?: boolean): boolean {
+
+			// make sure that we have a current view, and that we can leave it
+			if (!this._currentView) { return true; }
+			if (!this._currentView.value) { return true; }
+			if (!this._currentView.value.canNavigateAway(isCancel)) { return false; }
+
+			// determine if there is any information this view wants to add to the addlData array
+			let navAwayData: INavigationData<M> = this._currentView.value.onNavigateAway(isCancel);
+			if (!navAwayData) { return true; }
+
+			// if so, update the history state for this view
+			let historyState: IHistoryEntry<T> = {
+				navigationPath: null,
+				data: navAwayData
+			}
+			this._history.updateCurrentState(historyState);
+			return true;
 		}
 
 		/**...........................................................................
@@ -158,7 +193,7 @@ namespace KIP {
 		 * @returns	The created drawable
 		 * ...........................................................................
 		 */
-		protected _createView<D extends Drawable, M>(constructor: IConstructor<D>, addlData?: INavigationData<M>): D {
+		protected _createView<D extends View, M>(constructor: IConstructor<D>, addlData?: INavigationData<M>): D {
 			let view = new constructor();
 			return view;
 		}
@@ -171,7 +206,7 @@ namespace KIP {
 		 * @param 	addlData 	Additional data to pass into the view
 		 * ...........................................................................
 		 */
-		protected _updateView<D extends IUpdatable, M>(view: D, addlData?: INavigationData<M>): void {
+		protected _updateView<D extends View, M>(view: D, addlData?: INavigationData<M>): void {
 			view.update(addlData.model, addlData);
 		}
 
@@ -203,7 +238,7 @@ namespace KIP {
 		 * Switches between two separate views in this navigation world
 		 * ...........................................................................
 		 */
-		protected _handleTransition (view: Drawable): void {
+		protected _handleTransition (view: View): void {
 			// verify we have enough data to handle this
 			if (!view || !this._parent) { return; }
 			
@@ -227,7 +262,7 @@ namespace KIP {
 		  * @param view 
 		  * ...........................................................................
 		  */
-		 protected _noTransition(view: Drawable): void {
+		 protected _noTransition(view: View): void {
 			this._parent.innerHTML = "";
 			view.draw(this._parent);
 		 }
@@ -239,7 +274,7 @@ namespace KIP {
 		  * @param view 
 		  * ...........................................................................
 		  */
-		 protected _opacityTransition(view: Drawable): void {
+		 protected _opacityTransition(view: View): void {
 			transition(
 				this._parent,
 				{opacity: "1"},

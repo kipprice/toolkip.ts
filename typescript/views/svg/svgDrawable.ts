@@ -37,13 +37,13 @@ namespace KIP.SVG {
 		prevent_events?: boolean;
 	};
 
-	/**...........................................................................
+	/**----------------------------------------------------------------------------
 	 * @class 	SVGDrawable
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Create a drawable SVG canvas
-	 * @version 1.1
 	 * @author	Kip Price
-	 * ...........................................................................
+	 * @version 1.1.0
+	 * ----------------------------------------------------------------------------
 	 */
 	export class SVGDrawable extends Drawable {
 
@@ -64,6 +64,12 @@ namespace KIP.SVG {
 			window.setTimeout(() => { this._verifyViewMeetsAspectRatio(); }, 0);
 			return this._view; 
 		}
+		public set view(rect: IBasicRect) { 
+			this._view.x = rect.x;
+			this._view.y = rect.y;
+			this._view.w = rect.w;
+			this._view.h = rect.h;
+		 }
 
 		/** The maximum and minimum values of the SVG canvas */
 		private _extrema: IExtrema;
@@ -91,7 +97,7 @@ namespace KIP.SVG {
 		 * @param 	opts   Any options that should be applied to the canvas
 		 * ...........................................................................
 		 */
-		constructor(id?: string, bounds?: IBasicRect, opts?: ISVGOptions) {
+		constructor(bounds?: IBasicRect, opts?: ISVGOptions) {
 			super();
 			this._bounds = bounds || { x: 0, y: 0, w: 0, h: 0 };
 
@@ -198,6 +204,9 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		private _addEventListeners () : void {
+
+			// don't listen for events if asked not to
+			if (this._options.prevent_events) { return; }
 
 			// Add the wheel listener to the SVG element
 			this.base.addEventListener("wheel", (e) => {
@@ -312,7 +321,10 @@ namespace KIP.SVG {
 			v_box = this._view.x + " " + this._view.y + " " + this._view.w + " " + this._view.h;
 
 			// Set the attribute if requested
-			if (set) { this.base.setAttribute("viewBox", v_box); }
+			if (set) { 
+				this.base.setAttribute("viewbox", v_box); 
+				this.base.setAttribute("viewBox", v_box); 
+			}
 
 			// Return the viewbox value
 			return v_box;
@@ -481,15 +493,15 @@ namespace KIP.SVG {
 
 		//#region ADD CHILDREN
 
-		/**...........................................................................
+		/**
 		 * addPath
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Add a path to our SVG canvas
 		 * @param 	points 	The points in the path to add
 		 * @param 	noFinish 	True if this path should be left unfinished
 		 * @param 	attr 		Any attributes that should be set for the path
+		 * 
 		 * @returns	The created PathElement
-		 * ...........................................................................
 		 */
 		public addPath (points: IPathPoint[], noFinish?: boolean, attr?: IPathSVGAttributes) : PathElement {
 			let path = this._group.addPath(points, noFinish, attr);
@@ -497,17 +509,17 @@ namespace KIP.SVG {
 			return path;
 		}
 
-		/**...........................................................................
+		/**
 		 * addRectangle
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Add a rectangle to our SVG canvas
 		 * @param 	x 		X coordinate for the rect
 		 * @param 	y 		y coordinate for the rect
 		 * @param 	width 	Width for the rect
 		 * @param 	height 	Height for the rect
 		 * @param 	attr 	Any attributes that should be set for the rect
-		 * @returns	The created rectangke
-		 * ...........................................................................
+		 * 
+		 * @returns	The created rectangle
 		 */
 		public addRectangle (x: number, y: number, width: number, height: number, attr?: ISVGAttributes) : RectangleElement {
 			let rect = this._group.addRectangle(x, y, width, height, attr);
@@ -515,12 +527,70 @@ namespace KIP.SVG {
 			return rect;
 		}
 
-		public addCircle (centerPt: IPoint, radius: number, attr?: IAttributes) : CircleElement {
+		/**
+		 * addCircle
+		 * ----------------------------------------------------------------------------
+		 * Add a circle to our SVG canvas
+		 * @param 	centerPt	Central point for the circle
+		 * @param 	radius		Radius for the circle 
+		 * @param 	attr		Any attributes that should be set for the circle
+		 * 
+		 * @returns	The created circle 
+		 */
+		public addCircle (centerPt: IPoint, radius: number, attr?: ISVGAttributes) : CircleElement {
 			let circle = this._group.addCircle(centerPt, radius, attr);
 			this._addElementListener(circle);
 			return circle;
 		}
 
+		/**
+		 * addPerfectArc
+		 * ----------------------------------------------------------------------------
+		 * Add an arc to our SVG canvas
+		 * @param centerPt 
+		 * @param radius 
+		 * @param startDeg 
+		 * @param endDeg 
+		 * @param direction 
+		 * @param attr 
+		 * 
+		 * @returns	The created arc
+		 */
+		public addPerfectArc (centerPt: IPoint, radius: number, startDeg: number, endDeg: number, direction: number, attr?: IPathSVGAttributes): ArcElement {
+			let arc = this._group.addPerfectArc(centerPt, radius, startDeg, endDeg, direction, attr);
+			this._addElementListener(arc);
+			return arc;
+		}
+
+		/**
+		 * addPieSlice
+		 * ----------------------------------------------------------------------------
+		 * @param centerPt 
+		 * @param radius 
+		 * @param startDeg 
+		 * @param endDeg 
+		 * @param direction 
+		 * @param attr 
+		 * 
+		 * @returns	The created pie slice
+		 */
+		public addPieSlice (centerPt: IPoint, radius: number, startDeg: number, endDeg: number, direction: number, attr?: IPathSVGAttributes): PieSliceElement {
+			let pieSlice = this._group.addPieSlice(centerPt, radius, startDeg, endDeg, direction, attr);
+			this._addElementListener(pieSlice);
+			return pieSlice;
+		}
+
+		/**
+		 * addRegularPolygon
+		 * ----------------------------------------------------------------------------
+		 * Add a multi-sided polygon to our SVG canvas
+		 * @param 	centerPt 	Central point for the shape
+		 * @param 	sides 		Number of sides for the polygon
+		 * @param 	radius 		Radius for the polygon
+		 * @param 	attr 		Any attributes that should be set for the circle
+		 * 
+		 * @returns	The created polygon
+		 */
 		public addRegularPolygon (centerPt: IPoint, sides: number, radius: number, attr?: IPathSVGAttributes) : PolygonElement {
 			let polygon = this._group.addRegularPolygon(centerPt, sides, radius, attr);
 			this._addElementListener(polygon);
@@ -539,19 +609,19 @@ namespace KIP.SVG {
 			return txt;
 		}
 		
-		public addFlowableText (text: string, bounds: IBasicRect, attr: IAttributes) : TextElement {
+		public addFlowableText (text: string, bounds: IBasicRect, attr: ISVGAttributes) : TextElement {
 			let txt = this._group.addFlowableText(text, bounds, attr);
 			this._addElementListener(txt);
 			return txt;
 		}
 
-		public addGroup (attr?: IAttributes): GroupElement {
+		public addGroup (attr?: ISVGAttributes): GroupElement {
 			let group = this._group.addGroup(attr);
 			this._addElementListener(group);
 			return group;
 		}
 
-		public addShape (shapeType: SVGShapeEnum, scale?: number, centerPt?: IPoint, attr?: IAttributes) : PathExtensionElement {
+		public addShape (shapeType: SVGShapeEnum, scale?: number, centerPt?: IPoint, attr?: ISVGAttributes) : PathExtensionElement {
 			let shape = this._group.addShape(shapeType, scale, centerPt, attr);
 			this._addElementListener(shape);
 			return shape;
@@ -564,14 +634,13 @@ namespace KIP.SVG {
 		}
 		//#endregion
 
-		/**...........................................................................
+		/**
 		 * _convertPointsToPathPoints
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Helper function to turn an array of IPoint elements to IPathPoint elements
 		 * @param   points 	The points to convert
 		 * @param   scale  	The scale that should be applied to the IPoint before turning into a IPathPoint
 		 * @returns Array of scaled IPathPoints
-		 * ...........................................................................
 		 */
 		private _convertPointsToPathPoints(points: IPoint[], scale?: number): IPathPoint[] {
 			if (!scale) { scale = 1; }

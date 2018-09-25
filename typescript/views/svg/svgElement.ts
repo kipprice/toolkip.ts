@@ -121,11 +121,10 @@ namespace KIP.SVG {
             if (!attributes) { attributes = {}; }
 
             // initialize the style
-            this._style = new SVGStyle();
+            this._style = new SVGStyle(attributes.svgStyle);
 
             // send all arguments to the _setAttributes function
-            addlArgs.splice(0, 0, attributes);
-            this._attributes = this._setAttributes.apply(this, addlArgs);
+            this._attributes = this._setAttributes(attributes, ...addlArgs);
 
             // create the elements
             this._createElements(this._attributes);
@@ -186,7 +185,7 @@ namespace KIP.SVG {
 			// Add to the appropriate parent
 			if (parent) {
                 parent.appendChild(elem);
-			}
+            }
 
 			// track that this element should be non-scaling
 			this._preventScaling = attributes.unscalable;
@@ -237,10 +236,6 @@ namespace KIP.SVG {
         protected _updateExtremaAndNotifyListeners(attributes: ISVGAttributes): void {
             this._updateExtrema(attributes);
             this._notifyUpdateListeners();
-        } 
-
-        public addEventListener(event: keyof WindowEventMap, listener: EventListenerObject): void {
-            this._elems.base.addEventListener(event, listener);
         }
 
         /**...........................................................................
@@ -261,10 +256,12 @@ namespace KIP.SVG {
         public scale(scaleAmt: number): void {
             let box = this.measureElement();
             this.style.transform = format(
-                "translate({0},{1}) scale({2}) translate(-{0},-{1})",
+                "translate({0},{1}) scale({2}) translate({3},{4})",
                 box.x + (box.w / 2),
                 box.y + (box.h / 2),
-                scaleAmt
+                scaleAmt,
+                -1 * (box.x + (box.w / 2)),
+                -1 * (box.y + (box.h / 2))
             );
         }
     }

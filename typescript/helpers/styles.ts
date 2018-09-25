@@ -3,6 +3,7 @@
 
 namespace KIP.Styles {
 
+    //#region INTERFACES AND DEFINITIONS
     /**...........................................................................
      * IStandardStyles
      * ...........................................................................
@@ -54,14 +55,6 @@ namespace KIP.Styles {
         [id: string]: string;
     }
 
-    export interface IThemeMap {
-        [id: string]: string[];
-    }
-
-    interface ICreatedStyles {
-        [key: string]: boolean;
-    }
-
     export interface IFontFaceDefinition {
         url: string;
         format: string;
@@ -74,574 +67,9 @@ namespace KIP.Styles {
     export interface IMediaQueries {
         [screenSize: string]: IStandardStyles;
     }
-
-    /**...........................................................................
-     * @class Stylable
-     * Creates an element that can additionally add CSS styles
-     * @version 1.0
-     * ...........................................................................
-     */
-    export abstract class Stylable extends NamedClass {
-
-        //#region STATIC PROPERTIES
-
-        /** create the collection of all styles that have been added to the page */
-        private static _pageStyles: IStandardStyles = {};
-
-        /** keep track of all of the classes without the color substitutions */
-        private static _uncoloredPageStyles: IStandardStyles = {};
-
-        /** keep track of all of the theme colors for each of the classes */
-        private static _themeColors: IThemeColors = {};
-
-        /** map theme colors back to the affected classes so we don't over-aggressively update */
-        private static _themeMap: IThemeMap = {};
-
-        /** hold the style tag containing our css class */
-        private static _styleElem: HTMLStyleElement;
-
-        /** keep track of the styles we've already created */
-        private static _createdStyles: ICreatedStyles = {};
-
-        /** keep track of the custom fonts for the page */
-        private static _customPageFonts: ICustomFonts = {};
-
-        //#endregion
-
-        //#region INSTANCE PROPERTIES
-
-        /** keep track of the styles defined by this class */
-        private _styles: IStandardStyles;
-
-        /** keep track of the un-themed version of our styles */
-        protected static _uncoloredStyles: IStandardStyles;
-        private get _uncoloredStyles(): IStandardStyles { return (this.constructor as typeof Stylable)._uncoloredStyles; }
-        public get uncoloredStyles(): IStandardStyles { return this._getUncoloredStyles(); }
-
-        /** overridable function to grab the appropriate styles for this particular class */
-        protected _getUncoloredStyles(): IStandardStyles {
-            return (this.constructor as typeof Stylable)._uncoloredStyles;
-        }
-
-        /** keep track of the fonts defined by this element */
-        protected static _customFonts: ICustomFonts = {};
-        private get _customFonts(): ICustomFonts { return (this.constructor as typeof Stylable)._customFonts; }
-        public get customFonts(): ICustomFonts { return this._getCustomFonts(); }
-
-        /** overridable function to grab the appropriate fonts for this particular class */
-        protected _getCustomFonts(): ICustomFonts {
-            return (this.constructor as typeof Stylable)._customFonts;
-        }
-
-        /** keep track of the initial set of colors */
-        protected _colors: string[];
-
-        /** keep track of whether we've initialized our styles */
-        protected _hasCreatedStyles: boolean;
-
-        //#endregion
-
-        /**...........................................................................
-         * Creates a stylable class
-         * ...........................................................................
-         */
-        constructor() {
-            super("Stylable");
-            this._colors = [];
-            // TODO: Check if we should actually be conditionally declaring our static variables in the constructor
-
-            // Create the styles
-            this._createStyles();
-            this._hasCreatedStyles = true;
-        }
-
-        /**...........................................................................
-         * setThemeColor
-         * ...........................................................................
-         * Update a theme color based on placeholders
-         * 
-         * @param   idx             The index of the theme color 
-         * @param   color           The color to replace it with
-         * @param   noReplace       True if we shouldn't replace an existing color
-         * ...........................................................................
-         */
-        public setThemeColor(idx: number, color: string, noReplace?: boolean): void {
-
-            // Quit if we're missing the color
-            if (!color) { return; }
-
-            // Calculate the appropriate name of the index
-            let colorId: string = this._buildThemeColorId(idx);
-
-            // Quit if the color is already set to any value
-            if (noReplace && Stylable._themeColors[colorId]) { return; }
-
-            // Quit if this is already the color set for this element
-            if (Stylable._themeColors[colorId] === color) { return; }
-
-            // Replace the color stored in our array
-            Stylable._themeColors[colorId] = color;
-
-            // update the styles related to this particular theme
-            Stylable._updateThemeColor(colorId);
-
-            // Create the appropriate style classes out of it
-            Stylable._createStyles(true);
-        }
-
-        /**...........................................................................
-         * _buildThemeColorId
-         * ...........................................................................
-         * Create a unique ID for a color for a particular class
-         * 
-         * @param   idx         The index of the color 
-         * @param   uniqueID    Optional name to use instead of the class name
-         * 
-         * @returns The created color ID
-         * ...........................................................................
-         */
-        protected static _buildThemeColorId (idx: number, uniqueId: string): string {
-            let outStr: string = format("<{0}|{1}>", uniqueId, idx.toString());
-            return outStr;
-        }
-
-        /**...........................................................................
-         * _buildThemeColorId
-         * ...........................................................................
-         * Create a unique ID for a color for a particular class
-         * 
-         * @param   idx         The index of the color 
-         * @param   uniqueID    Optional name to use instead of the class name
-         * 
-         * @returns The created color ID
-         * ...........................................................................
-         */
-        protected _buildThemeColorId (idx: number, uniqueId?: string): string {
-            return Stylable._buildThemeColorId(idx, uniqueId || this._getUniqueThemeName());
-        }
-
-        protected _getUniqueThemeName(): string {
-            return (this.constructor as any).name;
-        }
-
-        /**...........................................................................
-         * _updateAllThemeColors
-         * ...........................................................................
-         * Make sure we have an updated version of our styles
-         * ...........................................................................
-         */
-        protected static _updateAllThemeColors(): void {
-            let styles: IStandardStyles = cloneObject(this._uncoloredPageStyles);
-            let updateAll: boolean = Stylable._handleUpdatingThemeColors(styles);
-
-            this._pageStyles = styles;
-
-            if (!updateAll) { return; }
-            this._createStyles();
-        }
-
-        protected static _updateThemeColor(colorId: string): void {
-            let affectedSelectors: string[] = this._themeMap[colorId];
-            if (!affectedSelectors) { return; }
-
-            for (let selector of affectedSelectors) {
-                let def: TypedClassDefinition = cloneObject(this._uncoloredPageStyles[selector]);
-                if (!def) { return; }
-                let replaced: boolean = this._updateColorInClassDefinition(def, colorId);
-                if (!replaced) { return; }
-
-                this._pageStyles[selector] = this._mergeDefinition(this._pageStyles[selector], def);
-            }
-        }
-
-        /**...........................................................................
-         * _handleUpdatingThemeColor
-         * ...........................................................................
-         * Make sure any changes to theme colors are handled elegantly
-         * 
-         * @param   styles  The styles to update 
-         * 
-         * @returns True if an update was made
-         * ...........................................................................
-         */
-        protected static _handleUpdatingThemeColors(styles: IStandardStyles, updatedPlaceholder?: string): boolean {
-            // Only update the full classes if something actually changed
-            let updateAll: boolean = false;
-            
-            // loop through each of the style definitions
-            map(styles, (cssDeclaration: TypedClassDefinition, selector: string) => {
-
-                // loop through each property on this particular class
-                map(cssDeclaration, (value: any, key: string) => {
-
-                    if (typeof value === "object") { return; }
-
-                    // Split each value & assume we won't replace anything
-                    let valArray: string[] = value.split(" ");
-                    let replaced: boolean = false;
-
-                     // Loop through the split value
-                    valArray.map((val: string, idx: number) => {                     
-
-                        // Check if this is a placeholder & quit if it isn't
-                        let placeholder: string = this._matchesPlaceholder(val);      
-                        if (placeholder === "") { return; }                           
-
-                        // If we have an appropriate color, replace it
-                        if (this._themeColors["<" + placeholder + ">"]) {                         
-                            valArray[idx] = this._themeColors["<" + placeholder + ">"];          
-                            replaced = true;                                         
-                            updateAll = true;
-
-                        // otherwise, if we're updating placeholders and this needs updating, do so
-                        } else if (updatedPlaceholder) {                                
-                            if (!isNaN(+placeholder)) {
-                                let colorId: string = this._buildThemeColorId(+placeholder, updatedPlaceholder);
-                                valArray[idx] = colorId;
-                                if (!this._themeMap[colorId]) { this._themeMap[colorId] = []; }
-                                this._themeMap[colorId].push(selector);
-                                replaced = true;
-                                updateAll = true;
-                            }
-                        }
-                    }); 
-
-                    // Quit if we didn't replace anything
-                    if (!replaced) { return; }                                        
-
-                    // Replace the value with the new color
-                    styles[selector][key] = valArray.join(" ");                       
-                });
-
-            });
-
-            return updateAll;
-        }
-
-        protected static _updateColorInClassDefinition(def: TypedClassDefinition, colorId: string): boolean {
-            let color: string = this._themeColors[colorId];
-            if (!color) { return; }
-
-            let replacedAny: boolean = false;
-
-            // loop through each property on this particular class
-            map(def, (value: any, key: string) => {
-
-                // skip transition values
-                if (typeof value === "object") { return; }
-                let replaced: boolean = false;
-
-                // Split each value & assume we won't replace anything
-                let valArray: string[] = value.split(" ");
-
-                 // Loop through the split value
-                valArray.map((val: string, idx: number) => {                     
-
-                    if (val !== colorId) { return; }                     
-                      
-                    valArray[idx] = color;          
-                    replaced = true; 
-            
-                }); 
-
-                // Quit if we didn't replace anything
-                if (!replaced) { 
-                    delete def[key];
-                    return; 
-                }                                        
-
-                // Replace the value with the new color
-                def[key] = valArray.join(" ");     
-                
-                // let the return value that we replaced something
-                replacedAny = true;
-            });
-
-            return replacedAny;
-        }
-
-        /**...........................................................................
-         * _mergeThemes
-         * ...........................................................................
-         * Mere a set of themes into a single theme
-         * 
-         * @param   styles  Sets of themes that should be merged together
-         * 
-         * @returns The updated set of themes
-         * ...........................................................................
-         */
-        protected static _mergeThemes(...styles: IStandardStyles[]): IStandardStyles {
-            let flatStyles: IStandardStyles[] = [];
-            let style: IStandardStyles;
-            for (style of styles) {
-                let flatStyle: IStandardStyles = this._cleanStyles(style);
-                flatStyles.push(flatStyle);
-            }
-            return this._combineThemes.apply(this, flatStyles);
-        }
-
-        /**...........................................................................
-         * _combineThemes
-         * ...........................................................................
-         * @param   themes  The themes to combine
-         * @returns The merged themes
-         * ...........................................................................
-         */
-        private static _combineThemes(...themes: IStandardStyles[]): IStandardStyles {
-            let out: IStandardStyles = {};
-
-            // Go through each of the themes
-            themes.map((style: IStandardStyles) => {
-                // then through each of the selectors
-                map(style, (def: TypedClassDefinition, selector: string) => {
-                    // initialise the properties for this selector if not already created
-                    if (!out[selector]) { out[selector] = {}; }
-
-                    out[selector] = this._mergeDefinition(def, out[selector]);
-                });
-            });
-
-            return out;
-        }
-
-        private static _mergeDefinition(...definitions: TypedClassDefinition[]): TypedClassDefinition {
-            let mergedDef: TypedClassDefinition = {}
-            
-            for (let def of definitions) {
-                // and last through all of the properties
-                map(def, (val: string, property: string) => {
-                    mergedDef[property] = val;
-                });
-            }
-            
-            return mergedDef;
-        }
-
-        /**...........................................................................
-         * _mergeThemes
-         * ...........................................................................
-         * Instance class to merge different themes
-         * 
-         * @param   themes  The themes to merge
-         * 
-         * @returns The merged themes 
-         * ...........................................................................
-         */
-        protected _mergeThemes(...themes: IStandardStyles[]): IStandardStyles {
-            return Stylable._mergeThemes.apply(Stylable, themes);
-        }
-
-        /**...........................................................................
-         * _mergeIntoStyles
-         * ...........................................................................
-         * Add a new set of styles into the set of page styles
-         * 
-         * @param   styles  The styles to merge
-         * ...........................................................................
-         */
-        protected static _mergeIntoStyles(styles: IStandardStyles): void {
-            this._uncoloredPageStyles = this._mergeThemes(this._uncoloredPageStyles, styles);
-            this._updateAllThemeColors();
-        }
-
-        /**...........................................................................
-         * _mergeIntoFonts
-         * ...........................................................................
-         * @param fonts 
-         * ...........................................................................
-         */
-        protected static _mergeIntoFonts(fonts: ICustomFonts): void {
-            map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
-                this._customPageFonts[fontName] = fontDef;
-            });
-        }
-
-        /**...........................................................................
-         * _createStyles
-         * ...........................................................................
-         * Create the styles for this class 
-         * @param   forceOverride   True if we should create the classes even if they 
-         *                          already exist
-         * ...........................................................................
-         */
-        protected static _createStyles(forceOverride?: boolean): void {
-
-            // grab our updated colors
-            let styles: IStandardStyles = Stylable._pageStyles;
-            let fonts: ICustomFonts = Stylable._customPageFonts;
-
-            // If we don't have any styles, just quit
-            if (!styles) { return; }
-
-            // Create the HTML style tag if we need to
-            if (!this._styleElem) {
-                this._styleElem = _createStyleElement(false);
-                document.head.appendChild(this._styleElem);
-            } else {
-                this._styleElem.innerHTML = "";
-            }
-
-            // add the font-family pieces
-            map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
-                let tmpElem: HTMLStyleElement = createFontDefinition(fontName, fontDef);
-            });
-
-            // create all of the individual styles
-            map(styles, (cssDeclaration: Styles.TypedClassDefinition, selector: string) => {
-                let tmpElem: HTMLStyleElement = Styles.createClass(selector, cssDeclaration, true, forceOverride);
-                if (!tmpElem) { return; }
-                this._styleElem.innerHTML += tmpElem.innerHTML;
-            });
-
-        }
-
-        /**...........................................................................
-         * _createStyles
-         * ...........................................................................
-         * Create the styles for this class 
-         * @param   forceOverride   True if we should create the classes even if they 
-         *                          already exist
-         * ...........................................................................
-         */
-        protected _createStyles(forceOverride?: boolean): void {
-            // Quit if we don't have the right styles
-            if (!this.uncoloredStyles) { return; }
-
-            // If we've already created styles for these elements, don't do it again
-            if ((Stylable._createdStyles[(this.constructor as any).name]) && !forceOverride) { return; }
-
-            // Copy our styles & replace the wrong tags
-            let tmpStyles: IStandardStyles = cloneObject(this.uncoloredStyles);
-            tmpStyles = this._cleanStyles(tmpStyles);
-            Stylable._handleUpdatingThemeColors(tmpStyles, this._getUniqueThemeName());
-
-            // Merge into the static styles
-            Stylable._mergeIntoStyles(tmpStyles);  
-            
-            // Handle the fonts as well
-            let customFonts: ICustomFonts = cloneObject(this._customFonts);
-            Stylable._mergeIntoFonts(customFonts);
-
-            // create all styles for the element
-            Stylable._createStyles(forceOverride);
-
-            Stylable._createdStyles[(this.constructor as any).name] = true;
-
-        }
-
-        /**...........................................................................
-         * _cleanStyles
-         * ...........................................................................
-         * Clean the nested styles data so that we can parse it properly
-         * @param   styles  The styles to clean
-         * @returns The cleaned styles
-         * ...........................................................................
-         */
-        protected _cleanStyles(styles: IStandardStyles, lastSelector?: string): IStandardStyles {
-            return Stylable._cleanStyles(styles, lastSelector);
-        }
-
-        protected static _cleanStyles(styles: IStandardStyles, lastSelector?: string): IStandardStyles {
-            let outStyles: IStandardStyles = {} as any;
-            map(styles, (value: TypedClassDefinition, selector: string) => {
-
-                // split all selectors at commas so we can appropriately nest
-                let newSelectors: string[] = selector.split(",");
-                if (lastSelector) {
-                    for (let i = 0; i < newSelectors.length; i += 1) {
-
-                        let newSelector: string = newSelectors[i];
-
-                        // handle selectors that are modifications of the last selector
-                        if (newSelector[0] === "&") {
-                            newSelectors[i] = lastSelector + rest(newSelector,1);
-                        
-                        // handle all other subclass cases
-                        } else {
-                            newSelectors[i] = lastSelector + " " + newSelector;
-                        }
-                    }
-                }
-
-                // loop through all of the available subclasses for this
-                let subCls: string;
-                for (subCls of newSelectors) {
-                    let calculatedStyles: IStandardStyles = this._cleanClassDef(subCls, value);
-                    outStyles = this._combineThemes(outStyles, calculatedStyles);
-                }
-
-            });
-            return outStyles;
-        }
-
-        /**...........................................................................
-         * _cleanClassDef
-         * ...........................................................................
-         * Clean a particular class definition recursively
-         * @param   selector    The CSS selector for this class
-         * @param   classDef    The definition for this CSS class
-         * @returns The merged styles
-         * ...........................................................................
-         */
-        protected static _cleanClassDef(selector: string, classDef: TypedClassDefinition): IStandardStyles {
-            let topStyles: IStandardStyles = {} as any;
-            topStyles[selector] = {} as TypedClassDefinition;
-
-            map(classDef, (propertyValue: any, propertyName: string) => {
-
-                // allow for animations to be created
-                if (propertyName === "nested") {
-
-                    let nestedStyles: IStandardStyles = propertyValue;
-
-                    
-                    let subnestedStyles = this._cleanStyles(propertyValue, selector);
-                    topStyles = this._combineThemes(topStyles, subnestedStyles);
-
-                } else {
-                    topStyles[selector][propertyName] = propertyValue;
-                }
-            });
-
-            return topStyles;
-        }
-
-        /**...........................................................................
-         * _matchesNumericPlaceholder
-         * ...........................................................................
-         * Checks if a particular string is a placeholder for a theme color
-         * @param   valuePiece  The value to check for any placeholder
-         * @returns The placeholder ID
-         * ...........................................................................
-         */
-        protected static _matchesPlaceholder(valuePiece: string): string {
-            let placeholderRegex: RegExp = /<(.+?)>/;
-            let result: RegExpExecArray = placeholderRegex.exec(valuePiece);
-            if (!result || !result[1]) { return ""; }
-            return result[1];
-        }
-
-        /**...........................................................................
-         * _applyColors
-         * ...........................................................................
-         * Apply the appropriate theme colors
-         * @param   otherElem   If passed in, sets a theme color on a different element
-         * ...........................................................................
-         */
-        protected _applyColors(otherElem?: Stylable): void {
-
-            let idx: number = 0;
-            for (idx; idx < this._colors.length; idx += 1) {
-                if (!this._colors[idx]) { continue; }
-                if (!otherElem) {
-                    this.setThemeColor(idx, this._colors[idx], true);
-                } else {
-                    otherElem.setThemeColor(idx, this._colors[idx], true);
-                }
-            }
-        }
-    }
     //#endregion
+
+    
 
     //#region HANDLE THE CLASS CREATION
 
@@ -656,7 +84,7 @@ namespace KIP.Styles {
      * @returns The created style element
      * ...........................................................................
      */
-    export function createClass(selector: string, attr: TypedClassDefinition, noAppend?: boolean, forceOverride?: boolean): HTMLStyleElement {
+    export function createClass(selector: string, attr: TypedClassDefinition, noAppend?: boolean, forceOverride?: boolean, skipExistingSelector?: boolean): HTMLStyleElement {
         let cls: HTMLStyleElement;
         let a: string;
         let styleString: string = "";
@@ -664,7 +92,8 @@ namespace KIP.Styles {
         let containsCurlyBrace: boolean = (selector.indexOf("{") !== -1);
 
         // If this style already exists, append to it
-        let cssRule: CSSStyleRule = _getExistingSelector(selector);
+        let cssRule: CSSStyleRule;
+        if (!skipExistingSelector) { cssRule = _getExistingSelector(selector); }
         if (!cssRule) { cssRule = { style: {} } as CSSStyleRule; }
 
         // Loop through the attributes we were passed in to create the class
@@ -696,7 +125,7 @@ namespace KIP.Styles {
         if (!addedSomething && !forceOverride) { return null; }
 
         // Append the class to the head of the document
-        cls = _createStyleElement(!noAppend);
+        cls = createStyleElement(!noAppend);
         cls.innerHTML += styleString;
 
         if (!noAppend) {
@@ -716,7 +145,7 @@ namespace KIP.Styles {
      * @returns The created style element
      * ...........................................................................
      */
-    function _createStyleElement(findExisting?: boolean): HTMLStyleElement {
+    export function createStyleElement(findExisting?: boolean): HTMLStyleElement {
         let styles: NodeList;
         let cls: HTMLStyleElement;
 
@@ -842,11 +271,13 @@ namespace KIP.Styles {
 
         return createClass("@font-face", attr, noAppend, forceOverride);
     }
+    //#endregion
 
+    // optional function that can generate a set of styles on page load, to speed up experience elsewhere
     export function preemptivelyCreateStyles(constructor: IConstructor<Stylable>): void {
-        window.addEventListener("load", () => {
+        window.setTimeout(() => {
             new constructor();
-        });
+        }, 0);
         
     }
 }

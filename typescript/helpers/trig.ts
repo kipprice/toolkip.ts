@@ -205,7 +205,7 @@ namespace KIP {
 		 * @returns The line that was drawn
 		 * --------------------------------------------------------------------------
 		 */
-		export function drawLine(start: IPoint, end: IPoint, host: HTMLElement, lbl?: string, lblNoRotate?: boolean): HTMLElement {
+		export function drawLine(start: IPoint, end: IPoint, host?: HTMLElement, lbl?: string, lblNoRotate?: boolean): HTMLElement {
 			"use strict";
 			let angle: number;
 			let distance: number;
@@ -236,7 +236,7 @@ namespace KIP {
 			div.style.transform = "rotate(" + angle + "deg)";
 
 			// Add to the specified parent element
-			host.appendChild(div);
+			if (host) { host.appendChild(div); }
 
 			// If there is also a label, create that
 			if (lbl) {
@@ -249,6 +249,30 @@ namespace KIP {
 			}
 			return div;
 		};
+
+		/**...........................................................................
+		 * updateLine
+		 * ...........................................................................
+		 * Update an existing line to have a new end-point
+		 * @param 	line	The line to update 
+		 * @param 	end		The end point to use for the line
+		 * @returns	The updated line
+		 * ........................................................................... 
+		 */
+		export function updateLine(line: HTMLElement, end: KIP.IPoint): HTMLElement {
+			let start: KIP.IPoint = {
+				x: parseInt(line.style.left),
+				y: parseInt(line.style.top)
+			};
+
+			let distance = getDistance(start, end);
+			let angle = getAngle(start, end);
+
+			line.style.width = distance + "px",
+			line.style.transform = "rotate(" + angle + "deg)";
+
+			return line;
+		}
 
 		/**--------------------------------------------------------------------------
 		 * connectElements
@@ -744,6 +768,59 @@ namespace KIP {
 			return out;
 		}
 
+		//#endregion
+
+		//#region RELATIVE POSITIONS
+		
+		export function compareLeftPosition(elemA: HTMLElement, elemB: HTMLElement): SortOrderEnum {
+			return _comparePosition(
+				globalOffsetLeft(elemA),
+				globalOffsetLeft(elemB)
+			);
+		}
+
+		export function getLeftMost(...elems: HTMLElement[]): HTMLElement {
+			return elems.sort(compareLeftPosition)[0];
+		}
+
+		export function compareRightPosition(elemA: HTMLElement, elemB: HTMLElement): SortOrderEnum {
+			return _comparePosition(
+				-1 * (globalOffsetLeft(elemA) + elemA.offsetWidth),
+				-1 * (globalOffsetLeft(elemB) + elemB.offsetWidth)
+			);
+		}
+
+		export function getRightMost(...elems: HTMLElement[]): HTMLElement {
+			return elems.sort(compareRightPosition)[0];
+		}
+
+		export function compareTopPosition(elemA: HTMLElement, elemB: HTMLElement): SortOrderEnum {
+			return _comparePosition(
+				globalOffsetTop(elemA),
+				globalOffsetTop(elemB)
+			);
+		}
+
+		export function getTopMost(...elems: HTMLElement[]): HTMLElement {
+			return elems.sort(compareTopPosition)[0];
+		}
+
+		export function compareBottomPosition(elemA: HTMLElement, elemB: HTMLElement): SortOrderEnum {
+			return _comparePosition(
+				-1 * (globalOffsetTop(elemA) + elemA.offsetHeight),
+				-1 * (globalOffsetTop(elemB) + elemB.offsetHeight)
+			);
+		}
+		
+		export function getBottomMost(...elems: HTMLElement[]): HTMLElement {
+			return elems.sort(compareBottomPosition)[0];
+		}
+
+		function _comparePosition (posA: number, posB: number): SortOrderEnum {
+			if (posA < posB) { return SortOrderEnum.CORRECT_ORDER; }
+			if (posA > posB) { return SortOrderEnum.INCORRECT_ORDER; }
+			return SortOrderEnum.SAME;
+		}
 		//#endregion
 	}
 

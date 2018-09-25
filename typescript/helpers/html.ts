@@ -61,6 +61,9 @@ namespace KIP {
 
         /** if we're creating a namespaced element, allow for specifying it */
         namespace?: string;
+
+        /** determine whether this element should be able to receive focus */
+        focusable?: boolean;
     }
 
     /**
@@ -69,7 +72,7 @@ namespace KIP {
     export type IEventListeners = {
         [key in keyof WindowEventMap]?: EventListener;
     }
-    
+
     //#endregion
 
     //#region PUBLIC FUNCTIONS FOR CREATING ELEMENTS
@@ -204,33 +207,37 @@ namespace KIP {
         }
 
         // Loop through all other attributes that we should be setting
-        if (obj.attr) {
-            for (a in obj.attr) {
-                if (obj.attr.hasOwnProperty(a)) {
-                    if (!obj.attr[a]) continue;
+        if (!obj.attr) { obj.attr = {}; }
 
-                    if ((obj.attr[a] as IKeyValPair<string>).key) {
-                        if ((obj.attr[a] as IKeyValPair<string>).key === "value") {
-                            (elem as HTMLInputElement).value = (obj.attr[a] as IKeyValPair<string>).val;
-                        } else {
-                            elem.setAttribute((obj.attr[a] as IKeyValPair<string>).key, (obj.attr[a] as IKeyValPair<string>).val);
-                        }
+        // handle accessibility on elements that can be selected
+        if (isNullOrUndefined(obj.focusable) && obj.eventListeners && obj.eventListeners.click) { obj.focusable = true; }
+        if (obj.focusable && !obj.attr.tabindex) { obj.attr.tabindex = 0; } 
 
+        for (a in obj.attr) {
+            if (obj.attr.hasOwnProperty(a)) {
+                if (isNullOrUndefined(obj.attr[a])) { continue; }
+
+                if ((obj.attr[a] as IKeyValPair<string>).key) {
+                    if ((obj.attr[a] as IKeyValPair<string>).key === "value") {
+                        (elem as HTMLInputElement).value = (obj.attr[a] as IKeyValPair<string>).val;
                     } else {
-                        if (a === "value") {
-                            (elem as HTMLInputElement).value = (obj.attr[a] as string);
-                        } else {
-                            elem.setAttribute(a, (obj.attr[a] as string));
-                        }
+                        elem.setAttribute((obj.attr[a] as IKeyValPair<string>).key, (obj.attr[a] as IKeyValPair<string>).val);
                     }
 
+                } else {
+                    if (a === "value") {
+                        (elem as HTMLInputElement).value = (obj.attr[a] as string);
+                    } else {
+                        elem.setAttribute(a, (obj.attr[a] as string));
+                    }
                 }
+
             }
         }
-
+        
         // add style properties
         if (obj.style) {
-            map(obj.style, (val: any, key: string) =>{
+            map(obj.style, (val: any, key: string) => {
                 elem.style[key] = val;
             });
         }
@@ -247,6 +254,17 @@ namespace KIP {
 
         // add any event listeners the user requested
         if (obj.eventListeners) {
+
+            // if this is an accessible object and it can take focus, add keybaord listeners too
+            if (obj.focusable && obj.eventListeners.click && !obj.eventListeners.keypress) {
+                obj.eventListeners.keypress = (e: KeyboardEvent) => {
+                    if (e.keyCode !== 13 && e.keyCode !== 32) { return; }
+                    obj.eventListeners.click(e);
+                    e.preventDefault();
+                }
+            }
+
+            // loop through all listeners to add them to the element
             map(obj.eventListeners, (listener: EventListener, key: keyof WindowEventMap) => {
                 elem.addEventListener(key, listener);
             });
@@ -348,242 +366,247 @@ namespace KIP {
         };
     }
 
-      //#region CALCULATE OFFSET FUNCTIONS
+    //#region CALCULATE OFFSET FUNCTIONS
 
-  /**...........................................................................
-   * GlobalOffsetLeft
-   * ...........................................................................
-   * Gets the offset left of this element in reference to the entire page
-   *
-   * @param   elem    The element to get the offset of
-   * @param   parent  The parent element to use as the reference. If not 
-   *                  included, it uses the document.body as the reference
-   *
-   * @returns The global offset of the elememt from the left of the page (or 
-   *          parent, if included)
-   * ...........................................................................
-   */
-  export function globalOffsetLeft(elem: HTMLElement, parent?: HTMLElement): number {
-    return _auxGlobalOffset(elem, "offsetLeft", parent);
-  };
-
-  /**...........................................................................
-   * GlobalOffsetTop
-   * ...........................................................................
-   * Gets the offset top of this element in reference to the entire page
-   *
-   * @param   elem   The element to get the offset of
-   * @param   parent The parent element to use as the reference. If not 
-   *                 included, it uses the document.body as the reference 
-   *
-   * @returns The global offset of the elememt from the top of the page (or 
-   *          parent, if included)
-   * ...........................................................................
-   */
-  export function globalOffsetTop(elem: HTMLElement, parent?: HTMLElement): number {
-    return _auxGlobalOffset(elem, "offsetTop", parent);
-  };
-
-  /**...........................................................................
-   * GlobalOffsets
-   * ...........................................................................
-   * Gets both the left and top offset
-   *
-   * @param   elem    The element to get the offsets for
-   * @param   parent  The element to use as the reference frame
-   *
-   * @returns Object with the keys "left" and "top"
-   * ...........................................................................
-   */
-  export function globalOffsets(elem: HTMLElement, parent?: HTMLElement): { left: number, top: number } {
-    "use strict";
-    return {
-      left: globalOffsetLeft(elem, parent),
-      top: globalOffsetTop(elem, parent)
+    /**...........................................................................
+     * GlobalOffsetLeft
+     * ...........................................................................
+     * Gets the offset left of this element in reference to the entire page
+     *
+     * @param   elem    The element to get the offset of
+     * @param   parent  The parent element to use as the reference. If not 
+     *                  included, it uses the document.body as the reference
+     *
+     * @returns The global offset of the elememt from the left of the page (or 
+     *          parent, if included)
+     * ...........................................................................
+     */
+    export function globalOffsetLeft(elem: HTMLElement, parent?: HTMLElement, useStandardParent?: boolean): number {
+        return _auxGlobalOffset(elem, "offsetLeft", parent, useStandardParent);
     };
-  };
 
-  /**...........................................................................
-   *  _auxGlobalOffset
-   * ...........................................................................
-   * Helper function to get a global offset
-   *
-   * @param   elem    The element to get the global offset for
-   * @param   type    The type of offset we should look at (either "offsetTop"
-   *                  or "offsetWidth")
-   * @param   parent  The parent to use as the reference frame. Uses document.
-   *                  body by default {optional}
-   *
-   * @return The specified offset for the element
-   * ...........................................................................
-   */
-  function _auxGlobalOffset(elem: HTMLElement, type: string, parent?: HTMLElement): number {
-    let offset: number = 0;
+    /**...........................................................................
+     * GlobalOffsetTop
+     * ...........................................................................
+     * Gets the offset top of this element in reference to the entire page
+     *
+     * @param   elem   The element to get the offset of
+     * @param   parent The parent element to use as the reference. If not 
+     *                 included, it uses the document.body as the reference 
+     *
+     * @returns The global offset of the elememt from the top of the page (or 
+     *          parent, if included)
+     * ...........................................................................
+     */
+    export function globalOffsetTop(elem: HTMLElement, parent?: HTMLElement, useStandardParent?: boolean): number {
+        return _auxGlobalOffset(elem, "offsetTop", parent, useStandardParent);
+    };
 
-    // Recursively loop until we no longer have a parent
-    while (elem && (elem !== parent)) {
-      if (elem[type]) {
-        offset += elem[type];
-      }
-      elem = <HTMLElement>elem.offsetParent;
-    }
+    /**...........................................................................
+     * GlobalOffsets
+     * ...........................................................................
+     * Gets both the left and top offset
+     *
+     * @param   elem    The element to get the offsets for
+     * @param   parent  The element to use as the reference frame
+     *
+     * @returns Object with the keys "left" and "top"
+     * ...........................................................................
+     */
+    export function globalOffsets(elem: HTMLElement, parent?: HTMLElement, useStandardParent?: boolean): { left: number, top: number } {
+        "use strict";
+        return {
+            left: globalOffsetLeft(elem, parent, useStandardParent),
+            top: globalOffsetTop(elem, parent, useStandardParent)
+        };
+    };
 
-    return offset;
-  };
+    /**...........................................................................
+     *  _auxGlobalOffset
+     * ...........................................................................
+     * Helper function to get a global offset
+     *
+     * @param   elem    The element to get the global offset for
+     * @param   type    The type of offset we should look at (either "offsetTop"
+     *                  or "offsetWidth")
+     * @param   parent  The parent to use as the reference frame. Uses document.
+     *                  body by default {optional}
+     *
+     * @return The specified offset for the element
+     * ...........................................................................
+     */
+    function _auxGlobalOffset(elem: HTMLElement, type: string, parent?: HTMLElement, useStandardParent?: boolean): number {
+        let offset: number = 0;
 
-  //#endregion
+        // Recursively loop until we no longer have a parent
+        while (elem && (elem !== parent)) {
+            if (elem[type]) {
+                offset += elem[type];
+            }
 
-  //#region RELATIVE TO OTHER ELEM FUNCTIONS
+            if (useStandardParent) {
+                elem = elem.parentNode as HTMLElement;
+            } else {
+                elem = <HTMLElement>elem.offsetParent;
+            }
+        }
 
-  /**...........................................................................
-   * findCommonParent
-   * ...........................................................................
-   * Finds the closest shared parent between two arbitrary elements
-   *
-   * @param   elem_a    The first element to find the shared parent for
-   * @param   elem_b    The second element to find the shared parent for
-   *
-   * @returns The closest shared parent, or undefined if it doesn't exist or 
-   *          an error occurred.
-   * ...........................................................................
-   */
-  export function findCommonParent(elem_a: HTMLElement, elem_b: HTMLElement): HTMLElement {
-    let parent_a: HTMLElement;
-    let parent_b: HTMLElement;
+        return offset;
+    };
 
-    // If eother element doesn't exist, no point in going further
-    if (!elem_a || !elem_b) return undefined;
+    //#endregion
 
-    // Set up the source parent, and quit if it doesn't exist
-    parent_a = elem_a;
+    //#region RELATIVE TO OTHER ELEM FUNCTIONS
 
-    // Set up the reference parent and quit if it doesn't exist
-    parent_b = elem_b;
+    /**...........................................................................
+     * findCommonParent
+     * ...........................................................................
+     * Finds the closest shared parent between two arbitrary elements
+     *
+     * @param   elem_a    The first element to find the shared parent for
+     * @param   elem_b    The second element to find the shared parent for
+     *
+     * @returns The closest shared parent, or undefined if it doesn't exist or 
+     *          an error occurred.
+     * ...........................................................................
+     */
+    export function findCommonParent(elem_a: HTMLElement, elem_b: HTMLElement): HTMLElement {
+        let parent_a: HTMLElement;
+        let parent_b: HTMLElement;
 
-    // Loop through all parents of the source element
-    while (parent_a) {
+        // If eother element doesn't exist, no point in going further
+        if (!elem_a || !elem_b) return undefined;
 
-      // And all of the parents of the reference element
-      while (parent_b) {
+        // Set up the source parent, and quit if it doesn't exist
+        parent_a = elem_a;
 
-        // If they are the same parent, we have found our parent node
-        if (parent_a === parent_b) return parent_a;
+        // Set up the reference parent and quit if it doesn't exist
+        parent_b = elem_b;
 
-        // Otherwise, increment the parent of the reference element
-        parent_b = <HTMLElement>parent_b.parentNode;
-      }
+        // Loop through all parents of the source element
+        while (parent_a) {
 
-      // Increment the source parent and reset the reference parent
-      parent_a = <HTMLElement>parent_a.parentNode;
-      parent_b = elem_b;
-    }
+            // And all of the parents of the reference element
+            while (parent_b) {
 
-    // return undefined if we never found a match
-    return undefined;
+                // If they are the same parent, we have found our parent node
+                if (parent_a === parent_b) return parent_a;
 
-  };
+                // Otherwise, increment the parent of the reference element
+                parent_b = <HTMLElement>parent_b.parentNode;
+            }
 
-  /**...........................................................................
-   * moveRelToElement
-   * ...........................................................................
-   * Moves a given element to a position relative to the reference element.
-   *
-   * This is for cases where you have two elements with different parents, and
-   * you want to specify that element A is some number of pixels in some 
-   * direction compared to element B.
-   *
-   * @param   elem    The element to move
-   * @param   ref     The element to use as the reference element
-   * @param   x       The x offset to give this element, relative to the reference
-   * @param   y       The y offset to give this element, relative to the reference
-   * @param   no_move If set to false, only returns the offset_x and offset_y that 
-   *                  the element would have to be moved {optional}
-   *
-   * @returns An object containing the keys x and y, set to the offset applied to the element.
-   * ...........................................................................
-   */
-  export function moveRelToElem(elem: HTMLElement, ref: HTMLElement, x?: number, y?: number, no_move?: boolean): { x: number, y: number } {
-    let offset_me: { left: number, top: number };
-    let offset_them: { left: number, top: number };
-    let dx: number;
-    let dy: number;
+            // Increment the source parent and reset the reference parent
+            parent_a = <HTMLElement>parent_a.parentNode;
+            parent_b = elem_b;
+        }
 
-    // Find the offsets globally for each element
-    offset_me = globalOffsets(elem);
-    offset_them = globalOffsets(elem);
+        // return undefined if we never found a match
+        return undefined;
 
-    // Find the difference between their global offsets
-    dx = (offset_them.left + x) - offset_me.left;
-    dy = (offset_them.top + y) - offset_me.top;
+    };
 
-    // Adjust the element to the position specified
-    if (!no_move) {
-      elem.style.position = "absolute";
-      elem.style.left = dx + "px";
-      elem.style.top = dy + "px";
-    }
+    /**...........................................................................
+     * moveRelToElement
+     * ...........................................................................
+     * Moves a given element to a position relative to the reference element.
+     *
+     * This is for cases where you have two elements with different parents, and
+     * you want to specify that element A is some number of pixels in some 
+     * direction compared to element B.
+     *
+     * @param   elem    The element to move
+     * @param   ref     The element to use as the reference element
+     * @param   x       The x offset to give this element, relative to the reference
+     * @param   y       The y offset to give this element, relative to the reference
+     * @param   no_move If set to false, only returns the offset_x and offset_y that 
+     *                  the element would have to be moved {optional}
+     *
+     * @returns An object containing the keys x and y, set to the offset applied to the element.
+     * ...........................................................................
+     */
+    export function moveRelToElem(elem: HTMLElement, ref: HTMLElement, x?: number, y?: number, no_move?: boolean): { x: number, y: number } {
+        let offset_me: { left: number, top: number };
+        let offset_them: { left: number, top: number };
+        let dx: number;
+        let dy: number;
 
-    // Always return the offset we assigned this element.
-    return { x: dx, y: dy };
+        // Find the offsets globally for each element
+        offset_me = globalOffsets(elem);
+        offset_them = globalOffsets(elem);
 
-  };
+        // Find the difference between their global offsets
+        dx = (offset_them.left + x) - offset_me.left;
+        dy = (offset_them.top + y) - offset_me.top;
 
-  //#endregion
+        // Adjust the element to the position specified
+        if (!no_move) {
+            elem.style.position = "absolute";
+            elem.style.left = dx + "px";
+            elem.style.top = dy + "px";
+        }
 
-  /**...........................................................................
-   * removeSubclassFromAllElenents
-   * ...........................................................................
-   * Allows you to easily remove a subclass from all elements that have a certain 
-   * main class. Useful for things like button selection
-   *
-   * @param   cls       The main class to find all elements of
-   * @param   subcls    The sub class to remove from all of those elements
-   * @param   exception If needed, a single element that should 
-   *                    not have its subclass removed.
-   * ...........................................................................
-   */
-  export function removeSubclassFromAllElements(cls: string, subcls: string, exception?: HTMLElement): void {
-    let elems: NodeList;
-    let e: number;
-    let elem: HTMLElement;
+        // Always return the offset we assigned this element.
+        return { x: dx, y: dy };
 
-    elems = document.getElementsByClassName(cls);
+    };
 
-    for (e = 0; e < elems.length; e += 1) {
-      elem = <HTMLElement>elems[e];
+    //#endregion
 
-      // Only remove it if it isn't the exception
-      if (elem !== exception) {
-        removeClass(elem, subcls);
-      }
-    }
-  };
+    /**...........................................................................
+     * removeSubclassFromAllElenents
+     * ...........................................................................
+     * Allows you to easily remove a subclass from all elements that have a certain 
+     * main class. Useful for things like button selection
+     *
+     * @param   cls       The main class to find all elements of
+     * @param   subcls    The sub class to remove from all of those elements
+     * @param   exception If needed, a single element that should 
+     *                    not have its subclass removed.
+     * ...........................................................................
+     */
+    export function removeSubclassFromAllElements(cls: string, subcls: string, exception?: HTMLElement): void {
+        let elems: NodeList;
+        let e: number;
+        let elem: HTMLElement;
 
-  /**...........................................................................
-   * addResizingElement (UNIMPLEMENTED)
-   * ...........................................................................
-   * Adds an element to the document that should resize with the document
-   * 
-   * @param   elem        The element that should resize
-   * @param   fixedRatio  If provided, keeps the image at this fixed ratio of w:h at all document sizes
-   * @param   forceInitW  Optionally force the initial width to a certain value
-   * @param   forceInitH  Optionally force the initial height to a certain value
-   * ...........................................................................
-   */
-  function addResizingElement(elem, fixedRatio, forceInitW, forceInitH) {
-    // TODO: implement
-  };
+        elems = document.getElementsByClassName(cls);
 
-  /**...........................................................................
-   * resizeElement (UNIMPLEMENTED)
-   * ...........................................................................
-   * Resizes an element to be the same ratio as it previously was
-   * @param   obj   The element to resize
-   * ...........................................................................
-   */
-  function resizeElement(obj) {
-    // TODO: implement
-  };
+        for (e = 0; e < elems.length; e += 1) {
+            elem = <HTMLElement>elems[e];
+
+            // Only remove it if it isn't the exception
+            if (elem !== exception) {
+                removeClass(elem, subcls);
+            }
+        }
+    };
+
+    /**...........................................................................
+     * addResizingElement (UNIMPLEMENTED)
+     * ...........................................................................
+     * Adds an element to the document that should resize with the document
+     * 
+     * @param   elem        The element that should resize
+     * @param   fixedRatio  If provided, keeps the image at this fixed ratio of w:h at all document sizes
+     * @param   forceInitW  Optionally force the initial width to a certain value
+     * @param   forceInitH  Optionally force the initial height to a certain value
+     * ...........................................................................
+     */
+    function addResizingElement(elem, fixedRatio, forceInitW, forceInitH) {
+        // TODO: implement
+    };
+
+    /**...........................................................................
+     * resizeElement (UNIMPLEMENTED)
+     * ...........................................................................
+     * Resizes an element to be the same ratio as it previously was
+     * @param   obj   The element to resize
+     * ...........................................................................
+     */
+    function resizeElement(obj) {
+        // TODO: implement
+    };
 
     /**...........................................................................
    * isChildEventTarget
@@ -597,90 +620,220 @@ namespace KIP {
    *          root element, false otherwise
    * ...........................................................................
    */
-  export function isChildEventTarget(ev: Event, root: HTMLElement): boolean {
-    "use strict";
-    return isChild(root, <HTMLElement>ev.target);
-  };
+    export function isChildEventTarget(ev: Event, root: HTMLElement): boolean {
+        "use strict";
+        return isChild(root, <HTMLElement>ev.target);
+    };
 
-  /**...........................................................................
-   * isChild
-   * ...........................................................................
-   * Checks if an element is a child of the provided parent element
-   * 
-   * @param   root    The parent to check for
-   * @param   child   The element to check for being a child of the root node
-   * @param   levels  The maximum number of layers that the child can be 
-   *                  separated from its parent. Ignored if not set.
-   * 
-   * @returns True if the child has the root as a parent
-   * ...........................................................................
-   */
-  export function isChild(root: HTMLElement, child: HTMLElement): boolean {
-    "use strict";
-    let parent: HTMLElement;
+    /**...........................................................................
+     * isChild
+     * ...........................................................................
+     * Checks if an element is a child of the provided parent element
+     * 
+     * @param   root    The parent to check for
+     * @param   child   The element to check for being a child of the root node
+     * @param   levels  The maximum number of layers that the child can be 
+     *                  separated from its parent. Ignored if not set.
+     * 
+     * @returns True if the child has the root as a parent
+     * ...........................................................................
+     */
+    export function isChild(root: HTMLElement, child: HTMLElement): boolean {
+        "use strict";
+        let parent: HTMLElement;
 
-    parent = child;
+        parent = child;
 
-    // Loop through til we either have a match or ran out of parents
-    while (parent) {
-      if (parent === root) return true;
-      parent = <HTMLElement>parent.parentNode;
+        // Loop through til we either have a match or ran out of parents
+        while (parent) {
+            if (parent === root) return true;
+            parent = <HTMLElement>parent.parentNode;
+        }
+
+        return false;
+    };
+
+    /**...........................................................................
+     * AppendChildren
+     * ...........................................................................
+     * Appends an arbitrary number of children to the specified parent node. Loops 
+     * through all members of the argument list to get the appropriate children 
+     * to add.
+     * 
+     * @param   parent  The parent element to add children to
+     * @param   kids    Any children that should be appended
+     * ...........................................................................
+     */
+    export function appendChildren(parent: HTMLElement, ...kids: HTMLElement[]): void {
+        "use strict";
+        let idx: number;
+
+        for (idx = 1; idx < kids.length; idx += 1) {
+            parent.appendChild(kids[idx]);
+        }
     }
 
-    return false;
-  };
+    /**...........................................................................
+     * moveElemRelativePosition
+     * ...........................................................................
+     * Moves an element a relative anount
+     * 
+     * @param   elem      The element to move
+     * @param   distance  The relative distance to move
+     * ...........................................................................
+     */
+    export function moveElemRelativePosition(elem: HTMLElement, distance: IPoint): void {
+        let top: number = parseInt(elem.style.top) || 0;
+        let left: number = parseInt(elem.style.left) || 0;
 
-  /**...........................................................................
-   * AppendChildren
-   * ...........................................................................
-   * Appends an arbitrary number of children to the specified parent node. Loops 
-   * through all members of the argument list to get the appropriate children 
-   * to add.
-   * 
-   * @param   parent  The parent element to add children to
-   * @param   kids    Any children that should be appended
-   * ...........................................................................
-   */
-  export function appendChildren(parent: HTMLElement, ...kids: HTMLElement[]): void {
-    "use strict";
-    let idx: number;
-
-    for (idx = 1; idx < kids.length; idx += 1) {
-      parent.appendChild(kids[idx]);
-    }
-  }
-
-  /**...........................................................................
-   * moveElemRelativePosition
-   * ...........................................................................
-   * Moves an element a relative anount
-   * 
-   * @param   elem      The element to move
-   * @param   distance  The relative distance to move
-   * ...........................................................................
-   */
-  export function moveElemRelativePosition(elem: HTMLElement, distance: IPoint): void {
-    let top: number = parseInt(elem.style.top);
-    let left: number = parseInt(elem.style.left);
-
-    elem.style.top = (top + distance.y) + "px";
-    elem.style.left = (left + distance.x) + "px";
-  }
-
-  /**...........................................................................
-   * getScrollPosition
-   * ...........................................................................
-   * Determines how far we have scrolled down the page
-   * 
-   * @returns The point of the current scroll position
-   * ...........................................................................
-   */
-  export function getScrollPosition() : IPoint {
-    let out: IPoint = {
-      x: (window.pageXOffset) ? window.pageXOffset : document.body.scrollLeft,
-      y: (window.pageYOffset) ? window.pageYOffset : document.body.scrollTop
+        elem.style.top = (top + distance.y) + "px";
+        elem.style.left = (left + distance.x) + "px";
     }
 
-    return out;
-  }
+    /**...........................................................................
+     * getScrollPosition
+     * ...........................................................................
+     * Determines how far we have scrolled down the page
+     * 
+     * @returns The point of the current scroll position
+     * ...........................................................................
+     */
+    export function getScrollPosition(): IPoint {
+        let out: IPoint = {
+            x: (window.pageXOffset) ? window.pageXOffset : document.body.scrollLeft,
+            y: (window.pageYOffset) ? window.pageYOffset : document.body.scrollTop
+        }
+
+        return out;
+    }
+
+    /**...........................................................................
+     * measureElement
+     * ...........................................................................
+     * Measures how large an element is when rendered on the document
+     * @param     elem    The element to measure 
+     * @param     parent  The parent element to render this within
+     * @returns   The client rect for the element 
+     * ...........................................................................
+     */
+    export function measureElement(elem: HTMLElement, parent?: HTMLElement): ClientRect {
+
+        // add to the document if not already present
+        if (!elem.parentNode) {
+            // save off the opacity originally, then set it to 0
+            let origOpacity: string = elem.style.opacity;
+            elem.style.opacity = "0";
+            window.setTimeout(() => { elem.style.opacity = origOpacity; });
+
+            // add the element to the parent
+            if (!parent) { parent = document.body; }
+            parent.appendChild(elem);
+        }
+
+        // measure the element on the parent
+        let rect: ClientRect = elem.getBoundingClientRect();
+        return rect;
+    }
+
+    /**...........................................................................
+     * resetPageFocus
+     * ...........................................................................
+     * Reset where current focus is to the top of the page
+     * ...........................................................................
+     */
+    export function resetPageFocus(): void {
+        let oldTabIndex: number = -1;
+        if (isNullOrUndefined(document.body.tabIndex)) {
+            oldTabIndex = document.body.tabIndex;
+        }
+        document.body.tabIndex = 0;
+        document.body.focus();
+        document.body.tabIndex = oldTabIndex;
+    }
+
+    /**...........................................................................
+     * removeElement
+     * ...........................................................................
+     * Remove an element from the DOM
+     * @param   elem    The element to remove
+     * ...........................................................................
+     */
+    export function removeElement(elem: HTMLElement): void {
+        if (!elem.parentNode) { return; }
+        elem.parentNode.removeChild(elem);
+    }
+
+    /**...........................................................................
+     * select
+     * ...........................................................................
+     * Selects the contents of an HTML element, whether an input or a 
+     * content-editable element.
+     * 
+     * @param   htmlElem    The element to select the contents of
+     * ...........................................................................
+     */
+    export function select(htmlElem: HTMLElement): void {
+
+        // elements that have select built in are easy: just use their function
+        if (isSelectable(htmlElem)) {
+            htmlElem.select();
+
+        // conte-editable areas are trickier; use some range logic 
+        // (taken from https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element)
+        } else {
+            // get the range of the element
+            let range = document.createRange();
+            range.selectNodeContents(htmlElem);
+
+            // set the window selection to be the range for the element
+            let selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+
+    const HTML_TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    /**...........................................................................
+     * encodeForHTML
+     * ...........................................................................
+     * Encode a string so that it can render appropriately in HTML contexts
+     * @param   data    The data to encode
+     * @returns The encoded data
+     * ........................................................................... 
+     */
+    export function encodeForHTML(data: string): string {
+        data = data.replace(/&/g, "&amp;");
+        data = data.replace(/</g, "&lt;");
+        data = data.replace(/>/g, "&gt;");
+
+        // whitespace
+        data = data.replace(/\\n/g, "<br>");
+        data = data.replace(/\\t/g, HTML_TAB); 
+        return data;
+    }
+
+    /**...........................................................................
+     * decodeFromHTML
+     * ...........................................................................
+     * From an HTML-renderable string, convert back to standard strings
+     * @param   data    The string to unencode
+     * @returns The decoded data
+     * ...........................................................................
+     */
+    export function decodeFromHTML(data: string): string {
+        data = data.replace(/&amp;/g, "&");
+        data = data.replace(/&lt;/g, "<");
+        data = data.replace(/&gt;/g, ">");
+
+        // some uncommon but possible control characters
+        data = data.replace(/&quot;/g, "\"");
+        data = data.replace(/&apos;/g, "'");
+
+        // whitespace replacements
+        data = data.replace(/<br>/g, "\n");
+        data = data.replace(new RegExp(HTML_TAB, "g"), "\t");
+        data = data.replace(/&nbsp;/g, " ");
+        
+        return data;
+    }
 }

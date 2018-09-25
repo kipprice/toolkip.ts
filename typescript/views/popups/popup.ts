@@ -1,6 +1,8 @@
 ///<reference path="../drawable.ts" />
 namespace KIP {
 
+	export type PopupColor = "popupTheme";
+
 	export interface PopupElements extends IDrawableElements {
 		base: HTMLElement;
 		overlay: HTMLElement;
@@ -15,19 +17,27 @@ namespace KIP {
 		themeColor?: string;
 	}
 
-	/**...........................................................................
+	/**----------------------------------------------------------------------------
 	 * @class Popup
+	 * ----------------------------------------------------------------------------
 	 * Generic class to show data in a popup form
-	 * @version 1.0
-	 * ...........................................................................
+	 * @author	Kip Price
+	 * @version 1.0.0
+	 * ----------------------------------------------------------------------------
 	 */
 	export class Popup extends Drawable {
 
+		//.....................
 		//#region PROPERTIES
 
 		/** elements contained within the popup */
 		protected _elems: PopupElements;
 
+		//#endregion
+		//.....................
+
+		//...............
+		//#region STYLES
 		/** styles to render the popup with */
 		protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
 			".overlay": {
@@ -59,7 +69,7 @@ namespace KIP {
 				borderRadius: "3px",
 				boxShadow: "1px 1px 5px 2px rgba(0,0,0,.2)",
 				display: "block",
-				borderTop: "10px solid <0>",
+				borderTop: "10px solid <popupTheme>",
 				padding: "10px",
 			},
 
@@ -84,7 +94,7 @@ namespace KIP {
 
 			".popup .buttonContainer .popupButton": {
 				padding: "2px 10px",
-				backgroundColor: "<0>",
+				backgroundColor: "<popupTheme>",
 				color: "#FFF",
 				cursor: "pointer",
 				marginLeft: "15px",
@@ -121,14 +131,21 @@ namespace KIP {
 				transform: "scale(1.1)"
 			}
 		}
-		//#endregion
 
+		public setThemeColor(colorId: PopupColor, color: string, noReplace?: boolean): void {
+			super.setThemeColor(colorId, color, noReplace);
+		}
+		//#endregion
+		//...............
+
+		//..............................
 		//#region CREATE A POPUP FORM
 
-		/**...........................................................................
+		/**
+		 * Popup
+		 * ----------------------------------------------------------------------------
 		 * Creates a new popup form
 		 * @param 	obj 	If included, contains info on how to create this popup
-		 * ........................................................................... 
 		 */
 		constructor (obj?: IPopupDefinition) {
 			if (!obj) { 
@@ -139,21 +156,22 @@ namespace KIP {
 
 			super(obj);
 			if (obj.themeColor) {
-				this.setThemeColor(0, obj.themeColor);
+				this.setThemeColor("popupTheme", obj.themeColor);
 			} else {
-				this.setThemeColor(0, "#06F", true);
+				this.setThemeColor("popupTheme", "#06F", true);
 			}
 			
 		}
 		//#endregion
-
+		//..............................
+		
+		//........................
 		//#region CREATE ELEMENTS
 
-		/**...........................................................................
+		/**
 		 * _createElements
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Creates all of the elements needed for this popup
-		 * ...........................................................................
 		 */
 		protected _createElements(): void {
 			this._createOverlay();				// BG layer to shield the rest of the page from this popup
@@ -164,11 +182,10 @@ namespace KIP {
 			this._createButtonContainer();		// create the container for the buttons
 		}
 
-		/**...........................................................................
+		/**
 		 * _createOverlay
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Creates the overlay for the popup to shield the rest of the page
-		 * ...........................................................................
 		 */
 		private _createOverlay(): void {
 			this._elems.overlay = createSimpleElement("", "overlay");
@@ -178,32 +195,29 @@ namespace KIP {
 			this._elems.base.appendChild(this._elems.overlay);
 		}
 
-		/**...........................................................................
+		/**
 		 * _createFrame
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Create the frame of the popup
-		 * ...........................................................................
 		 */
 		private _createFrame(): void {
 			this._elems.frame = createSimpleElement("", "frame");
 			this._elems.base.appendChild(this._elems.frame);
 		}
 
-		/**...........................................................................
+		/**
 		 * _createTitle
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Create the title of the popup
-		 * ...........................................................................
 		 */
 		private _createTitle(): void {
 			this._elems.title = createElement({ cls: "popupTitle", parent: this._elems.frame });
 		}
 
-		/**...........................................................................
+		/**
 		 * _createCloseButton
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Create the close button for the form
-		 * ...........................................................................
 		 */
 		private _createCloseButton(): void {
 			this._elems.closeBtn = createSimpleElement("", "closeBtn", "", null, [{ content: "x", cls: "x" }] );
@@ -213,37 +227,35 @@ namespace KIP {
 			this._elems.frame.appendChild(this._elems.closeBtn);
 		}
 
-		/**...........................................................................
+		/**
 		 * _createContentElement
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Create the element taht will hold all content for the popup
-		 * ...........................................................................
 		 */
 		private _createContentElement(): void {
 			this._elems.content = createSimpleElement("", "content");
 			this._elems.frame.appendChild(this._elems.content);
 		}
 
-		/**...........................................................................
+		/**
 		 * _createButtonContainer
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Create the container that will hold buttons
-		 * ...........................................................................
 		 */
 		private _createButtonContainer(): void {
 			this._elems.buttonContainer = createElement({ cls: "buttonContainer", parent: this._elems.frame });
 		}
 		//#endregion
+		//........................
 
+		//........................
 		//#region SET THE TITLE
 
-		/**...........................................................................
+		/**
 		 * setTitle
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Sets the title for the popup
-		 * 
 		 * @param 	title	What to set as the title
-		 * ........................................................................... 
 		 */
 		public setTitle(title: string): void {
 			this._elems.title.innerHTML = title;
@@ -255,59 +267,55 @@ namespace KIP {
 			}
 		}
 		//#endregion
+		//........................
 
+		//...............................................................
 		//#region ALLOW THE CALLER TO ADD / REMOVE CONTENT TO THE POPUP
 
-		/**...........................................................................
+		/**
 		 * addContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Allows the caller to add a Drawable to the popup
-		 * 
 		 * @param 	drawable 	The drawable element to add
-		 * ...........................................................................
 		 */
 		public addContent(drawable: Drawable): void;
 
-		/**...........................................................................
+		/**
 		 * addContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Allows the caller to add an HTMLElement to the popup
-		 * 
 		 * @param	elem	The HTMLElement to add
-		 * ...........................................................................
 		 */
 		public addContent(elem: HTMLElement): void;
 
-		/**...........................................................................
+		/**
 		 * addContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Allows the caller to pass basic info to the popup so that 
 		 * createSimpleElement can be called
-		 * 
 		 * @param	id		ID of the element to be created
 		 * @param	cls		Class of the element to be created
 		 * @param	content	What content the element should contain
-		 * ...........................................................................
 		 */
 		public addContent(id?: string, cls?: string | IClasses, content?: string): void;
 
-		/**...........................................................................
+		/**
 		 * addContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Allows the caller to add detailed info to the popup so that createElement
 		 * can be called
-		 * 
 		 * @param	obj		The object containing data on how to create the element
-		 * ...........................................................................
 		 */
 		public addContent(obj: IElemDefinition): void;
 
-		/**...........................................................................
+		/**
 		 * addContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Allows the user to add content to the popup
 		 * See individual tags for param info
-		 * ...........................................................................
+		 * @param	param1
+		 * @param	cls
+		 * @param	content
 		 */
 		public addContent(param1?: (HTMLElement | string | Drawable | IElemDefinition), cls?: string | IClasses, content?: string): void {
 			let elem: StandardElement;
@@ -335,26 +343,26 @@ namespace KIP {
 			this._elems.content.appendChild(elem);
 		}
 
-		/**...........................................................................
+		/**
 		 * clearContent
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Clears all content out of the form
-		 * ...........................................................................
 		 */
 		public clearContent(): void {
 			this._elems.content.innerHTML = "";
 		}
 		//#endregion
+		//...............................................................
 
+		//.....................
 		//#region ADD BUTTONS
-		/**...........................................................................
+
+		/**
 		 * addButton
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Adds a button to the popup
-		 * 
 		 * @param 	label 		The label to use for the button
 		 * @param 	callback 	What to do when the button is clicked
-		 * ...........................................................................
 		 */
 		public addButton(label: string, callback: Function) : void {
 			let btnElem: HTMLElement = createElement({ cls: "popupButton", parent: this._elems.buttonContainer, content: label });
@@ -362,7 +370,9 @@ namespace KIP {
 				callback();
 			});
 		}
+
 		//#endregion
+		//.....................
 
 	}
 

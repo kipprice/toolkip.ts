@@ -24,6 +24,18 @@ namespace KIP {
 		
 	}
 
+	export interface IContextMenuThemeColors extends IDictionary<string> {
+		menuBG: string; 
+		menuText: string; 
+		menuOptBG: string; 
+		menuBorder: string; 
+		menuOptNested: string; 
+		menuBorderNested: string; 
+		menuSelectedText: string; 
+		menuSelectedBorder: string;
+	}
+	
+
 	/**...........................................................................
 	 * @class ContextMenu
 	 * creates a custom context menu 
@@ -57,13 +69,13 @@ namespace KIP {
 		public get base(): HTMLElement { return this._elems.base; }
 
 		/** collection of theme colors for the context menu */
-		protected _themes: string[];
+		protected _colors: IContextMenuThemeColors;
 
 		/** the styles to use for the standard context menu */
 		protected static _uncoloredStyles: Styles.IStandardStyles = {
 			".ctxMenu": {
-				backgroundColor: "<0>",
-				color: "<1>",
+				backgroundColor: "<menuBG>",
+				color: "<menuText>",
 				fontFamily: "'Calibri Light', Helvetica",
 				boxShadow: "1px 1px 3px 2px rgba(0,0,0,.1)",
 				fontSize: "14px",
@@ -75,17 +87,17 @@ namespace KIP {
 			},
 
 			".ctxMenu .subMenu": {
-				backgroundColor: "<2>",
+				backgroundColor: "<menuOptBG>",
 				width: "100%",
 				top: "-2px",
 				boxShadow: "1px 1px 1px 1px rgba(0,0,0,.1)",
 				left: "calc(100% - 1px)",
-				borderLeft: "1px solid <3>"
+				borderLeft: "1px solid <menuBorder>"
 			},
 
 			".ctxMenu .subMenu .subMenu": {
-				backgroundColor: "<4>",
-				borderLeft: "1px solid <5>"
+				backgroundColor: "<menuOptNested>",
+				borderLeft: "1px solid <menuBorderNested>"
 			},
 
 			".ctxMenu .ctxOption" : {
@@ -95,9 +107,9 @@ namespace KIP {
 			},
 
 			".ctxMenu .ctxOption:hover": {
-				backgroundColor: "<6>",
-				color: "<2>",
-				borderLeft: "7px solid <7>"
+				backgroundColor: "<menuSelectedText>",
+				color: "<menuOptBG>",
+				borderLeft: "7px solid <menuSelectedBorder>"
 			}
 		}
 
@@ -105,10 +117,10 @@ namespace KIP {
 		 * Creates a custom context (right-click) menu for a given element
 		 * @param 	target    	The element to create the custom menu for
 		 * @param 	noStyles	True if we shouldn't create css classes for the standard menu styles
-		 * @param	themes		Optional set of theme colors to use for the menu
+		 * @param	colors		Optional set of theme colors to use for the menu
 		 * ...........................................................................
 		 */
-		constructor(target: HTMLElement, noStyles?: boolean, themes?: string[]) {
+		constructor(target: HTMLElement, noStyles?: boolean, colors?: IContextMenuThemeColors) {
 
 			// Initialize our Drawable
 			super({cls: "ctxMenu"});
@@ -117,7 +129,16 @@ namespace KIP {
 			// Set our initial properties
 			this._target = target;
 			this._noStyles = noStyles;
-			this._themes = themes || ["rgba(40,40,40,1)", "#FFF", "rgba(40,40,40,.9)", "#777", "rgba(40,40,40,.85)", "#888", "#505050", "#999"];
+			this._colors = colors || {
+				menuBG: "rgba(40,40,40,1)", 
+				menuText: "#FFF", 
+				menuOptBG: "rgba(40,40,40,.9)", 
+				menuBorder: "#777", 
+				menuOptNested: "rgba(40,40,40,.85)", 
+				menuBorderNested: "#888", 
+				menuSelectedText: "#505050", 
+				menuSelectedBorder: "#999"
+			};
 
 			// Initialize the option array
 			this._options = new Collection<Option>();
@@ -402,10 +423,9 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		protected _setThemeColors(): void {
-			let idx: number = 0;
-			for (idx; idx < this._themes.length; idx += 1) {
-				this.setThemeColor(idx, this._themes[idx]);
-			}
+			map(this._colors, (color: string, uniqueId: string) => { 
+				this.setThemeColor(uniqueId, color);
+			});
 		}
 
 		/**...........................................................................

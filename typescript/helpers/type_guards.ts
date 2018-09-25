@@ -51,7 +51,7 @@ namespace KIP {
       y: 1,
       width: 1,
       height: 1
-    };
+    } as any as SVGRect;
 
     if (isInterface<SVGRect>(test, rect)) { return true; }
     return false;
@@ -201,6 +201,14 @@ namespace KIP {
    */
   export function isObject (test: any): test is Object {
     return (typeof test === typeof {});
+  }
+
+  export interface ISelectable {
+    select(): void;
+  }
+  
+  export function isSelectable (test: any): test is ISelectable {
+    return !!(test as HTMLInputElement).select;
   }
 
 }

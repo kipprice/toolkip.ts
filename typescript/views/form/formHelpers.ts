@@ -99,13 +99,15 @@ namespace KIP.Forms {
     }
 
     /** creates a label that will be clickable to select an associated input */
-    export function createLabelForInput(lbl: string, labelFor: string, cls?: string, embedIn?: HTMLElement): HTMLLabelElement {
+    export function createLabelForInput(lbl: string, labelFor: string, cls?: string, embedIn?: HTMLElement, attr?: IAttributes): HTMLLabelElement {
+        if (!attr) { attr = {}; }
+
+        attr.for = labelFor;
+
         let lblElement: HTMLLabelElement = createElement({
             type: "label",
             cls: cls,
-            attr: {
-                for: labelFor
-            },
+            attr: attr,
             content: lbl,
             parent: embedIn
         }) as HTMLLabelElement;
@@ -163,5 +165,26 @@ namespace KIP.Forms {
 
         // return the element
         return elem;
+    }
+
+    /** 
+     * determine whether a particular parameter is a form element 
+     * @param elem - Either a FormElement or a FormTemplate
+     * @returns True if elem is a form Element
+     */
+    export function isFormElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is FormElement<T> {
+        if (!elem) { return false; }
+        
+        return ((elem as FormElement<T>).id !== undefined) && 
+            ((elem as FormElement<T>).type !== undefined) &&
+            ((elem as FormElement<T>).template !== undefined);
+    }
+
+    export function isArrayChildElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is ArrayChildElement<T> {
+        if (!elem) { return false; }
+        if (isFormElement(elem)) { 
+            return (elem.type === FormElementTypeEnum.ARRAY_CHILD);
+        }
+        return false;
     }
 }

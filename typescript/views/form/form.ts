@@ -1,7 +1,8 @@
 ///<reference path="../drawable.ts" />
 ///<reference path="formConstants.ts" />
-
 namespace KIP.Forms {
+
+    export type FormColor = "formTheme" | "formSubTheme";
 
     export interface IFormElems extends IDrawableElements {
         base: HTMLElement;
@@ -98,7 +99,7 @@ namespace KIP.Forms {
             },
 
             ".kipForm .save.kipBtn": {
-                backgroundColor: "<0>",
+                backgroundColor: "<formTheme>",
                 color: "#FFF",
                 width: "20%"
             },
@@ -131,6 +132,10 @@ namespace KIP.Forms {
                 color: "#FFF"
             }
         };
+
+        public setThemeColor(colorId: FormColor, color: string, noReplace?: boolean): void {
+            super.setThemeColor(colorId, color, noReplace);
+        }
 
         protected _getUniqueThemeName(): string {
             return "Form";
@@ -200,7 +205,7 @@ namespace KIP.Forms {
             this._hasChanges = false;
             this._canSaveTracker = { hasMissingRequired: false, hasErrors: false };
 
-            this._colors = options.colors || ["#4A5", "#284"];
+            this._colors = options.colors || {formTheme: "#4A5", formSubTheme: "#284"};
             this._applyColors();
 
             // handle listeners
@@ -337,7 +342,7 @@ namespace KIP.Forms {
         protected _addSaveButtonUpdater(): void {
             Events.addEventListener(FORM_SAVABLE_CHANGE, {
                 func: (event: FormSavableEvent) => {
-                    let canSave = this._canSave();
+                    let canSave = this.canSave();
                     if (!canSave) {
                         this._elems.saveButton.title = this._getCannotSaveMessage();
                         addClass(this._elems.saveButton, "disabled");
@@ -376,7 +381,7 @@ namespace KIP.Forms {
          */
         public trySave(): F {
             if (hasClass(this._elems.saveButton, "disabled")) { return null; }
-            if (!this._canSave()) {
+            if (!this.canSave()) {
                 this._showCannotSaveMessage();
                 return null;
             } else {
@@ -390,7 +395,7 @@ namespace KIP.Forms {
          * Check with our elements that we are able to save
          * ...........................................................................
          */
-        protected _canSave(): boolean {
+        public canSave(): boolean {
             this._canSaveTracker = this._coreFormElem.canSave();
 
             return !(this._canSaveTracker.hasErrors || this._canSaveTracker.hasMissingRequired);
@@ -407,8 +412,7 @@ namespace KIP.Forms {
             if (!msg) { return; }
 
             let popup: ErrorPopup = new ErrorPopup(msg, "Couldn't Save");
-            popup.setThemeColor(0, this._colors[0]);
-            popup.setThemeColor(1, this._colors[1]);
+            popup.setThemeColor("popupTheme", this._colors.formTheme);
             popup.draw(document.body);
         }
 
@@ -463,7 +467,7 @@ namespace KIP.Forms {
                         }
                     }
                 );
-                popup.setThemeColor(0, this._colors[0]);
+                popup.setThemeColor("popupTheme", this._colors.formTheme);
                 popup.draw(document.body);
             } else {
                 this._cancel();
@@ -526,11 +530,11 @@ namespace KIP.Forms {
          * ...........................................................................
          * update the data in the form to match a particular data set
          * 
-         * @param   data    The data to update the form with
+         * @param   model    The data to update the form with
          * ...........................................................................
          */
-        public update(data: F): void {
-            this._coreFormElem.update(data);
+        public update(model: F): void {
+            this._coreFormElem.update(model);
             this._hasChanges = false;
         }
 
@@ -591,6 +595,16 @@ namespace KIP.Forms {
                 document.body.appendChild(this._elems.base);
             }
             if (!noShow) { this.show(); }
+        }
+
+        /**...........................................................................
+         * focus
+         * ...........................................................................
+         * Gives focus to the first element that can take focus
+         * ...........................................................................
+         */
+        public focus(): void {
+            this._coreFormElem.focus();
         }
         //#endregion
 

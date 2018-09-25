@@ -46,12 +46,16 @@ namespace KIP.Forms {
             layout?: FormElementLayoutEnum;
             hideTitle?: boolean;
             useGhostText?: boolean;
+            helpText?: string;
         }
 
         export interface IFormOptions extends IFormDisplay {
             popupForm?: boolean;
             noStandardStyles?: boolean;
-            colors?: string[];
+            colors?: {
+                formTheme: string;
+                formSubTheme?: string;
+            };
             addlButtons?: IFormButton[];
         }
 
@@ -145,7 +149,9 @@ namespace KIP.Forms {
         export interface IFormHTMLElements {
             core: HTMLElement;
             error?: HTMLElement;
+            lblContainer?: HTMLElement;
             lbl?: HTMLElement;
+            helpTextIcon?: HTMLElement;
             input?: EvaluableElem;
             childrenContainer?: HTMLElement;
             [key: string]: HTMLElement;

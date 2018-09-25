@@ -1,4 +1,4 @@
-///<reference path="../../../interfaces/model.ts" />
+///<reference path="../../../models/model.ts" />
 
 namespace KIP.Timeline {
 	export interface ITimeline {

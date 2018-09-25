@@ -101,7 +101,7 @@ namespace KIP.Forms {
             },
 
             ".kipFormElem.filepath label.filepath": {
-                backgroundColor: "<0>",
+                backgroundColor: "<formTheme>",
                 color: "#FFF",
                 borderRadius: "2px",
                 boxShadow: "1px 1px 5px 2px rgba(0,0,0,.1)",
@@ -264,7 +264,7 @@ namespace KIP.Forms {
                 width: "100px",
                 height: "100px",
                 borderRadius: "50px",
-                border: "1px solid <0>",
+                border: "1px solid <formTheme>",
                 overflow: "hidden",
                 position: "relative"
             },
@@ -275,7 +275,7 @@ namespace KIP.Forms {
 
             ".kipFormElem.photopath .photoWrapper .photoBtn": {
                 width: "100%",
-                backgroundColor: "<0>",
+                backgroundColor: "<formTheme>",
                 color: "#FFF",
                 textAlign: "center",
                 fontSize: "0.7em",
@@ -392,7 +392,7 @@ namespace KIP.Forms {
             let fileReader: FileReader = new FileReader();
             fileReader.addEventListener("load", () => {
                 window.setTimeout(() => {
-                    let photoURL = fileReader.result;
+                    let photoURL = fileReader.result as string;
                     this._elems.display.src = photoURL;
                 }, 0);
             });

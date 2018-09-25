@@ -1,19 +1,6 @@
 ///<reference path="formConstants.ts" />
 namespace KIP.Forms {
 
-    /** 
-     * determine whether a particular parameter is a form element 
-     * @param elem - Either a FormElement or a FormTemplate
-     * @returns True if elem is a form Element
-     */
-    export function isFormElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is FormElement<T> {
-        if (!elem) { return false; }
-        
-        return ((elem as FormElement<T>).id !== undefined) && 
-            ((elem as FormElement<T>).type !== undefined) &&
-            ((elem as FormElement<T>).template !== undefined);
-    }
-
     /** create the general form element class that all others extend */
     export abstract class FormElement<T> extends Styles.Stylable {
 
@@ -57,6 +44,13 @@ namespace KIP.Forms {
         /** elements of the form element */
         protected _elems: IFormHTMLElements;
 
+        public get input(): EvaluableElem { 
+            if (!this._elems.input) { 
+                return null; 
+            } 
+            return this._elems.input; 
+        }
+
         /** how this form element should be laid out */
         protected _layout: FormElementLayoutEnum;
 
@@ -71,6 +65,11 @@ namespace KIP.Forms {
 
         /** keep track of where this form is drawn */
         protected _parent: HTMLElement;
+
+        /** allow for label or label containers to be used */
+        protected get _labelElem(): HTMLElement {
+            return this._elems.lblContainer || this._elems.lbl;
+        }
 
         /** keep track of the form template */
         protected _template: IFormElemTemplate<T>;
@@ -89,7 +88,8 @@ namespace KIP.Forms {
             ".kipFormElem, .kipFormElem input, .kipFormElem select, .kipFormElem textarea": {
                 fontSize: "1em",
                 width: "100%",
-                boxSizing: "border-box"
+                boxSizing: "border-box",
+                fontFamily: "OpenSansLight,Segoe UI,Helvetica",
             },
 
             ".kipFormElem": {
@@ -98,14 +98,37 @@ namespace KIP.Forms {
             },
 
             ".kipFormElem input, .kipFormElem textarea, .kipFormElem select": {
-                fontFamily: "OpenSansLight,Segoe UI,Helvetica",
-                fontSize: "0.8em",
                 border: "1px solid #CCC"
             },
 
             ".kipFormElem textarea": {
                 minHeight: "100px",
                 maxWidth: "100%"
+            },
+
+            ".kipFormElem .labelContainer": {
+                display: "flex",
+                alignItems: "center"
+            },
+
+            ".kipFormElem .helpTextIcon": {
+                width: "19px",
+                height: "19px",
+                boxSizing: "border-box",
+                paddingTop: "4px",
+                backgroundColor: "<formSubTheme>",
+                color: "#FFF",
+                borderRadius: "50%",
+                fontSize: "0.8em",
+                textAlign: "center",
+                fontFamily: "SpecialElite",
+                cursor: "pointer",
+
+                nested: {
+                    "&:hover": {
+                        transform: "scale(1.1)"
+                    }
+                }
             },
 
             ".kipFormElem .lbl": {
@@ -121,7 +144,7 @@ namespace KIP.Forms {
 
             ".kipFormElem.required .lbl:after": {
                 content: '"*"',
-                color: "<1>",
+                color: "<formSubTheme>",
                 fontWeight: "bold",
                 fontSize: "1.8em",
                 position: "absolute",
@@ -264,7 +287,7 @@ namespace KIP.Forms {
          * wrapper around the cloning method so we don't run into protection issues 
          * ...........................................................................
          */
-        protected _parseElement (template: FormElement<any>, appendToID?: string): FormElement<any> {
+        protected _cloneFormElement (template: FormElement<any>, appendToID?: string): FormElement<any> {
             if (!appendToID) { appendToID = ""; }
             return template._createClonedElement(appendToID);
         }
@@ -324,7 +347,7 @@ namespace KIP.Forms {
             }
 
             // add the label and the input to the table cells
-            if (this._elems.lbl) { cells[0].appendChild(this._elems.lbl); }
+            if (this._labelElem) { cells[0].appendChild(this._labelElem); }
             if (this._elems.input) { cells[1].appendChild(this._elems.input); }
 
             // create the actual table element & add it to the core element
@@ -362,7 +385,7 @@ namespace KIP.Forms {
          */
         protected _labelAfterLayout(): void {
             this._elems.core.appendChild(this._elems.input);
-            this._elems.core.appendChild(this._elems.lbl);
+            this._elems.core.appendChild(this._labelElem);
         }
 
         /**...........................................................................
@@ -372,7 +395,7 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _addStandardElemsToCore(): void {
-            this._elems.core.appendChild(this._elems.lbl);
+            this._elems.core.appendChild(this._labelElem);
             this._elems.core.appendChild(this._elems.input);
         }
 
@@ -462,11 +485,15 @@ namespace KIP.Forms {
         public update(data: T): void {
             this._onClear();
             if (isNullOrUndefined(data)) { data = this._defaultValue; }
-            
+            let changed: boolean = (this._data === data);
+
             this._data = data;
             if (this._elems.input) {
                 this._elems.input.value = data;
             }
+
+            // notify other elements that this changed
+            if (changed) { window.setTimeout(() => { this._dispatchChangeEvent(); },0); }
         }
 
         /** ...........................................................................
@@ -495,6 +522,18 @@ namespace KIP.Forms {
          */
         public clear(): void {
             return this._onClear();
+        }
+
+        /**...........................................................................
+         * focus
+         * ...........................................................................
+         * Set focus to the input of this form element
+         * ...........................................................................
+         */
+        public focus(): boolean {
+            if (!this._elems.input) { return false; }
+            this._elems.input.focus();
+            return true;
         }
 
         //#endregion
@@ -658,7 +697,9 @@ namespace KIP.Forms {
          * @returns The cloned form element
          * ...........................................................................
          */
-        protected abstract _createClonedElement(appendToID: string): FormElement<T>;
+        protected _createClonedElement(appendToID: string): FormElement<T> {
+            return new (this.constructor as IConstructor<FormElement<T>>)(this._id + appendToID, this._template);
+        }
         
         //#endregion
 
@@ -698,7 +739,7 @@ namespace KIP.Forms {
             let attr: IAttributes = {};
             
             if (this._template.useGhostText) {
-                attr.placeholder = this._template.lbl;
+                attr.placeholder = this._template.label;
             }
             this._elems.input = createInputElement(this._id + "|input", "input", FormElementTypeEnum[this.type], this._data, attr);
         }
@@ -712,7 +753,24 @@ namespace KIP.Forms {
         protected _createStandardLabel(embedIn?: HTMLElement): void {
             let lbl: string = this._label;
             if (this._template.useGhostText) { lbl = ""; }
-            this._elems.lbl = createLabelForInput(lbl, this._id, "lbl", embedIn);
+
+        this._elems.lblContainer = createElement({
+                cls: "labelContainer",
+                parent: embedIn
+            });
+
+            this._elems.lbl = createLabelForInput(lbl, this._id, "lbl", this._elems.lblContainer);
+
+            if (this._template.helpText) {
+                this._elems.helpTextIcon = createElement({
+                    type: "span",
+                    cls: "helpTextIcon",
+                    content: "?",
+                    parent: this._elems.lblContainer
+                });
+
+                let tooltip: Tooltip = new Tooltip({content: this._template.helpText}, this._elems.helpTextIcon);
+            }
         }
 
         /**...........................................................................

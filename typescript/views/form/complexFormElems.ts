@@ -2,6 +2,12 @@
 
 namespace KIP.Forms {
 
+    export interface ICollapsibleHTMLElements extends IFormHTMLElements {
+        title: HTMLElement;
+        collapseElem?: HTMLElement;
+        titleContainer?: HTMLElement;
+    }
+
     //#region COLLAPSIBLE ELEMENT
     /**...........................................................................
      * @class CollapsibleElement
@@ -21,13 +27,7 @@ namespace KIP.Forms {
         protected _shouldHideTitle: boolean;
 
         /** keep track of shared elements for collapsible sections */
-        protected _elems: {
-            core: HTMLElement;
-            title: HTMLElement;
-            collapseElem?: HTMLElement;
-            titleContainer?: HTMLElement;
-            childrenContainer: HTMLElement;
-        }
+        protected _elems: ICollapsibleHTMLElements;
 
         /** style collapsible sections */
         protected static _uncoloredStyles: Styles.IStandardStyles = {
@@ -99,10 +99,15 @@ namespace KIP.Forms {
             let titleCls: string = "sectionHeaderContainer";
             if (this._shouldHideTitle) { titleCls += " hidden"; }
 
-            this._elems.titleContainer = createSimpleElement("", titleCls, "", null, null, this._elems.core);
+            this._elems.titleContainer = createElement({
+                cls: titleCls,
+                parent:this._elems.core,
+                eventListeners: {
+                    click: () => { this._onCaretClicked(); }
+                }
+            });
             this._elems.title = createSimpleElement("", "sectionHeader", this._label, null, null, this._elems.titleContainer);
             this._elems.collapseElem = createSimpleElement("", "caret", "\u25B5", null, null, this._elems.titleContainer);
-            this._elems.titleContainer.addEventListener("click", () => { this._onCaretClicked(); });
 
             // add a tracking class to the core element
             addClass(this._elems.core, "collapsible");
@@ -162,7 +167,8 @@ namespace KIP.Forms {
      * @class SectionElement
      * ...........................................................................
      * create an element in the form that will contain other elements of a form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.1
      * ...........................................................................
      */
     export class SectionElement<T extends Object> extends CollapsibleElement<T> {
@@ -170,13 +176,7 @@ namespace KIP.Forms {
         //#region PROPERTIES
 
         /** HTML elements that make up this form */
-        protected _elems: {
-            core: HTMLElement;
-            title: HTMLElement;
-            collapseElem?: HTMLElement;
-            titleContainer?: HTMLElement;
-            childrenContainer: HTMLElement;
-        }
+        protected _elems: ICollapsibleHTMLElements;
 
         /** styles to display this section correctly */
         protected static _uncoloredStyles: Styles.IStandardStyles = {
@@ -189,13 +189,13 @@ namespace KIP.Forms {
             ".kipFormElem .sectionHeader": {
                 fontFamily: "OpenSansBold,Segoe UI,Helvetica",
                 fontSize: "1.5em",
-                color: "<0>",
+                color: "<formTheme>",
                 fontWeight: "bold",
             },
 
             ".kipFormElem .section .sectionHeader, .kipFormElem .array .sectionHeader": {
                 fontSize: "1.2em",
-                color: "<1>"
+                color: "<formSubTheme>"
             },
 
             ".kipFormElem.section > .formChildren": {
@@ -221,15 +221,15 @@ namespace KIP.Forms {
         }
 
         /** update the appropriate theme color for the form */
-        public setThemeColor(idx: number, color: string, noReplace: boolean): void {
-            super.setThemeColor(idx, color);
+        public setThemeColor(uniqueId: string, color: string, noReplace: boolean): void {
+            super.setThemeColor(uniqueId, color);
 
             if (!this._children) { return; }
             if (isFormElement(this._children)) {
-                this._children.setThemeColor(idx, color, noReplace);
+                this._children.setThemeColor(uniqueId, color, noReplace);
             } else {
                 map(this._children, (child: FormElement<any>) => {
-                    child.setThemeColor(idx, color, noReplace);
+                    child.setThemeColor(uniqueId, color, noReplace);
                 });
             }
         }
@@ -335,7 +335,7 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _parseChild(child: FormElement<any>): FormElement<any> {
-            let elem: FormElement<any> = this._parseElement(child);
+            let elem: FormElement<any> = this._cloneFormElement(child);
 
             this._applyColors(elem);
             elem.render(this._elems.childrenContainer);
@@ -446,6 +446,25 @@ namespace KIP.Forms {
             }
         }
 
+        /**...........................................................................
+         * focus
+         * ...........................................................................
+         * Allow the first child of this section to take focus
+         * ...........................................................................
+         */
+        public focus<K extends keyof T>(): boolean {
+            if (!this._children) { return false; }
+            if (isFormElement(this._children)) {
+                return this._children.focus();
+            } else {
+                let isFocused: boolean;
+                map(this._children, (value: FormElement<T[K]>, key: K) => {
+                    if (value.focus()) { isFocused = true; }
+                }, () => { return isFocused; })
+                return isFocused;
+            }
+        }
+
         //#endregion
 
         //#region HANDLE CHANGES
@@ -490,14 +509,16 @@ namespace KIP.Forms {
             this._children[key] = this._parseChild(formElem);
         }
 
-        private _updateClsBasedOnLayout(): void {
+        protected _updateClsBasedOnLayout(): void {
             let cls: string;
             switch(this._layout) {
                 case FormElementLayoutEnum.FLEX:
                     cls = "flex";
                     break;
-                case FormElementLayoutEnum.LABEL_AFTER:
                 case FormElementLayoutEnum.TABLE:
+                    cls = "table";
+                    break;
+                case FormElementLayoutEnum.LABEL_AFTER:
                 case FormElementLayoutEnum.MULTILINE:
                 default:
                     cls = "multiline";
@@ -516,7 +537,8 @@ namespace KIP.Forms {
      * @class ArrayElement
      * ...........................................................................
      * Create an element in the form that can be added to
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.1
      * ...........................................................................
      */
     export class ArrayElement<T> extends CollapsibleElement<T[]> {
@@ -532,9 +554,13 @@ namespace KIP.Forms {
                 marginTop: "10px",
                 marginBottom: "10px",
                 marginLeft: "25px",
-                backgroundColor: "<0>",
+                backgroundColor: "<formTheme>",
                 color: "#FFF",
                 width: "calc(33% - 15px)",
+                userSelect: "none",
+                webkitUserSelect: "none",
+                MozUserSelect: "none",
+                msUserSelect: "none"
             },
 
             ".kipFormElem.array .arrayChild .arrayChild .kipBtn.new": {
@@ -552,14 +578,6 @@ namespace KIP.Forms {
                 alignItems: "top"
             },
 
-            ".kipFormElem.array .formChildren .arrayChild": {
-                maxWidth: "calc(33% - 20px)"
-            },
-
-            ".kipFormElem.array .formChildren .arrayChild .arrayChild": {
-                maxWidth: "100%"
-            },
-
             ".kipFormElem.array.collapsed .kipBtn.new": {
                 display: "none"
             }
@@ -571,8 +589,6 @@ namespace KIP.Forms {
 
         protected _childTemplate: IFormElements<T> | FormElement<T>;
         public get childTemplate(): IFormElements<T> | FormElement<T> { return this._childTemplate; }
-
-        protected _childFormElem: FormElement<T>;
 
         protected _children: FormElement<T>[];
 
@@ -590,22 +606,22 @@ namespace KIP.Forms {
         protected _newLabel: string;
 
         /** update the appropriate theme color for the form */
-        public setThemeColor(idx: number, color: string, noReplace?: boolean): void {
-            super.setThemeColor(idx, color);
+        public setThemeColor(uniqueId: string, color: string, noReplace?: boolean): void {
+            super.setThemeColor(uniqueId, color);
 
             // if there are no children yet, apply to the child template
             if (!this._children || this._children.length === 0) {
                 if (isFormElement(this._childTemplate)) {
-                    this._childTemplate.setThemeColor(idx, color, noReplace);
+                    this._childTemplate.setThemeColor(uniqueId, color, noReplace);
                 } else {
                     map(this._childTemplate, (child: FormElement<any>) => {
-                        child.setThemeColor(idx, color, noReplace);
+                        child.setThemeColor(uniqueId, color, noReplace);
                     });
                 }
             }
 
             map(this._children, (child: FormElement<any>) => {
-                child.setThemeColor(idx, color, noReplace);
+                child.setThemeColor(uniqueId, color, noReplace);
             });
         }
         //#endregion
@@ -622,8 +638,6 @@ namespace KIP.Forms {
 
             // create the children array; this will be parsed after elements are created
             this._children = [];
-
-            //this._createNewChild();
         }
 
         protected _parseElemTemplate(template: IFormArrayTemplate<T>): void {
@@ -639,9 +653,13 @@ namespace KIP.Forms {
 
             // handle showing the children
             this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.core);
-            this._elems.newButton = createSimpleElement("", "kipBtn new", this._newLabel, null, null, this._elems.core);
-            this._elems.newButton.addEventListener("click", () => {
-                this._createNewChild();
+            this._elems.newButton = createElement({
+                cls:"kipBtn new", 
+                content: this._newLabel, 
+                parent: this._elems.core,
+                eventListeners: {
+                    click: () => { this._createNewChild(); }
+                }
             });
             this._createStyles();
         }
@@ -680,31 +698,67 @@ namespace KIP.Forms {
 
         /** create a new child element in the array */
         protected _createNewChild(): ArrayChildElement<T> {
+            let elem: ArrayChildElement<T> = this._generateChildElement();
+            this._addNewChildListeners(elem);
+            this._finalizeNewChild(elem);
+            return elem;
+        }
+
+        /**
+         * generate a new child array element
+         */
+        protected _generateChildElement(): ArrayChildElement<T> {
             let idx: number = this._children.length;
-            let elem: ArrayChildElement<T> = new ArrayChildElement(this._id + "|" + idx.toString(), this._childTemplate);
-            elem.addOrderingListener(this);
+            let elem: ArrayChildElement<T>;
+            
+            // if this is already an element, just clone it
+            if (isArrayChildElement(this._childTemplate)) {
+                elem = this._cloneFormElement(this._childTemplate, this._id + "|" + idx.toString()) as ArrayChildElement<T>;
+            
+            // otherwise, spin up a new child altogether
+            } else {
+                elem = new ArrayChildElement(this._id + "|" + idx.toString(), this._childTemplate);
+            }
+            return elem;
+        }
 
+        /**
+         * add the created child to our style map and our children
+         * @param elem 
+         */
+        protected _finalizeNewChild(elem: ArrayChildElement<T>): void {
             this._applyColors(elem);
-
             this._children.push(elem);
             elem.render(this._elems.childrenContainer);
 
+            window.setTimeout(() => { elem.focus(); }, 300);
+        }
+
+        /**
+         * make sure the child has the appropriate listeners
+         * @param child 
+         */
+        protected _addNewChildListeners(child: ArrayChildElement<T>): void {
+
+            // handle when the child is rearranged in the order
+            child.addOrderingListener(this);
+
+            // handle the child updating
             Events.addEventListener(FORM_ELEM_CHANGE,
                 {
                     func: (event: FormElemChangeEvent<any>) => {
 
                         let key: string = event.context.key;
-                        if (key !== elem.id) { return; }
+                        if (key !== child.id) { return; }
 
                         window.setTimeout(() => {
                             this._updateInternalData(true);
                             this._dispatchChangeEvent();
                         }, 0);
                     },
-                    uniqueId: this.id + "|" + elem.id
+                    uniqueId: this.id + "|" + child.id
                 }
             );
-            return elem;
         }
 
         protected _updateInternalData(internalOnly?: boolean): void {
@@ -805,13 +859,40 @@ namespace KIP.Forms {
             
         }
 
+        /**...........................................................................
+         * focus
+         * ...........................................................................
+         * Give focus to the first field in our first child element
+         * ...........................................................................
+         */
+        public focus(): boolean {
+            if (!this._children) { return false; }
+            
+            for (let child of this._children) {
+                if (!child) { continue; }
+                if (child.focus()) { return true; }
+            }
+            return false; 
+        }
+
         //#endregion
 
     }
 
-    /**
+    export interface IArrayChildHTMLElements extends ICollapsibleHTMLElements {
+        title: HTMLElement;
+        closeBtn: HTMLElement;
+        nextBtn: HTMLElement;
+        prevBtn: HTMLElement;
+    }
+
+    /**...........................................................................
+     * @class   ArrayChildElement
+     * ...........................................................................
      * Keep track of a child of an array in the form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.0
+     * ...........................................................................
      */
     export class ArrayChildElement<T> extends SectionElement<T> {
 
@@ -823,6 +904,30 @@ namespace KIP.Forms {
         protected _orderlistener: ArrayElement<T>;
 
         protected static _uncoloredStyles: Styles.IStandardStyles = {
+            "@media only screen and (max-width: 1200px) { ": {
+                nested: {
+                    ".kipFormElem.array .formChildren .kipFormElem.arrayChild": {
+                        maxWidth: "calc(50% - 20px)"
+                    }
+                }
+            },
+
+            "@media only screen and (max-width: 1000px) { ": {
+                nested: {
+                    ".kipFormElem.array .formChildren .kipFormElem.arrayChild": {
+                        maxWidth: "calc(100% - 20px)"
+                    }
+                }
+            },
+
+            ".kipFormElem.array .formChildren .arrayChild": {
+                maxWidth: "calc(33% - 20px)"
+            },
+
+            ".kipFormElem.array .formChildren .arrayChild .arrayChild": {
+                maxWidth: "100%"
+            },
+
             ".kipFormElem.arrayChild": {
                 backgroundColor: "#FFF",
                 borderRadius: "5px",
@@ -885,20 +990,13 @@ namespace KIP.Forms {
             return this._mergeThemes(ArrayChildElement._uncoloredStyles, CollapsibleElement._uncoloredStyles, FormElement._uncoloredStyles);
         }
 
-        protected _elems: {
-            core: HTMLElement;
-            title: HTMLElement;
-            childrenContainer: HTMLElement;
-            closeBtn: HTMLElement;
-            nextBtn: HTMLElement;
-            prevBtn: HTMLElement;
-        }
+        protected _elems: IArrayChildHTMLElements;
         //#endregion
 
         //#region CONSTRUCT AN ARRAY CHILD ELEMENT
         /** create an element of an array */
-        constructor(id: string, children: IFormElements<T> | FormElement<T>) {
-            super(id.toString(), {}, children);
+        constructor(id: string, children: IFormElements<T> | FormElement<T>, template?: IFormCollapsibleTemplate<T>) {
+            super(id.toString(), template || {}, children);
         }
 
         protected _onCreateElements(): void {
@@ -920,9 +1018,13 @@ namespace KIP.Forms {
                 }
             });
 
-            this._elems.closeBtn = createSimpleElement("", "close kipBtn", "X", null, null, this._elems.core);
-            this._elems.closeBtn.addEventListener("click", () => {
-                this._delete();
+            this._elems.closeBtn = createElement({
+                cls: "close kipBtn", 
+                content: "X", 
+                parent: this._elems.core,
+                eventListeners: {
+                    click: () => { this._delete(); }
+                }
             });
 
             this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.core);
@@ -932,8 +1034,8 @@ namespace KIP.Forms {
             return new ArrayChildElement<T>(this._id + appendToID, this._children);
         }
 
-        protected _parseElement(child: FormElement<any>): FormElement<any> {
-            return super._parseElement(child, "|" + this._id);
+        protected _cloneFormElement(child: FormElement<any>): FormElement<any> {
+            return super._cloneFormElement(child, "|" + this._id);
         }
         //#endregion
 

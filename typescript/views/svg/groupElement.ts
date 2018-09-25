@@ -158,6 +158,50 @@ namespace KIP.SVG {
 			return circle;
 		}
 
+		/**
+		 * addPerfectArc
+		 * ----------------------------------------------------------------------------
+		 * Add a perfect arc to the SVG Canvas
+		 * 
+		 * @returns	The created arc element
+		 */
+		public addPerfectArc(centerPt: IPoint, radius: number, startDeg: number, endDeg: number, direction: number, attr?: IAttributes): ArcElement {
+			attr = this._initializeAttributes(attr);
+
+			let arc: ArcElement = new ArcElement(centerPt, radius, startDeg, endDeg, direction, attr);
+			this._addChildElement(arc);
+			return arc;
+		}
+
+		/**
+		 * addPieSlice
+		 * ----------------------------------------------------------------------------
+		 * Add a pie slice element to the SVG canvas
+		 * @param 	centerPt 	
+		 * @param 	radius 
+		 * @param 	startDeg 
+		 * @param 	endDeg 
+		 * @param 	direction 
+		 * @param 	attr 
+		 * 
+		 * @returns	The created pie slice
+		 */
+		public addPieSlice(centerPt: IPoint, radius: number, startDeg: number, endDeg: number, direction: number, attr?: IAttributes): PieSliceElement {
+			attr = this._initializeAttributes(attr);
+
+			let pieSlice: PieSliceElement = new PieSliceElement(centerPt, radius, startDeg, endDeg, direction, attr);
+			this._addChildElement(pieSlice);
+			return pieSlice;
+		}
+
+		public addCurve(points: ICurvePoint[], attr?: IAttributes): CurveElement {
+			attr = this._initializeAttributes(attr);
+
+			let curve: CurveElement = new CurveElement(points, attr);
+			this._addChildElement(curve);
+			return curve;
+		}
+
 		//#endregion
 
 		

@@ -65,7 +65,7 @@ namespace KIP.Forms {
             },
 
             ".toggleBtn.selected, .toggleBtn:hover": {
-                border: "1px solid <0>",
+                border: "1px solid <formTheme>",
                 transform: "scale(1.08)"
             },
 
@@ -175,19 +175,19 @@ namespace KIP.Forms {
                 id: this._id + "btn" + elem.value, 
                 cls: "toggleBtn", 
                 content: elem.label, 
-                parent: this._elems.childrenContainer
+                parent: this._elems.childrenContainer,
+                eventListeners:{
+                    click: () => {
+                        this._selectBtn(btn, elem.value);
+                        this._changeEventFired();
+                    }
+                }
             });
 
             // check if we already know that this button should be selected
             if (this._shouldBeSelected(elem)) {
                 this._selectBtn(btn, elem.value);
             }
-
-            // deal with the select event
-            btn.addEventListener("click", () => {
-                this._selectBtn(btn, elem.value);
-                this._changeEventFired();
-            });
 
             // add this to our button arary as appropriate
             if (!this._buttons) { this._buttons = []; }
@@ -301,10 +301,6 @@ namespace KIP.Forms {
                 this._selectedBtn = null;
             }
             this._data = this._defaultValue;
-        }
-
-        public setThemeColor(idx: number, color: string, noReplace?: boolean): void {
-            super.setThemeColor(idx, color, noReplace);
         }
 
     }

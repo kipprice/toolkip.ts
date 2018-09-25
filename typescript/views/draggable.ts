@@ -58,6 +58,9 @@ namespace KIP {
 
 		/** keep track of whether we're using HTML5 events for dragging/dropping */
 		isNonStandard?: boolean;
+
+		/** allow this element to be snapped to a grid */
+		gridSize?: number;
 	}
 
 	/** functions that can be used for a draggable element */
@@ -102,6 +105,11 @@ namespace KIP {
 		/** override what happens when the element is moved */
 		protected _moveFunc: OnMoveFunction;
 		public set moveFunc(func: OnMoveFunction) { this._moveFunc = func; }
+
+		/** allow users to set whether this element will be snapping to a grid */
+		protected _gridSize: number;
+		public get gridSize(): number { return this._gridSize || 1; }
+		public set gridSize(size: number) { this._gridSize = size; }
 
 		/** handle the particular styles for this class */
 		protected static _uncoloredStyles: Styles.IStandardStyles = {
@@ -162,7 +170,11 @@ namespace KIP {
 			}, 0);
 		}
 
-		protected _defaultMoveFunc (delta: IPoint): void {
+		protected _defaultMoveFunc(delta: IPoint): void {
+
+			// determine if this is far enough on the grid to move
+			delta = this._adjustDeltaByGrid(delta);
+
 			// Default implementation : adjust position
 			let new_pt: IPoint = {
 				x: ((parseInt(this.base.style.left) || 0) + delta.x),
@@ -171,6 +183,24 @@ namespace KIP {
 
 			this.base.style.left = new_pt.x + "px";
 			this.base.style.top = new_pt.y + "px";
+		}
+
+		protected _adjustDeltaByGrid(delta: IPoint): IPoint {
+			let dx: number = delta.x % this.gridSize;
+			let dy: number = delta.y % this.gridSize;
+
+			if (dx !== 0) { delta.x = 0; }
+			if (dy !== 0) { delta.y = 0; }
+
+			// positive direction
+			if (dx > (this.gridSize / 2)) { delta.x = this.gridSize; }
+			if (dy > (this.gridSize / 2)) { delta.y = this.gridSize; }
+
+			// negative direction
+			if (dx < (this.gridSize / -2)) { delta.x = -1 * this.gridSize; }
+			if (dy < (this.gridSize / -2)) { delta.y = -1 * this.gridSize; }
+
+			return delta;
 		}
 
 		protected _defaultDragEnterFunc(target: HTMLElement, e: Event): void {
@@ -191,6 +221,9 @@ namespace KIP {
 				this.base.parentNode.removeChild(this.base);
 			}
 
+			// reset the mouse point
+			this._mousePoint = null;
+
 			target.appendChild(this.base);
 		}
 
@@ -208,9 +241,13 @@ namespace KIP {
 
 			base.addEventListener("dragstart", (e: DragEvent) => {
 				this._isDragging = true;
+				addClass(this._elems.base, "dragging");
+
 				this._updateMousePoint(e);
 				e.dataTransfer.dropEffect = "move";
-				//e.preventDefault();
+				window.setTimeout(() => { 
+					this._elems.base.style.opacity = "0.01" 
+				}, 50);
 			});
 
 			base.addEventListener('drag', (e: DragEvent) => {
@@ -219,6 +256,8 @@ namespace KIP {
 
 			base.addEventListener("dragend", (e: DragEvent) => {
 				this._isDragging = false;
+				removeClass(this._elems.base, "dragging");
+				this._elems.base.style.opacity = "1";
 			});
 
 			let target: HTMLElement;
@@ -522,10 +561,17 @@ namespace KIP {
 		 * ...........................................................................
 		 */
 		private _updateMousePoint(e: MouseEvent): void {
-			this._mousePoint = {
-				x: e.clientX,
-				y: e.clientY
-			};
+
+			if (!this._mousePoint) {
+				this._mousePoint = { x: e.clientX, y: e.clientY };
+			}
+
+			let delta: IPoint = this._getDelta(e);
+			delta = this._adjustDeltaByGrid(delta);
+
+			// adjust the current mouse position by the grid as well
+			this._mousePoint.x += delta.x;
+			this._mousePoint.y += delta.y;
 		}
 
 	}
@@ -546,7 +592,7 @@ namespace KIP {
 		 * @param	nonStandard		If true, uses mouseup / down instead of drag / drop
 		 * ...........................................................................
 		 */
-		constructor (existingElem: StandardElement, target?: HTMLElement, nonStandard?: boolean) {
+		constructor(existingElem: StandardElement, target?: HTMLElement, nonStandard?: boolean) {
 			super(null, target, nonStandard);
 			this._elems = {
 				base: existingElem
@@ -559,7 +605,7 @@ namespace KIP {
 		 * Does nothing as the only element here is the base, which already exists
 		 * ...........................................................................
 		 */
-		protected _createElements(): void {}
+		protected _createElements(): void { }
 	}
 
 
@@ -581,6 +627,7 @@ namespace KIP {
 		// Behind the scenes, we create a draggable to get this
 		let drg: ExistingDraggable = new ExistingDraggable(elem, options.target, options.isNonStandard);
 		drg.overrideFunctions(options);
+		drg.gridSize = options.gridSize || 1;
 
 		// Return the element of the Draggable
 		return drg.base;

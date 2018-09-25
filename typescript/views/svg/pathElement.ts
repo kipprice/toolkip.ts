@@ -224,28 +224,32 @@ namespace KIP.SVG {
 			return this._elems.base;
 		}
 
-		/**...........................................................................
+		/**
 		 * lineTo
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * @param	point	The point to draw a line to
-		 * ...........................................................................
 		 */
 		public lineTo (point: IPoint) : void {
 			this._checkForCurrentPath();
 			this._addToPathAttribute(this._constructPathAttribute("L", point));
 		}
 
-		/**...........................................................................
+		/**
 		 * moveTo
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * @param 	point 	
-		 * ...........................................................................
 		 */
 		public moveTo (point: IPoint) : void {
 			this._checkForCurrentPath();
 			this._addToPathAttribute(this._constructPathAttribute("M", point));
 		}
 
+		/**
+		 * curveTo
+		 * ----------------------------------------------------------------------------
+		 * Create a curve from the current position to the specified curve point
+		 * @param	point 	Point to end the curve at
+		 */
 		public curveTo (point: ICurvePoint) : void {
 			this._checkForCurrentPath();
 			let d: string;
@@ -255,7 +259,13 @@ namespace KIP.SVG {
 			this._addToPathAttribute(d);
 		}
 
-		public arcTo (point: IArcPoint) {
+		/**
+		 * arcTo
+		 * ----------------------------------------------------------------------------
+		 * Create an arc from the current position to the specified arc point
+		 * @param 	point 	Point to end the arc at
+		 */
+		public arcTo (point: IArcPoint): void {
 			let d: string;
 			d = "A" + this._pointToAttributeString(point.radius) + " ";
 			d += point.xRotation + " " + point.largeArc + " " + point.sweepFlag + " ";
@@ -263,13 +273,21 @@ namespace KIP.SVG {
 			this._addToPathAttribute(d);
 		}
 
-		/** closes the path so it creates an enclosed space */
+		/** 
+		 * closePath
+		 * ----------------------------------------------------------------------------
+		 * closes the path so it creates an enclosed space 
+		 */
 		public closePath () : void {
 			this._addToPathAttribute(" Z");
 			this.finishPathWithoutClosing();
 		}
 
-		/** indicates the path is finished without closing the path */
+		/** 
+		 * finishPathWithoutClosing
+		 * ----------------------------------------------------------------------------
+		 * indicates the path is finished without closing the path 
+		 */
 		public finishPathWithoutClosing () : void {
 		}
 

@@ -30,15 +30,13 @@ namespace KIP {
 		return out;
 	}
 
-	/**...........................................................................
+	/**
 	 * cloneObject
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Generic function to try to clone any object, using JSON stringify + parse
-	 * 
 	 * @param 	obj		The object to clone
 	 * 
 	 * @returns	The cloned elements
-	 * ........................................................................... 
 	 */
 	export function cloneObject<T> (obj: T): T {
 		return JSON.parse(JSON.stringify(obj));
