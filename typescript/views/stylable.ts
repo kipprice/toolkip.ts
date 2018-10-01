@@ -4,16 +4,17 @@ namespace KIP.Styles {
         [key: string]: boolean;
     }
 
-    /**...........................................................................
+    /**----------------------------------------------------------------------------
      * @class Stylable
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * Creates an element that can additionally add CSS styles
      * @author  Kip Price
      * @version 1.1.0
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      */
     export abstract class Stylable extends NamedClass {
 
+        //...........................
         //#region STATIC PROPERTIES
 
         /** create the collection of all styles that have been added to the page */
@@ -41,21 +42,23 @@ namespace KIP.Styles {
         private static _createdStyles: ICreatedStyles = {};
 
         //#endregion
+        //...........................
 
+        //........................
         //#region STATIC METHODS
-
+        
+        //.................................
         //#region COLOR-RELATED METHODS
 
-        /**...........................................................................
+        /**
          * _buildThemeColorId
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create a unique ID for a color for a particular class
          * 
          * @param   idx         The index of the color 
          * @param   uniqueID    Optional name to use instead of the class name
          * 
          * @returns The created color ID
-         * ...........................................................................
          */
         protected static _buildThemeColorId (uniqueId: string): string {
             let outStr: string = format("<{0}>", uniqueId);
@@ -184,8 +187,11 @@ namespace KIP.Styles {
         }
 
         //#endregion
+        //.................................
 
+        //........................
         //#region MERGING THEMES
+
         /**...........................................................................
          * _mergeIntoStyles
          * ...........................................................................
@@ -317,7 +323,9 @@ namespace KIP.Styles {
             });
         }
         //#endregion
+        //........................
 
+        //........................
         //#region CREATING STYLES
 
         /**...........................................................................
@@ -411,7 +419,9 @@ namespace KIP.Styles {
 
         }
         //#endregion
+        //........................
 
+        //........................
         //#region CLEANING STYLES
         /**...........................................................................
          * _cleanStyles
@@ -486,9 +496,12 @@ namespace KIP.Styles {
             return topStyles;
         }
         //#endregion
+        //........................
 
         //#endregion
+        //........................
 
+        //................................................
         //#region INSTANCE OR CLASS-SPECIFIC PROPERTIES
 
         /** keep track of the styles defined by this class */
@@ -521,11 +534,15 @@ namespace KIP.Styles {
         protected _hasCreatedStyles: boolean;
 
         //#endregion
+        //................................................
 
+        //...........................
         //#region INSTANCE METHODS
-        /**...........................................................................
+
+        /**
+         * Stylable
+         * ----------------------------------------------------------------------------
          * Creates a stylable class
-         * ...........................................................................
          */
         constructor() {
             super("Stylable");
@@ -536,12 +553,11 @@ namespace KIP.Styles {
             this._hasCreatedStyles = true;
         }
 
-        /**...........................................................................
+        /**
          * _applyColors
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Apply the appropriate theme colors
          * @param   otherElem   If passed in, sets a theme color on a different element
-         * ...........................................................................
          */
         protected _applyColors(otherElem?: Stylable): void {
 
@@ -556,15 +572,14 @@ namespace KIP.Styles {
             });
         }
 
-        /**...........................................................................
+        /**
          * setThemeColor
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Update a theme color based on placeholders
          * 
-         * @param   uniqueId             The index of the theme color 
+         * @param   uniqueId        The index of the theme color 
          * @param   color           The color to replace it with
          * @param   noReplace       True if we shouldn't replace an existing color
-         * ...........................................................................
          */
         public setThemeColor(colorId: string, color: string, noReplace?: boolean): void {
 
@@ -584,42 +599,39 @@ namespace KIP.Styles {
             Stylable._updateThemeColor(colorId);
         }
 
-        /**...........................................................................
+        /**
          * _buildThemeColorId
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create a unique ID for a color for a particular class
          * 
          * @param   idx         The index of the color 
          * @param   uniqueID    Optional name to use instead of the class name
          * 
          * @returns The created color ID
-         * ...........................................................................
          */
         protected _buildThemeColorId (uniqueId?: string): string {
             return Stylable._buildThemeColorId(uniqueId);
         }
 
-        /**...........................................................................
+        /**
          * _mergeThemes
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Instance class to merge different themes
          * 
          * @param   themes  The themes to merge
          * 
          * @returns The merged themes 
-         * ...........................................................................
          */
         protected _mergeThemes(...themes: IStandardStyles[]): IStandardStyles {
             return Stylable._mergeThemes(null, ...themes);
         }
 
-        /**...........................................................................
+        /**
          * _createStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create the styles for this class 
          * @param   forceOverride   True if we should create the classes even if they 
          *                          already exist
-         * ...........................................................................
          */
         protected _createStyles(forceOverride?: boolean): void {
             // Quit if we don't have the right styles
@@ -648,21 +660,18 @@ namespace KIP.Styles {
 
         }
 
-        /**...........................................................................
+        /**
          * _cleanStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Clean the nested styles data so that we can parse it properly
          * @param   styles  The styles to clean
          * @returns The cleaned styles
-         * ...........................................................................
          */
         protected _cleanStyles(styles: IStandardStyles, lastSelector?: string): IStandardStyles {
             return Stylable._cleanStyles(styles, lastSelector);
         }
+
         //#endregion
+        //...........................
     }
-
-    window.addEventListener("load", () => {
-
-    });
 }
