@@ -14,12 +14,63 @@ namespace KIP.Forms {
         cancelButton?: HTMLElement;
         closeButton?: HTMLElement;
     }
-    /** 
+
+    /**----------------------------------------------------------------------------
+     * @class   Form
+     * ----------------------------------------------------------------------------
      * create a form with a data structure of F 
-     * @version 1.0
+     * @author  Kip Price
+     * @version 3.5.0
+     * ----------------------------------------------------------------------------
      */
     export class Form<F> extends Drawable {
+
+        //.....................
         //#region PROPERTIES
+
+        /** get the appropriate data out of this form */
+        public get data(): F {
+            return this._coreFormElem.save(true);
+        }
+
+        /** internal tracking for whether the form is showing or not */
+        protected _hidden: boolean;
+
+        /** true if this is a popup form rather than an inline form */
+        protected _showAsPopup: boolean;
+
+        /** true if we should skip our standard styles */
+        protected _noStandardStyles: boolean;
+
+        /** unique ID for the form */
+        protected _id: string;
+
+        /** keep track pf the elements in this form */
+        protected _elems: IFormElems;
+
+        /** the drawable element containing all other form elements */
+        protected _coreFormElem: SectionElement<F>;
+
+        /** any listeners that should be used upon the form saving */
+        protected _saveListeners: Collection<IFormSaveFunction>;
+
+        /** any listeners that should be used upon the form canceling */
+        protected _cancelListeners: Collection<IFormCancelFunction>;
+
+        /** any additional buttons that should show in the form */
+        protected _additionalButtons: IFormButton[];
+
+        /** keep track of whether there are changes in this form */
+        protected _hasChanges: boolean;
+
+        /** keep track of whether we can save this form */
+        protected _canSaveTracker: ICanSaveTracker;
+
+        //#endregion
+        //.....................
+
+        //..................
+        //#region STYLES
 
         /** handle standard styles for the form */
         protected static _uncoloredStyles: Styles.IStandardStyles = {
@@ -28,7 +79,7 @@ namespace KIP.Forms {
                 padding: "0",
                 width: "100%",
                 height: "100%",
-                fontFamily: "OpenSansLight,Segoe UI,Helvetica",
+                fontFamily: "Open Sans,Segoe UI,Helvetica",
                 fontSize: "1.2em",
                 position: "inherit",
                 boxSizing: "border-box"
@@ -140,58 +191,20 @@ namespace KIP.Forms {
         protected _getUniqueThemeName(): string {
             return "Form";
         }
-
-        /** get the appropriate data out of this form */
-        public get data(): F {
-            return this._coreFormElem.save(true);
-        }
-
-        /** internal tracking for whether the form is showing or not */
-        protected _hidden: boolean;
-
-        /** true if this is a popup form rather than an inline form */
-        protected _showAsPopup: boolean;
-
-        /** true if we should skip our standard styles */
-        protected _noStandardStyles: boolean;
-
-        /** unique ID for the form */
-        protected _id: string;
-
-        /** keep track pf the elements in this form */
-        protected _elems: IFormElems;
-
-        /** the drawable element containing all other form elements */
-        protected _coreFormElem: SectionElement<F>;
-
-        /** any listeners that should be used upon the form saving */
-        protected _saveListeners: Collection<IFormSaveFunction>;
-
-        /** any listeners that should be used upon the form canceling */
-        protected _cancelListeners: Collection<IFormCancelFunction>;
-
-        /** any additional buttons that should show in the form */
-        protected _additionalButtons: IFormButton[];
-
-        /** keep track of whether there are changes in this form */
-        protected _hasChanges: boolean;
-
-        /** keep track of whether we can save this form */
-        protected _canSaveTracker: ICanSaveTracker;
-
         //#endregion
+        //..................
 
+        //.....................
         //#region CONSTRUCTOR
 
-        /**...........................................................................
+        /**
          * Form
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create the Form 
          * 
          * @param   id          Unique ID for the form
          * @param   options     Specific way this form should be created
          * @param   elems       Form elements that should be shown for this form
-         * ...........................................................................
          */
         constructor(id: string, options: IFormOptions, elems?: IFormElements<F>) {
             super();
@@ -218,14 +231,15 @@ namespace KIP.Forms {
         }
 
         //#endregion
+        //.....................
 
+        //........................
         //#region CREATE ELEMENTS
 
-        /**...........................................................................
+        /**
          * _createElements
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create the elements used by the form 
-         * ...........................................................................
          */
         protected _createElements(): void {
             this._elems = {
@@ -239,11 +253,10 @@ namespace KIP.Forms {
             if (!this._noStandardStyles) { this._createStyles(); }
         }
 
-        /**...........................................................................
+        /**
          * _createPopupElements
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * create the elements needed for the popup version of the form 
-         * ...........................................................................
          */
         protected _createPopupElements(): void {
 
@@ -255,16 +268,25 @@ namespace KIP.Forms {
 
             // Create the elements that are only used for the popup version of the form
             addClass(this._elems.base, "popup");
-            this._elems.overlay = createSimpleElement("", "formOverlay", "", null, null, this._elems.base);
-            this._elems.overlay.appendChild(this._elems.background);
-            this._elems.closeButton = createSimpleElement("", "close kipBtn", "x", null, null, this._elems.background);
+
+            this._elems.overlay = createElement({ 
+                cls: "formOverlay", 
+                parent: this._elems.base, 
+                children: [this._elems.background]}
+            );
+
+            this._elems.closeButton = createElement({
+                cls: "close kipBtn", 
+                content: "x", 
+                parent: this._elems.background
+            });
         }
 
-        /**...........................................................................
+        /**
          * _createButtons
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * create the appropriate buttons for the form 
-         * ...........................................................................
+         * 
          */
         protected _createButtons(): void {
             this._elems.buttons = createSimpleElement("", "kipBtns", "", null, null, this._elems.background);
@@ -294,14 +316,14 @@ namespace KIP.Forms {
             }
         }
 
-        /**...........................................................................
+        /**
          * _createCoreElem
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * create the core section that will display all of our data 
          * 
          * @param   options     the options that are passed in for the general form
          * @param   elems       Elements associated with this form
-         * ...........................................................................
+         * 
          */
         protected _createCoreElem(options: IFormOptions, elems: IFormElements<F>): void {
 
@@ -337,7 +359,6 @@ namespace KIP.Forms {
             // add the section to the overall form UI
             this._coreFormElem.render(this._elems.formContent);
         }
-        //#endregion
 
         protected _addSaveButtonUpdater(): void {
             Events.addEventListener(FORM_SAVABLE_CHANGE, {
@@ -353,16 +374,19 @@ namespace KIP.Forms {
                 }
             })
         }
+        //#endregion
+        //........................
 
+        //..............................
         //#region DATA MANIPULATIONS
 
-        /**...........................................................................
+        /**
          * save
-         * ...........................................................................
+         * 
          * Saves data in the form
          * 
          * @returns The data contained in the form
-         * ...........................................................................
+         * 
          */
         protected _save(): F {
             let data: F = this._coreFormElem.save();
@@ -373,11 +397,11 @@ namespace KIP.Forms {
             return data;
         }
 
-        /**...........................................................................
+        /**
          * trySave
-         * ...........................................................................
+         * 
          * Attempt to save the form
-         * ...........................................................................
+         * 
          */
         public trySave(): F {
             if (hasClass(this._elems.saveButton, "disabled")) { return null; }
@@ -389,11 +413,11 @@ namespace KIP.Forms {
             }
         }
 
-        /**...........................................................................
+        /**
          * _canSave
-         * ...........................................................................
+         * 
          * Check with our elements that we are able to save
-         * ...........................................................................
+         * 
          */
         public canSave(): boolean {
             this._canSaveTracker = this._coreFormElem.canSave();
@@ -401,11 +425,11 @@ namespace KIP.Forms {
             return !(this._canSaveTracker.hasErrors || this._canSaveTracker.hasMissingRequired);
         }
 
-        /**...........................................................................
+        /**
          * _showCannotSaveMessage
-         * ...........................................................................
+         * 
          * Show popup indicating why we couldn't save this form
-         * ...........................................................................
+         * 
          */
         protected _showCannotSaveMessage(): void {
             let msg: string = this._getCannotSaveMessage();
@@ -416,11 +440,11 @@ namespace KIP.Forms {
             popup.draw(document.body);
         }
 
-        /**...........................................................................
+        /**
          * _getCannotSaveMessage
-         * ...........................................................................
+         * 
          * Determine what message to show as to why the form cannot be saved
-         * ...........................................................................
+         * 
          */
         protected _getCannotSaveMessage(): string {
             let msg: string = "";
@@ -436,13 +460,13 @@ namespace KIP.Forms {
             return msg;
         }
 
-        /**...........................................................................
+        /**
          * _notifySaveListeners
-         * ...........................................................................
+         * 
          * lets all listeners know that the form has saved
          *
          * @param  data    The form data that was just saved
-         * ...........................................................................
+         * 
          */
         protected _notifySaveListeners(data: F): void {
             this._saveListeners.map((listener: IFormSaveFunction) => {
@@ -451,11 +475,10 @@ namespace KIP.Forms {
             });
         }
 
-        /**...........................................................................
+        /**
          * _cancelConfirmation
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle informing the user that they have unsaved changes before cancelling
-         * ...........................................................................
          */
         protected _cancelConfirmation(): void {
             if (this._hasChanges) {
@@ -474,11 +497,10 @@ namespace KIP.Forms {
             }
         }
 
-        /**...........................................................................
+        /**
          * _cancel
-         * ...........................................................................
-         * Cancel the form and any changes within it
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
+         * Cancel the form and any changes within it\
          */
         protected _cancel(): void {
             this.clear();
@@ -487,6 +509,18 @@ namespace KIP.Forms {
             this.hide();
         }
 
+        /**
+         * tryCancel
+         * ----------------------------------------------------------------------------
+         * Public call to attempt to cancel all data within a form; prompts the user to
+         * verify cancelling if there are any unsaved elements unless otherwise 
+         * specified.
+         * 
+         * @param   ignoreUnsavedChanges    If true, doesn't prompt the user to confirm
+         *                                  that unsaved aspects won't be saved
+         * 
+         * @returns True if the form was successfully canceled
+         */
         public tryCancel(ignoreUnsavedChanges?: boolean): boolean {
             if (!this._hasChanges || ignoreUnsavedChanges) {
                 this._cancel();
@@ -500,13 +534,12 @@ namespace KIP.Forms {
             }
         }
 
-        /**...........................................................................
+        /**
          * _notifyCancelListeners
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * lets all listeners know that the form has been canceled
          * 
          * @param   hasChanges  True if the form has been changed since initialization
-         * ...........................................................................
          */
         protected _notifyCancelListeners(hasChanges: boolean): void {
             this._cancelListeners.map((listener: IFormCancelFunction) => {
@@ -515,23 +548,21 @@ namespace KIP.Forms {
             });
         }
 
-        /**...........................................................................
+        /**
          * clear
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * clears all data out of the form
-         * ...........................................................................
          */
         public clear(): void {
             this._coreFormElem.clear();
         }
 
-        /**...........................................................................
+        /**
          * update
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * update the data in the form to match a particular data set
          * 
          * @param   model    The data to update the form with
-         * ...........................................................................
          */
         public update(model: F): void {
             this._coreFormElem.update(model);
@@ -539,8 +570,15 @@ namespace KIP.Forms {
         }
 
         //#endregion
+        //..............................
 
+        //........................
         //#region TRACK CHANGES
+
+        /* TODO:
+        * ----------------------------------------------------------------------------
+        * [ ] Actually implement change control
+        */
         public undo(): void {
             // TODO
         }
@@ -553,41 +591,42 @@ namespace KIP.Forms {
             // TODO
         }
         //#endregion
+        //........................
 
+        //.................................
         //#region HIDE OR SHOW THE FORM
 
-        /**...........................................................................
+        /**
          * show
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * show the form on the appropriate parent
-         * ...........................................................................
          */
         public show(): void {
-
             if (!this._hidden) { return; }
             KIP.removeClass(this._elems.base, "hidden");
+            this._hidden = false;
         }
 
-        /**...........................................................................
+        /**
          * hide
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * hide the form
-         * ...........................................................................
          */
         public hide(): void {
             if (this._hidden) { return; }
             KIP.addClass(this._elems.base, "hidden");
+            this._hidden = true;
         }
 
-        /**...........................................................................
+        /**
          * draw
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Draw the form element on whatever parent is specified 
          * (defaults to document.body)
          * 
          * @param   parent  The element to add to
          * @param   noShow  If true, doesn't show the form as a oart of this draw 
-         * ...........................................................................
+         * 
          */
         public draw(parent: HTMLElement, noShow?: boolean): void {
             super.draw(parent);
@@ -597,28 +636,28 @@ namespace KIP.Forms {
             if (!noShow) { this.show(); }
         }
 
-        /**...........................................................................
+        /**
          * focus
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Gives focus to the first element that can take focus
-         * ...........................................................................
          */
         public focus(): void {
             this._coreFormElem.focus();
         }
         //#endregion
+        //.................................
 
-        //#region Handle Listeners
+        //...........................
+        //#region HANDLE LISTENERS
 
-        /**...........................................................................
+        /**
          * registerSaveListener
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * register any listener that wants to hear about this form saving
          * 
          * @param   listener    The function to call when the form is saved
          * 
          * @returns The key with which the event is registered
-         * ...........................................................................
          */
         public registerSaveListener(listener: IFormSaveFunction): string {
             let key: string = this._saveListeners.length.toString();
@@ -626,15 +665,14 @@ namespace KIP.Forms {
             return key;
         }
 
-        /**...........................................................................
+        /**
          * registerCancelListener
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * registers any listener that wants to hear about this form canceling
          * 
          * @param   listener       The function to call when the form is cancelled
          * 
          * @returns The key with which the event is registered
-         * ...........................................................................
          */
         public registerCancelListener(listener: IFormCancelFunction): string {
             let key: string = this._cancelListeners.length.toString();
@@ -642,6 +680,11 @@ namespace KIP.Forms {
             return key;
         }
 
+        /**
+         * _addWindowEventListeners
+         * ----------------------------------------------------------------------------
+         * listen to unload events to be able to prompt the user to save
+         */
         protected _addWindowEventListeners(): void {
             window.addEventListener("beforeunload", (e: Event) => {
                 if (this._hasChanges) {
@@ -652,14 +695,31 @@ namespace KIP.Forms {
             });
         }
         //#endregion
+        //..................
 
+        //.................................
         //#region CHANGE THE FORM DISPLAY
+
+        /*
+         * // TODO:
+         * ----------------------------------------------------------------------------
+         * [ ] Allow changing of the form after it's been created
+         */
+
+         /**
+          * addFormElement
+          * ----------------------------------------------------------------------------
+          * Adds a form element to our form after it's been initialized
+          */
         protected addFormElement<K extends keyof F>(key: K, formElem: FormElement<F[K]>): boolean {
             return this._coreFormElem.addChildElement(key, formElem);
         }
+
         //#endregion
+        //.................................
     }
 
+    //.................................
     //#region EVENT HANDLER FOR FORMS
 
     // create a particular event for all form change events
@@ -674,6 +734,7 @@ namespace KIP.Forms {
         name: "Form Savable Change",
         key: FORM_SAVABLE_CHANGE
     });
-    //#endregion
 
+    //#endregion
+    //.................................
 }

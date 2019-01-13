@@ -1,13 +1,16 @@
-///<reference path="css.ts" />
+/// <reference path="./styles.ts" />
+/// <reference path="./css.ts" />
+/// <reference path="./objects.ts" />
 
 namespace KIP {
+
+    export type IAttribute = IKeyValPair<string> | string | number;
     export interface IAttributes {
-        [key: string]: any;
+        [key: string]: IAttribute;
     }
 
-    export interface IChildren {
-        [key: number]: HTMLElement | IElemDefinition
-    }
+    export type IChild = StandardElement | IElemDefinition;
+    export type IChildren = IChild[];
 
     export interface IClasses {
         [key: string]: IClassDefinition | IKeyValPair<string>[];
@@ -25,6 +28,9 @@ namespace KIP {
      * ...........................................................................
      */
     export interface IElemDefinition {
+
+        /** unique key for this element; used to return an element */
+        key?: string;
 
         /** Id to use for the element */
         id?: string;
@@ -64,6 +70,12 @@ namespace KIP {
 
         /** determine whether this element should be able to receive focus */
         focusable?: boolean;
+
+        /** allow HTML contents to be bound dynamically */
+        boundContent?: BoundEvalFunction<string>;
+
+        /** builds a custom tooltip in lieu of the standard title */
+        tooltip?: string;
     }
 
     /**
@@ -106,172 +118,328 @@ namespace KIP {
         return createElement(obj);
     };
 
-    /**...........................................................................
+    /**
      * createElement
-     * ...........................................................................
+     * ---------------------------------------------------------------------------
      * Creates an HTML element with the attributes that are passed in through the
      * object.
      *
-     * @param   obj   The object to base the element off of
+     * @param   obj             The object to base the element off of
+     * @param   [keyedElems]    If provided, the elements that were created with a key
+     * 
      * @returns The HTML element with all attributes specified by the object
-     * ...........................................................................
      */
-    export function createElement(obj: IElemDefinition): HTMLElement {
+    export function createElement(obj: IElemDefinition, keyedElems?: KIP.IDictionary<HTMLElement>): HTMLElement {
         if (!obj) { return; }
         return _createElementCore(obj) as HTMLElement;
     }
 
-    export function createSVGElement(obj: IElemDefinition): SVGElement {
+    /**
+     * createSVGElement
+     * ---------------------------------------------------------------------------
+     * create a SVG element specifically
+     */
+    export function createSVGElement(obj: IElemDefinition, keyedElems?: KIP.IDictionary<SVGElement>): SVGElement {
         if (!obj) { return; }
         if (!obj.namespace) { obj.namespace = "http://www.w3.org/2000/svg"; }
         return _createElementCore(obj) as SVGElement;
     }
 
-    function _createElementCore(obj: IElemDefinition): StandardElement {
 
-        // #region Variable declaration
+    //...................................................
+    //#region INTERNAL FUNCTIONS FOR CREATING ELEMENTS
+
+    /**
+     * _createElementCore
+     * ---------------------------------------------------------------------------
+     * create a DOM element with the specified details
+     */
+    function _createElementCore(obj: IElemDefinition, keyedElems?: KIP.IDictionary<StandardElement>): StandardElement {
+
+        let elem = _createStandardElement(obj);
+
+        // set attributes of the element
+        _setElemIdentfiers(elem, obj, keyedElems);
+        _setElemClass(elem, obj);
+        _setElemAttributes(elem, obj);
+        _setElemStyle(elem, obj);
+        _setEventListeners(elem, obj);
+        _setKipTooltip(elem, obj);
+
+        // set content of the element
+        _setElemBaseContent(elem, obj);
+        _addElemChildren(elem, obj, keyedElems);
+        _setElemPostChildrenContent(obj, elem);
+
+        // append the element to an appropriate parent
+        _appendElemToParent(obj, elem);
+
+        return elem;
+    }
+
+    /**
+     * _createStandardElement
+     * ---------------------------------------------------------------------------
+     * create the approproate type of element
+     */
+    function _createStandardElement(obj: IElemDefinition): StandardElement {
         let elem: StandardElement;
-        let a: string;
-        let c: string;
-        let selector: string;
-        let child: StandardElement;
-        let type: string;
-        let namespace: string;
-        // #endregion
+        let type = obj.type || "div";
 
-        type = obj.type || "div";
-        namespace = obj.namespace;
-        if (namespace) {
-            elem = document.createElementNS(namespace, type) as StandardElement;
+        if (obj.namespace) {
+            elem = document.createElementNS(obj.namespace, type) as StandardElement;
         } else {
             elem = document.createElement(type);
         }
 
-        if (obj.id) {
-            elem.setAttribute("id", obj.id);
+        return elem;
+    }
+
+    /**
+     * _setElemIdentifiers
+     * ---------------------------------------------------------------------------
+     * assign an ID to this element, and add it to the keyed array if appropriate
+     */
+    function _setElemIdentfiers(elem: StandardElement, obj: IElemDefinition, keyedElems?: IDictionary<StandardElement>): void {
+        // set the id on the newly created object
+        if (obj.id) { elem.setAttribute("id", obj.id); }
+
+        // if there is a key, add this element to the keyed elements
+        if (obj.key && keyedElems) { keyedElems[obj.key] = elem; }
+    }
+
+    /**
+     * _setElemClass
+     * ---------------------------------------------------------------------------
+     * set the CSS class of this element (including creating it if it doesn't
+     * exist)
+     */
+    function _setElemClass(elem: StandardElement, obj: IElemDefinition): void {
+        if (!obj.cls) { return; }
+
+        // Check that the class is a string before setting it
+        if (typeof obj.cls === typeof "string") {
+            elem.setAttribute("class", obj.cls as string);
+
+            // If it's an object, we need to create the class(es) first
+        } else if (typeof obj.cls === "object") {
+            map(obj.cls as IClasses, (value: IClassDefinition, selector: string) => {
+                createClass(selector, value);
+                addClass(elem, selector);
+            });
         }
 
-        // Set the CSS class of the object
-        if (obj.cls) {
+    }
 
-            // Check that the class is a string before setting it
-            if (typeof obj.cls === typeof "string") {
-                elem.setAttribute("class", obj.cls as string);
+    //...................................................
+    //#region ATTRIBUTE SPECIFIC
+    
+    /**
+     * _setElemAttributes
+     * ---------------------------------------------------------------------------
+     * set any additional attributes for the element that aren't defined as common
+     * enough to be on the base elem definition
+     */
+    function _setElemAttributes(elem: StandardElement, obj: IElemDefinition): void {
 
-                // If it's an object, we need to create the class(es) first
-            } else if (typeof obj.cls === "object") {
-                for (selector in (obj.cls as IClasses)) {
-                    if (obj.cls.hasOwnProperty(selector)) {
-
-                        // Create the CSS class using the specified parameters
-                        createClass(selector, obj.cls[selector]);
-
-                        // Add the CSS class to the element itself
-                        addClass(elem, selector);
-                    }
-                }
-            }
-
-        }
-
-        // Set the first bit of content in the element (guaranteed to come before children)
-        if (obj.before_content) {
-            elem.innerHTML = obj.before_content;
-        }
-
-        // Also check for just plain "Content"
-        if (obj.content) {
-            elem.innerHTML += obj.content;
-        }
-
-        // Loop through all of the children listed for this element
-        if (obj.children) {
-            for (c in obj.children) {
-                if (obj.children.hasOwnProperty(c)) {
-
-                    if (!obj.children[c]) {
-                        throw new Error("cannot append non-existent child element");
-                    }
-
-                    if ((obj.children[c] as HTMLElement).setAttribute) {
-                        elem.appendChild(obj.children[c] as HTMLElement);
-                    } else {
-                        let subArray: IElemDefinition = obj.children[c];
-                        if (namespace) { subArray.namespace = namespace; }
-                        child = createElement(subArray);
-                        elem.appendChild(child);
-                    }
-
-                }
-            }
-        }
-
-        // Loop through all other attributes that we should be setting
+        // if we don't have an attributes array, we want one
         if (!obj.attr) { obj.attr = {}; }
 
         // handle accessibility on elements that can be selected
-        if (isNullOrUndefined(obj.focusable) && obj.eventListeners && obj.eventListeners.click) { obj.focusable = true; }
-        if (obj.focusable && !obj.attr.tabindex) { obj.attr.tabindex = 0; } 
+        if (_isFocusable(obj)) { obj.focusable = true; }
+        if (_needsTabIndex(obj)) { obj.attr.tabindex = 0; }
 
-        for (a in obj.attr) {
-            if (obj.attr.hasOwnProperty(a)) {
-                if (isNullOrUndefined(obj.attr[a])) { continue; }
+        // loop over all of the attributes
+        map(obj.attr, (value: IAttribute, key: string) => {
+            if (isNullOrUndefined(value)) { return; }
 
-                if ((obj.attr[a] as IKeyValPair<string>).key) {
-                    if ((obj.attr[a] as IKeyValPair<string>).key === "value") {
-                        (elem as HTMLInputElement).value = (obj.attr[a] as IKeyValPair<string>).val;
-                    } else {
-                        elem.setAttribute((obj.attr[a] as IKeyValPair<string>).key, (obj.attr[a] as IKeyValPair<string>).val);
-                    }
-
-                } else {
-                    if (a === "value") {
-                        (elem as HTMLInputElement).value = (obj.attr[a] as string);
-                    } else {
-                        elem.setAttribute(a, (obj.attr[a] as string));
-                    }
-                }
-
-            }
-        }
-        
-        // add style properties
-        if (obj.style) {
-            map(obj.style, (val: any, key: string) => {
-                elem.style[key] = val;
-            });
-        }
-
-        // Add any after html
-        if (obj.after_content) {
-            elem.innerHTML += obj.after_content;
-        }
-
-        // Attach the object to a parent if appropriate
-        if (obj.parent) {
-            obj.parent.appendChild(elem);
-        }
-
-        // add any event listeners the user requested
-        if (obj.eventListeners) {
-
-            // if this is an accessible object and it can take focus, add keybaord listeners too
-            if (obj.focusable && obj.eventListeners.click && !obj.eventListeners.keypress) {
-                obj.eventListeners.keypress = (e: KeyboardEvent) => {
-                    if (e.keyCode !== 13 && e.keyCode !== 32) { return; }
-                    obj.eventListeners.click(e);
-                    e.preventDefault();
-                }
+            if ((value as IKeyValPair<string>).key) {
+                let pair: IKeyValPair<string> = value as IKeyValPair<string>;
+                _setElemAttribute(elem, pair.key, pair.val);
+            } else {
+                _setElemAttribute(elem, key, value);
             }
 
-            // loop through all listeners to add them to the element
-            map(obj.eventListeners, (listener: EventListener, key: keyof WindowEventMap) => {
-                elem.addEventListener(key, listener);
-            });
-        }
-
-        return elem;
+        });
     }
+
+    /**
+     * _isFocusable
+     * ---------------------------------------------------------------------------
+     * checks if this element should be able to receive focus
+     */
+    function _isFocusable(obj: IElemDefinition): boolean {
+        if (!isNullOrUndefined(obj.focusable)) { return obj.focusable; }
+        if (!obj.eventListeners) { return false; }
+        if (!obj.eventListeners.click) { return false; }
+        return true;
+    }
+
+    /**
+     * _needsTabIndex
+     * ---------------------------------------------------------------------------
+     * check if this element should be getting a tab index value
+     */
+    function _needsTabIndex(obj: IElemDefinition): boolean {
+        if (!_isFocusable(obj)) { return false; }
+        if (obj.attr.tabIndex) { return false; }
+        return true;
+    }
+
+    /**
+     * _setElemAttribute
+     * ---------------------------------------------------------------------------
+     * sets the actual contents of a particular attribute
+     */
+    function _setElemAttribute(elem: StandardElement, key: string, value: any): void {
+
+        switch (key) {
+
+            // value gets special handling
+            case "value":
+                (elem as HTMLInputElement).value = (value as string);
+                break;
+
+            // everything else goes through set attribute
+            default:
+                elem.setAttribute(key, (value as string));
+                break;
+        }
+    }
+    
+    //#endregion
+    //...................................................
+
+    /**
+     * _setElemStyle
+     * ---------------------------------------------------------------------------
+     * set the appropriate element-level styles for this element
+     */
+    function _setElemStyle(elem: StandardElement, obj: IElemDefinition): void {
+        if (!obj.style) { return; }
+
+        map(obj.style, (val: any, key: string) => {
+            elem.style[key] = val;
+        });
+    }
+
+    /**
+     * _setEventListeners
+     * ---------------------------------------------------------------------------
+     * go through any registered event listeners on this element and assign them
+     */
+    function _setEventListeners(elem: StandardElement, obj: IElemDefinition): void {
+        if (!obj.eventListeners) { return; }
+
+        // if this is an accessible object and it can take focus, add keybaord listeners too
+        if (obj.focusable && obj.eventListeners.click && !obj.eventListeners.keypress) {
+            obj.eventListeners.keypress = (e: KeyboardEvent) => {
+                if (e.keyCode !== 13 && e.keyCode !== 32) { return; }
+                obj.eventListeners.click(e);
+                e.preventDefault();
+            }
+        }
+
+        // loop through all listeners to add them to the element
+        map(obj.eventListeners, (listener: EventListener, key: keyof WindowEventMap) => {
+            elem.addEventListener(key, listener);
+        });
+
+    }
+
+    /**
+     * _setKipTooltip
+     * ---------------------------------------------------------------------------
+     * set a more UI-focused tooltip on a particular element
+     */
+    function _setKipTooltip(elem: StandardElement, obj: IElemDefinition): void {
+        if (!obj.tooltip) { return; }
+
+        new Tooltip({ content: obj.tooltip }, elem as HTMLElement);
+    }
+
+    /**
+     * _setElemBaseContent
+     * ---------------------------------------------------------------------------
+     * set the initial content of the element, which will be rendered before any
+     * children are added
+     */
+    function _setElemBaseContent(elem: StandardElement, obj: IElemDefinition): void {
+
+        // Set the first bit of content in the element (guaranteed to come before children)
+        if (obj.before_content) { elem.innerHTML = obj.before_content; }
+
+        // Also check for just plain "Content"
+        if (obj.content) { elem.innerHTML += obj.content; }
+
+        // also check for bound content; if we find it, add our own content updater
+        if (obj.boundContent) {
+            elem.innerHTML = bind(obj.boundContent, (newVal: string) => {
+                elem.innerHTML = newVal;
+            });
+        }
+    }
+
+    /**
+     * _addElemChildren
+     * ---------------------------------------------------------------------------
+     * add any appropriate children to this element
+     */
+    function _addElemChildren(elem: StandardElement, obj: IElemDefinition, keyedElems?: IDictionary<StandardElement>): void {
+        if (!obj.children) { return; }
+
+        // loop through each child
+        for (let c of obj.children) {
+
+            // make sure there is a child
+            if (!c) {
+                console.warn("cannot append non-existent child element");
+                continue;
+            }
+
+            // if the child is already an element, just add it
+            if ((c as HTMLElement).setAttribute) {
+                elem.appendChild(c as HTMLElement);
+
+                // otherwise, recurse to create this child
+            } else {
+                let def: IElemDefinition = c as IElemDefinition;
+                if (obj.namespace) { def.namespace = obj.namespace; }
+                let child = _createElementCore(def, keyedElems);
+                elem.appendChild(child);
+            }
+
+
+        }
+
+    }
+
+    /**
+     * _setElemPostChildrenContent
+     * ---------------------------------------------------------------------------
+     * if there is content specified after children, set it here
+     */
+    function _setElemPostChildrenContent(obj: IElemDefinition, elem: StandardElement): void {
+        if (!obj.after_content) { return; }
+            
+        elem.innerHTML += obj.after_content;
+    }
+
+    /**
+     * _appendElemToParent
+     * ---------------------------------------------------------------------------
+     * add this element to a parent element
+     */
+    function _appendElemToParent(obj: IElemDefinition, elem: StandardElement): void {
+        if (!obj.parent) { return; }
+        
+        obj.parent.appendChild(elem);
+    }
+
+    
+
+    //#endregion
+    //...................................................
 
     /**...........................................................................
      * createSimpleLabeledElement
@@ -366,6 +534,7 @@ namespace KIP {
         };
     }
 
+    //....................................
     //#region CALCULATE OFFSET FUNCTIONS
 
     /**...........................................................................
@@ -455,7 +624,9 @@ namespace KIP {
     };
 
     //#endregion
+    //....................................
 
+    //..........................................
     //#region RELATIVE TO OTHER ELEM FUNCTIONS
 
     /**...........................................................................
@@ -552,6 +723,7 @@ namespace KIP {
     };
 
     //#endregion
+    //..........................................
 
     /**...........................................................................
      * removeSubclassFromAllElenents
@@ -566,7 +738,7 @@ namespace KIP {
      * ...........................................................................
      */
     export function removeSubclassFromAllElements(cls: string, subcls: string, exception?: HTMLElement): void {
-        let elems: NodeList;
+        let elems: HTMLCollectionOf<Element>;
         let e: number;
         let elem: HTMLElement;
 
@@ -653,25 +825,42 @@ namespace KIP {
         return false;
     };
 
-    /**...........................................................................
-     * AppendChildren
-     * ...........................................................................
+    //..........................................
+    //#region ADD OR REMOVE ALL CHILDREN
+
+    /**
+     * appendChildren
+     * ----------------------------------------------------------------------------
      * Appends an arbitrary number of children to the specified parent node. Loops 
      * through all members of the argument list to get the appropriate children 
      * to add.
      * 
      * @param   parent  The parent element to add children to
      * @param   kids    Any children that should be appended
-     * ...........................................................................
      */
     export function appendChildren(parent: HTMLElement, ...kids: HTMLElement[]): void {
         "use strict";
         let idx: number;
 
-        for (idx = 1; idx < kids.length; idx += 1) {
+        for (idx = 0; idx < kids.length; idx += 1) {
             parent.appendChild(kids[idx]);
         }
     }
+
+    /**
+     * clearChildren
+     * ----------------------------------------------------------------------------
+     * remove all children from the specified parent element
+     */
+    export function clearChildren(parent: HTMLElement): void {
+        for (let idx = parent.children.length - 1; idx >= 0; idx -= 1) {
+            let child: HTMLElement = parent.children[idx] as HTMLElement;
+            parent.removeChild(child);
+        }
+    }
+
+    //#endregion
+    //..........................................
 
     /**...........................................................................
      * moveElemRelativePosition
@@ -778,8 +967,8 @@ namespace KIP {
         if (isSelectable(htmlElem)) {
             htmlElem.select();
 
-        // conte-editable areas are trickier; use some range logic 
-        // (taken from https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element)
+            // conte-editable areas are trickier; use some range logic 
+            // (taken from https://stackoverflow.com/questions/6139107/programmatically-select-text-in-a-contenteditable-html-element)
         } else {
             // get the range of the element
             let range = document.createRange();
@@ -792,7 +981,8 @@ namespace KIP {
         }
     }
 
-    const HTML_TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    export const HTML_TAB = "&nbsp;&nbsp;&nbsp;&nbsp;";
+
     /**...........................................................................
      * encodeForHTML
      * ...........................................................................
@@ -808,17 +998,16 @@ namespace KIP {
 
         // whitespace
         data = data.replace(/\\n/g, "<br>");
-        data = data.replace(/\\t/g, HTML_TAB); 
+        data = data.replace(/\\t/g, HTML_TAB);
         return data;
     }
 
-    /**...........................................................................
+    /**
      * decodeFromHTML
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * From an HTML-renderable string, convert back to standard strings
      * @param   data    The string to unencode
      * @returns The decoded data
-     * ...........................................................................
      */
     export function decodeFromHTML(data: string): string {
         data = data.replace(/&amp;/g, "&");
@@ -833,7 +1022,20 @@ namespace KIP {
         data = data.replace(/<br>/g, "\n");
         data = data.replace(new RegExp(HTML_TAB, "g"), "\t");
         data = data.replace(/&nbsp;/g, " ");
-        
+
         return data;
+    }
+
+    export function replaceElemWithElem(elemToReplace: HTMLElement, replacement: HTMLElement): void {
+        if (!elemToReplace.parentNode) { return; }
+
+        // grab the current references that we'll need to properly replace
+        let nextChild = elemToReplace.nextSibling;
+        let parent = elemToReplace.parentNode;
+
+        // remove the current element and add our new one
+        parent.removeChild(elemToReplace);
+        parent.insertBefore(replacement, nextChild);
+
     }
 }

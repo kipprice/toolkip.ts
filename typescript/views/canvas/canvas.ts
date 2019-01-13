@@ -461,7 +461,7 @@ namespace KIP {
 		 */
 		private _onMouseWheel(event: MouseWheelEvent) : void {
 
-			let delta: number = event.wheelDelta;
+			let delta: number = event.deltaY;
 			delta = (Math.abs(delta) / delta);
 			this.zoom(delta);
 		}

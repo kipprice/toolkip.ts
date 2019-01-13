@@ -176,6 +176,7 @@ namespace KIP {
    * @param test 
    */
   export function isUpdatable (test: any): test is IUpdatable {
+    if (!test) { return; }
     return !!((test as any).update);
   }
 

@@ -1,11 +1,12 @@
 namespace KIP.Events {
 
+	//.....................
 	//#region INTERFACES
-	/**...........................................................................
+
+	/**
 	 * IEvent
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Keeps track of the basics of an event 
-	 * ...........................................................................
 	 */
 	export interface IEventDefinition {
 
@@ -17,23 +18,20 @@ namespace KIP.Events {
 
 	}
 
-	/**...........................................................................
+	/**
 	 * IListener
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Creates a function ready to receive context from a particular event firing
-	 * 
 	 * @param	ev	The Event that is being fired
-	 * ...........................................................................
 	 */
 	export interface IListener<C extends IEventContext>  {
 		(ev: Event<C>): void;
 	}
 
-	/**...........................................................................
+	/**
 	 * IListenerData
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Keeps track of all info we need about an event listener
-	 * ...........................................................................
 	 */
 	export interface IListenerData<C extends IEventContext> {
 
@@ -47,11 +45,11 @@ namespace KIP.Events {
 		uniqueId?: string;
 	}
 
-	/**...........................................................................
+	/**
 	 * IEventContext
-	 * ...........................................................................
+	 * 
 	 * Keeps track of the context atound a particular event dispatch
-	 * ...........................................................................
+	 * 
 	 */
 	export interface IEventContext {
 
@@ -64,15 +62,19 @@ namespace KIP.Events {
 
 	//#endregion
 
-	/**...........................................................................
+	/**----------------------------------------------------------------------------
 	 * @class	EventDefinition
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Declare the definition for a particular event
 	 * @author	Kip Price
 	 * @version 1.0.1
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 */
 	export class EventDefinition<C extends IEventContext> {
+		
+		//.....................
+		//#region PROPERTIES
+		
 		/** keep track of the name of the event */
 		protected _name: string;
 
@@ -84,11 +86,15 @@ namespace KIP.Events {
 
 		/** keep track of how many listeners we've added */
 		protected _numOfListeners: number = 0;
+		
+		//#endregion
+		//.....................
 
-		/**...........................................................................
+		/**
+		 * EventDefinition
+		 * ----------------------------------------------------------------------------
 		 * Creates a new Event
 		 * @param 	details 	The specs for this particular event
-		 * ...........................................................................
 		 */
 		constructor(details: IEventDefinition) {
 			this._name = details.name;
@@ -96,13 +102,13 @@ namespace KIP.Events {
 			this._listeners = new Collection<IListenerData<C>>(CollectionTypeEnum.ReplaceDuplicateKeys);
 		}
 
-		/**...........................................................................
+		/**
 		 * addListener
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * add a listener to our collection (with the option to replace if using a unique key) 
 		 * 
 		 * @param	listenerData	The listener features to add
-		 * ...........................................................................
+		 * 
 		 */
 		public addListener(listenerData: IListenerData<C>): void {
 			listenerData.uniqueId = listenerData.uniqueId || (this._key + this._numOfListeners.toString());
@@ -110,26 +116,26 @@ namespace KIP.Events {
 			this._numOfListeners += 1;
 		}
 
-		/**...........................................................................
+		/**
 		 * removeEventListener
-		 * ...........................................................................
-		 *  allow a listener to be skipped 
+		 * ----------------------------------------------------------------------------
+		 * allow a listener to be skipped 
 		 * 
 		 * @param	uniqueId	Unique identifier for the listener to remove
-		 * ...........................................................................
+		 * 
 		 */
 		public removeEventListener(uniqueId: string): void {
 			if (!uniqueId) { return; }
 			this._listeners.removeElement(uniqueId);
 		}
 
-		/**...........................................................................
+		/**
 		 * notifyListeners
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Let listeners know that an event that they care about has been fired
 		 * 
 		 * @param 	context 	The context to send along with the event
-		 * ...........................................................................
+		 * 
 		 */
 		public notifyListeners(context: Event<C>): void {
 
@@ -144,16 +150,17 @@ namespace KIP.Events {
 
 	}
 
-	/**...........................................................................
+	/**----------------------------------------------------------------------------
 	 * @class	Event
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * New instance of a particular event definition
 	 * @author	Kip Price
 	 * @version 1.0.0
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 */
 	export abstract class Event<C extends IEventContext> {
 
+		//.....................
 		//#region PROPERTIES
 
 		/** event name (overriden by child classes) */
@@ -165,11 +172,13 @@ namespace KIP.Events {
 		public get context(): C { return this._context; }
 
 		//#endregion
+		//.....................
 
-		/**...........................................................................
+		/**
+		 * Event
+		 * ----------------------------------------------------------------------------
 		 * create a new Event with the appropriate context
 		 * @param	context		The context to add to the event
-		 * ...........................................................................
 		 */
 		constructor(context: C) {
 			this._context = context;

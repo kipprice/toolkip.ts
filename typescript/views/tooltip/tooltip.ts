@@ -65,7 +65,8 @@ namespace KIP {
 
                 nested: {
                     "&.hidden": {
-                        opacity: "0"
+                        opacity: "0",
+                        pointerEvents: "none"
                     }
                 }
             },
@@ -293,19 +294,17 @@ namespace KIP {
         //#region DRAW AND ERASE
 
         public draw(parent: HTMLElement): void {
-            if (!this._elems.base.parentNode) super.draw(parent);
+            if (!this._elems.base.parentNode) { super.draw(parent); }
             removeClass(this._elems.base, "hidden");
         }
 
         public erase(): void {
             addClass(this._elems.base, "hidden");
-            setTimeout(() => { super.erase(); }, 110);
+            //setTimeout(() => { super.erase(); }, 110);
         }
 
         //#endregion
     }
-
-    
 
     export enum TooltipPositionType {
         TOP = 0,

@@ -1,11 +1,41 @@
 namespace KIP {
 
-    export interface IModelChangeListener<T, K extends keyof T> {
+    //..........................................
+    //#region TYPE GUARDS
+    
+    export function isIdentifiableModel(model: Model<any>): model is IdentifiableModel {
+        if (!model) { return false; }
+        if (!(model as any).id) { return false; }
+        return true;
+    }
+    
+    //#endregion
+    //..........................................
+    
+    //.............................................
+    //#region LISTENERS FOR CHANGES ON THE MODEL
+    
+    export interface IPropertyChangeListener<T, K extends keyof T> {
         (newValue: T[K], oldValue?: T[K]): void;
     }
 
-    export type IModelChangeListeners<T> = {
-        [K in keyof T]?: IModelChangeListener<T, K>[];
+    export interface IModelChangeListener<T> {
+        (key: keyof T, newValue: T[keyof T], oldValue?: T[keyof T]): void;
+    }
+
+    export type IPropertyChangeListeners<T> = {
+        [K in keyof T]?: IPropertyChangeListener<T, K>[];
+    }
+    
+    //#endregion
+    //.............................................
+
+    export type IPartial<T> = {
+        [K in keyof T]?: T[K];
+    }
+
+    export interface IModel {
+        [key: string]: any;
     }
 
     /**----------------------------------------------------------------------------
@@ -20,26 +50,39 @@ namespace KIP {
      *      _save[CamelCasePropertyName] : save data into JSON from this class
      * 
      * @author  Kip Price
-     * @version 1.0.4
+     * @version 1.0.5
      * ----------------------------------------------------------------------------
      */
-    export abstract class Model<T> {
+    export abstract class Model<T extends IModel = IModel> {
 
+        //.....................
         //#region PROPERTIES
 
-        /** track listeners registered by callers */
-        private __listeners: IModelChangeListeners<T>;
+        /** track listeners for specific properties registered by callers */
+        private __propertyListeners: IPropertyChangeListeners<T>;
+
+        /** track listeners for specific properties registered by callers */
+        private __modelListeners: IModelChangeListener<T>[];
 
         //#endregion
+        //.....................
 
+        //..........................................
+        //#region CREATE THE MODEL
+        
         /**
          * Model
          * ----------------------------------------------------------------------------
          * Create a new model from specific data
          * @param   dataToCopy  If provided, the JSON of this data to copy over
          */
-        constructor(dataToCopy?: T) {
-            this.__listeners = {};
+        constructor(dataToCopy?: IPartial<T>) {
+            
+            // initialize the listeners for our properties
+            this.__propertyListeners = {};
+            this.__modelListeners = [];
+
+            // Copy data over from the passed in interface
             this._setDefaultValues();
             if (dataToCopy) {
                 if ((dataToCopy as any).saveData) { dataToCopy = (dataToCopy as any).saveData(); }
@@ -54,13 +97,19 @@ namespace KIP {
          */
         protected _setDefaultValues(): void {}
         
+        //#endregion
+        //..........................................
+        
+        //.......................................
+        //#region MOVE DATA FROM OTHER ELEMENT
+
         /**
          * _copyData
          * ----------------------------------------------------------------------------
          * Copies data from a JSON version of this model
          * @param   data    The data to save into our model
          */
-        protected _copyData<K extends keyof T>(data: T): void {
+        protected _copyData<K extends keyof T>(data: IPartial<T>): void {
             map(data, (value: T[K], key: K) => {
                 this._copyPiece(key, value);
             });
@@ -88,6 +137,12 @@ namespace KIP {
                 return;
             };
 
+            // if our current value for this field can be updated, do that instead
+            if (isUpdatable(this[key as any])) {
+                this[key as any].update(value);
+                return;
+            }
+
             let savableValue: T[K];
 
             // make shallow copies of arrays by default
@@ -104,10 +159,57 @@ namespace KIP {
             }
 
             // otherwise, just set our internal property to have this value
-            let privateName: string = "_" + key;
-            this[privateName] = savableValue;
+            this._setValue(key, value);
         }
 
+        /**
+         * _copyModelArray
+         * ----------------------------------------------------------------------------
+         * 
+         * @param arr 
+         * @param constructor 
+         */
+        protected _copyModelArray<I, M extends I>(arr: I[], constructor: IConstructor<M>): M[] {
+			let out: M[] = [];
+
+			for (let m of arr) {
+				let model = new constructor(m);
+				out.push(model);
+			}
+
+			return out;
+        }
+
+        /**
+         * _copyModelDictionary
+         * ----------------------------------------------------------------------------
+         * @param dict 
+         * @param constructor 
+         */
+        protected _copyModelDictionary<I, M extends I>(dict: IDictionary<I>, constructor: IConstructor<M>): IDictionary<M> {
+            let out: IDictionary<M> = {};
+
+            map(dict, (m: I, key: string) => {
+                out[key] = new constructor(m);
+            });
+
+            return out;
+        }
+        
+        /**
+         * update
+         * ----------------------------------------------------------------------------
+         * update various elements of the model to match the passed in data
+         */
+        public update(model: IPartial<T>): void {
+            this._copyData(model);
+        }
+        //#endregion
+        //.......................................
+
+        //....................
+        //#region SAVE DATA
+        
         /**
          * saveData
          * ----------------------------------------------------------------------------
@@ -115,6 +217,7 @@ namespace KIP {
          */
         public saveData<K extends keyof T>(): T {
             let out: T = {} as T;
+
             map(this, (val: any, key: string) => {
                 if (typeof val === "function") { return; }
                 let fmtKey: string = key;
@@ -123,6 +226,7 @@ namespace KIP {
                 let outVal = this._savePiece(fmtKey as keyof T, val);
                 if (!isNullOrUndefined(outVal)) { out[fmtKey] = outVal; }
             });
+            
             return out;
         }
 
@@ -166,15 +270,17 @@ namespace KIP {
                 return this[privateName];
             }
         }
+        
+        //#endregion
+        //....................
 
+        //...........................
         //#region MANAGE LISTENERS
 
         /**
          * _setValue
          * ---------------------------------------------------------------------------
-         * Helper to update a value in this model
-         * @param key 
-         * @param value 
+         * Helper to update a value in this model & notify listeners about the change
          */
         protected _setValue<K extends keyof T>(key: K, value: T[K]): void {
             let privateName: string = "_" + key;
@@ -186,18 +292,46 @@ namespace KIP {
         /**
          * _notifyListeners
          * ---------------------------------------------------------------------------
-         * @param key 
-         * @param oldVal 
-         * @param newVal 
+         * Let any subscribers to this model know that some changes have occurred
+         * @param   key     The key that changed in the model
+         * @param   oldVal  The previous version of this key's value
+         * @param   newVal  The new version of this key's value
          */
         protected _notifyListeners<K extends keyof T>(key: K, oldVal: T[K], newVal: T[K]): void {
-           let listeners = this.__listeners[key];
+            this._notifyModelListeners(key, oldVal, newVal);
+            this._notifyPropertyListeners(key, oldVal, newVal);
+        }
+
+        /**
+         * _notifyModelListeners
+         * ----------------------------------------------------------------------------
+         * Let any listeners that care about any change to the model know that this 
+         * particular key has changed to this particular value
+         */
+        protected _notifyModelListeners<K extends keyof T>(key: K, oldVal: T[K], newVal: T[K]): void {
+            let listeners = this.__modelListeners;
+            if (!listeners || listeners.length === 0) { return; }
+
+            for (let listener of listeners) {
+                if (!listener) { continue; }
+                listener(key, newVal, oldVal);
+            }
+        }
+
+        /**
+         * _notifyPropertyListerners
+         * ----------------------------------------------------------------------------
+         * Let any listeners that care about this particular property know that it has 
+         * changed
+         */
+        protected _notifyPropertyListeners<K extends keyof T>(key: K, oldVal: T[K], newVal: T[K]): void {
+            let listeners = this.__propertyListeners[key];
            if (!listeners) { return; }
 
            // notify all registered listeners
            for (let listener of listeners) {
                if (!listener) { continue; }
-               listener(oldVal, newVal);
+               listener(newVal, oldVal);
            }
         }
 
@@ -208,14 +342,24 @@ namespace KIP {
          * @param listener 
          * @param uniqueKey 
          */
-        public registerListener<K extends keyof T>(key: K, listener: IModelChangeListener<T, K>, uniqueKey?: string): void {
-            if (!this.__listeners[key]) { this.__listeners[key] = []; }
-            this.__listeners[key].push(listener);
+        public registerPropertyListener<K extends keyof T>(key: K, listener: IPropertyChangeListener<T, K>): void {
+            if (!this.__propertyListeners[key]) { this.__propertyListeners[key] = []; }
+            this.__propertyListeners[key].push(listener);
+        }
+
+        /**
+         * registerModelListener
+         * ----------------------------------------------------------------------------
+         * register a listener for any change that occurs in this model
+         */
+        public registerModelListener(listener: IModelChangeListener<T>): void {
+            if (!listener) { return; }
         }
 
         //TODO: Unregister listeners
 
         //#endregion
+        //...........................
     }
 
     /**----------------------------------------------------------------------------
@@ -281,7 +425,7 @@ namespace KIP {
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class IdentifiableModel<T extends Identifiable> extends Serializable<T> implements Identifiable {
+    export class IdentifiableModel<T extends Identifiable = Identifiable> extends Serializable<T> implements Identifiable {
 
         //.....................
         //#region PROPERTIES
@@ -316,7 +460,13 @@ namespace KIP {
          * @param   lastId  Most recent iD used in a model  
          */
         protected static _updateLastId(lastId: string): void {
-            this._lastId = parseInt(lastId);
+            let lastNumericId = parseInt(lastId);
+            if (isNaN(lastNumericId)) {
+                this._lastId += 1;      // don't fail on NaN conditions; just increment
+            } else {
+                this._lastId = lastNumericId;
+            }
+            
         }
 
         /**
@@ -325,7 +475,7 @@ namespace KIP {
          * Create a new model with a unique ID
          * @param   dataToCopy  If available, the interface to copy into this model 
          */
-        constructor(dataToCopy?: T) {
+        constructor(dataToCopy?: IPartial<T>) {
             super(dataToCopy);
 
             // make sure we have an appropriate id stored statically

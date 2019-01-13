@@ -213,7 +213,7 @@ namespace KIP {
   export function createClass(selector: string, attr: IClassDefinition | IKeyValPair<string>[], noAppend?: boolean): HTMLElement {
     let cls: HTMLElement;
     let a: string;
-    let styles: NodeList;
+    let styles: HTMLCollectionOf<HTMLStyleElement>;
 
     // Grab the style node of this document (or create it if it doesn't exist)
     styles = document.getElementsByTagName("style");

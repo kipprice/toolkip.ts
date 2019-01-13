@@ -61,9 +61,9 @@ namespace KIP {
             this._onChange(StyleChangeEnum.STROKE_SIZE);
         }
 
-        protected _textAlign: string;
-        public get textAlign (): string { return this._textAlign; }
-        public set textAlign (align: string) {
+        protected _textAlign: CanvasTextAlign;
+        public get textAlign (): CanvasTextAlign { return this._textAlign; }
+        public set textAlign (align: CanvasTextAlign) {
             this._textAlign = align;
             this._onChange(StyleChangeEnum.TEXT_ALIGN);
         }
@@ -153,6 +153,7 @@ namespace KIP {
             context.textAlign = style.textAlign;
             context.font = style.font;
             context.lineWidth = style.strokeSize;
+            
         }
     }
 }

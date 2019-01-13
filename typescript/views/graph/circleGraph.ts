@@ -54,6 +54,7 @@ namespace KIP.SVG {
             "use strict";
             var text, dIdx, datum, perc, elem, ring, width, r, nextDeg, c, opacity, layerRings, layerText;
 
+            // create the SVG layers that will host our
             this._createLayers();
 
             // Initialize some variables we need

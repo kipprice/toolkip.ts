@@ -10,6 +10,8 @@
 	},
 	"exclude": [
 		"node_modules",
-		"compiled_js"
+		"compiled_js",
+		"typescript/modules",
+		"modules"
 	]
 }

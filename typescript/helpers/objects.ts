@@ -2,9 +2,9 @@ namespace KIP {
 
   //#region INTERFACES AND CONSTANTS
   export enum SortOrderEnum {
-    INCORRECT_ORDER = -1,
+    INCORRECT_ORDER = 1,
     SAME = 0,
-    CORRECT_ORDER = 1 
+    CORRECT_ORDER = -1 
   }
   
   export interface IKeyValPair<T> {
@@ -20,21 +20,19 @@ namespace KIP {
     [value: number]: string;
   }
 
-  /**...........................................................................
+  /**
    * IConstructor
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Generic tracker of a constructor function
-   * ...........................................................................
    */
   export interface IConstructor<T> {
     new(...addlArgs: any[]): T;
   }
   
-  /**...........................................................................
+  /**
    * IToggleBtnOptions
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Keep track of options for toggle buttons
-   * ...........................................................................
    */
   export interface IToggleBtnOption<T> {
     label: string;
@@ -42,31 +40,33 @@ namespace KIP {
     imageURL?: string;
   }
 
-  /**...........................................................................
+  /**
    * IDictionary
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * generic interface for key value pairs
-   * ...........................................................................
    */
-  export interface IDictionary<T> {
-    [key: string]: T;
+  export type IDictionary<T, K extends string = string> = {
+    [key in K]: T;
   }
 
-  /**...........................................................................
+  export type INumericDictionary<T, K extends number = number> = {
+    [key in K]: T;
+  }
+
+
+  /**
 	 * IMapFunction
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * allow for map function, similar to Array.map 
-	 * ...........................................................................
 	 */
 	export interface IMapFunction<T,> {
 		(elem: T, key: string | number | keyof any, idx: number) : void;
 	}
 
-	/**...........................................................................
+	/**
 	 * IQuitConditionFunction
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Determine whether we should stop looping over code
-	 * ...........................................................................
 	 */
 	export interface IQuitConditionFunction {
 		() : boolean;
@@ -75,16 +75,15 @@ namespace KIP {
 
   //#region HELPER FUNCTIONS
 
-  /**...........................................................................
+  /**
    * map
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Loop through all keys in an object or array and perform an action on each 
    * element. Similar to Array.map.
    * 
    * @param   object      The object to loop through
    * @param   callback    What to do with each element
    * @param   shouldQuit  Function to evaluate whether we are done looping
-   * ...........................................................................
    */
   export function map(object: any, callback: IMapFunction<any>, shouldQuit?: IQuitConditionFunction): void {
     if (!object) { return; }
@@ -122,9 +121,9 @@ namespace KIP {
     }
   }
 
-  /**...........................................................................
+  /**
    * getNextKey
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Grab the next keyed element in an object. This is terribly un-performant in
    * all but the first key case.
    * 
@@ -132,7 +131,6 @@ namespace KIP {
    * @param   lastKey   If provided, the key before the key we're looking for
    * 
    * @returns The next key for this element
-   * ...........................................................................
    */
   export function getNextKey(object: any, lastKey?: string): string {
     let propName: string;
@@ -151,6 +149,11 @@ namespace KIP {
     return "";
   }
 
+  /**
+   * keyCount
+   * ----------------------------------------------------------------------------
+   * Count & return how many keys exist in the specified object
+   */
   export function keyCount(object: any): number {
     let cnt: number = 0;
     map(object, () => {
@@ -159,14 +162,20 @@ namespace KIP {
     return cnt;
   }
 
+  /**
+   * isEmptyObject
+   * ----------------------------------------------------------------------------
+   * Checks if the specified object doesn't have any keys
+   * @returns True if no unique keys are on this object
+   */
   export function isEmptyObject(object: any): boolean {
     return (!getNextKey(object));
   }
   //#endregion
 
-  /**...........................................................................
+  /**
    * combineObjects
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Take two separate objects and combine them into one
    * 
    * @param   objA    First object to combine
@@ -174,7 +183,6 @@ namespace KIP {
    * @param   deep    True if this should be recursive
    * 
    * @returns The combined object
-   * ...........................................................................
    */
   export function combineObjects(objA: any, objB: any, deep?: boolean): any {
     let ret: {};
@@ -190,9 +198,9 @@ namespace KIP {
     return ret;
   }
 
-  /**...........................................................................
+  /**
    * _loopThru
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Combine an object into an output array
    * 
    * @param   objToCombine  The ibject to merge into the output
@@ -200,7 +208,6 @@ namespace KIP {
    * @param   deep          True if we should recurse on this object
    * 
    * @returns The merged object
-   * ...........................................................................
    */
   function _loopThru(objToCombine: any, outputObj: any, deep?: boolean): any {
 
@@ -237,16 +244,15 @@ namespace KIP {
     });
   }
 
-  /**...........................................................................
+  /**
    * reconcileOptions
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Takes in two different option objects & reconciles the options between them
    * 
    * @param   options    The user-defined set of option
    * @param   defaults   The default options
    * 
    * @returns The reconciled option list
-   * ...........................................................................
    */
   export function reconcileOptions<T extends IDictionary<any>>(options: T, defaults: T): T {
     let key: string;
@@ -267,19 +273,19 @@ namespace KIP {
     return options;
   }
 
-  /**...........................................................................
+  /**
    * isNullOrUndefined
-   * ...........................................................................
+   * ----------------------------------------------------------------------------
    * Determine whether the data passed in has value
    * 
    * @param   value   The value to check for null / undefined
    * 
    * @returns True if the value is null or undefined
-   * ...........................................................................
    */
   export function isNullOrUndefined (value: any) : boolean {
     if (value === undefined) { return true; }
     if (value === null) { return true; }
+    if (value === "") { return true; }
     return false;
   }
 

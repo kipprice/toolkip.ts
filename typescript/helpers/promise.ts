@@ -1,6 +1,6 @@
 namespace KIP {
-    export interface KipPromiseFunction {
-        (resolve: Function, reject: Function, ...params: any[]) : any;
+    export interface KipPromiseFunction<T extends Function = Function> {
+        (resolve: T, reject: Function, ...params: any[]) : any;
     }
 
     export function isPromise(data: any): data is KipPromise {
@@ -8,16 +8,21 @@ namespace KIP {
         return (!!(data as any).then);
     }
 
-    /**...........................................................................
+    /**----------------------------------------------------------------------------
      * @class KipPromise
+     * ----------------------------------------------------------------------------
      * Create a promise class to run async calls in a chained fashion
-     * @version 1.0
-     * ...........................................................................
+     * @author  Kip Price
+     * @version 1.0.1
+     * ----------------------------------------------------------------------------
      */
-    export class KipPromise implements Promise<any> {
+    export class KipPromise<T extends Function = Function> implements Promise<T> {
+
+        //.....................
+        //#region PROPERTIES
 
         /** the code that will be run for the actual promise evaluation */
-        protected _executable: KipPromiseFunction;
+        protected _executable: KipPromiseFunction<T>;
 
         /** keep track of what this promise should do after completion */
         protected _thenListeners: KipPromise[];
@@ -25,13 +30,16 @@ namespace KIP {
         /** keep track of what this promise should do after an error */
         protected _catchListeners: KipPromise[];
 
-        /**...........................................................................
+        //#endregion
+        //.....................
+
+        /**
+         * KipPromise
+         * ----------------------------------------------------------------------------
          * Creates a promise elements that runs a bit of code asynchronously
-         * 
          * @param   func    The code to run 
-         * ...........................................................................
          */
-        public constructor (func: KipPromiseFunction, deferred?: boolean) {
+        public constructor (func: KipPromiseFunction<T>, deferred?: boolean) {
             // initialize properties
             this._thenListeners = [];
             this._catchListeners = [];
@@ -42,19 +50,22 @@ namespace KIP {
             } else {
                 this._executable = func;
             }
+
         }
 
         /**
          * _executePromise
-         * 
+         * ----------------------------------------------------------------------------
          * Runs the code associated with a promise
          * @param   func    The code to run
          * @param   params  Any additional parameters that should be included in the promise
+         * 
+         * @version 1.0.1
          */
-        protected _executePromise(func: KipPromiseFunction, ...params: any[]): void {
+        protected _executePromise(func: KipPromiseFunction<T>, ...params: any[]): void {
             try {
                 func(
-                    (...params: any[]) => { this._resolve(...params); },
+                    ((...params: any[]) => { this._resolve(...params); }) as any as T,
                     (...params: any[]) => { this._reject(...params); },
                     ...params
                 );
@@ -65,7 +76,7 @@ namespace KIP {
 
         /**
          * _chain
-         * 
+         * ----------------------------------------------------------------------------
          * Run the contents of a deferred promise based on a chain event
          * @param   params  Any additional data that should be passed to the next promise
          */
@@ -75,7 +86,7 @@ namespace KIP {
 
         /**
          * _getListenerPromise
-         * 
+         * ----------------------------------------------------------------------------
          * Generates a promise (or reuses an existing one) for the then / catch listeners
          * @param   listener    The listener to add 
          */
@@ -90,8 +101,12 @@ namespace KIP {
             } else {
                 promise = new KipPromise((resolve, reject, ...params: any[]) => {
                     let result: any = listener(...params);
+
+                    // if the result of this function is another promise, attach to the then listener
                     if (isPromise(result)) {
                         result.then((...params: any[]) => { resolve(...params); });
+
+                    // otherwise, just resolve immediately after execution
                     } else {
                         resolve(result);
                     }
@@ -102,15 +117,13 @@ namespace KIP {
             return promise;
         }
 
-        /**...........................................................................
+        /**
          * then
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Public function to setup what should run after this promise completes
-         * 
          * @param   onThen  The function to run on completion
+         * @returns The promise associated with our then action
          * 
-         * @returns This promise
-         * ...........................................................................
          */
         public then(onThen: Function | KipPromise): KipPromise {
             let onThenPromise: KipPromise = this._getListenerPromise(onThen);
@@ -118,29 +131,25 @@ namespace KIP {
             return onThenPromise;
         }
         
-        /**...........................................................................
+        /**
          * catch
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Register the function that should catch any errors that occur
-         * 
          * @param   onCatch     The function that will handle catching
-         * 
          * @returns This promise
-         * ...........................................................................
          */
-        public catch(onCatch: Function): KipPromise {
+        public catch(onCatch: Function): KipPromise<T> {
             let onCatchPromise: KipPromise = this._getListenerPromise(onCatch);
             this._catchListeners.push(onCatchPromise);
-            return onCatchPromise;
+            return this;
         }
 
 
-        /**...........................................................................
+        /**
          * resolve
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Called when the promise has been successfully resolved
          * @param   params  Any additional data that should be passed along to the promise
-         * ...........................................................................
          */
         protected _resolve(...params: any[]): void {
             window.setTimeout(() => {
@@ -152,12 +161,11 @@ namespace KIP {
             }, 0);
         }
 
-        /**...........................................................................
+        /**
          * _reject
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Called when the promise failed to resolve for some reason
-         * @param params 
-         * ...........................................................................
+         * @param   params  Any additional data that should be passed along to the promise
          */
         protected _reject(...params: any[]): void {
             window.setTimeout(() => {
@@ -169,39 +177,41 @@ namespace KIP {
             }, 0);
         }
 
-        /**...........................................................................
+        /**
          * resolve
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * return a promise that will immediately resolve 
-         * 
          * @param   any arguments that should be passed to the resolve function
-         * ...........................................................................
          */
-        public static resolve(...params: any[]): KipPromise {
-            let promise: KipPromise = new KipPromise((resolve,reject) => {resolve(...params); });
+        public static resolve<T extends Function>(...params: any[]): KipPromise<T> {
+            let promise: KipPromise<T> = new KipPromise<T>((resolve) => {resolve(...params); });
             return promise;
         }
 
-        /**...........................................................................
+        /**
          * reject
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * return a promise that will be rejected 
-         * ...........................................................................
          */
-        public static reject(...params: any[]): KipPromise {
-            let promise: KipPromise = new KipPromise((resolve, reject) => { reject(...params); });
+        public static reject<T extends Function>(...params: any[]): KipPromise<T> {
+            let promise: KipPromise<T> = new KipPromise<T>((resolve, reject) => { reject(...params); });
             return promise;
         }
 
     }
 
-    /**
+    /**----------------------------------------------------------------------------
      * @class   PromiseChain
-     * 
-     * @version 1.0
+     * ----------------------------------------------------------------------------
+     * Ensure that promises get evaluated in order
      * @author  Kip Price
+     * @version 1.0.0
+     * ----------------------------------------------------------------------------
      */
     export class PromiseChain extends KipPromise {
+
+        //.....................
+        //#region PROPERTIES
 
         /** keep track of the first promise added */
         protected _initialPromise: KipPromise;
@@ -209,7 +219,12 @@ namespace KIP {
         /** keep track of the last promise added */
         protected _finalPromise: KipPromise;
 
+        //#endregion
+        //.....................
+
         /**
+         * PromiseChain
+         * ----------------------------------------------------------------------------
          * create a promise chain to be executed asynchronously
          */
         public constructor() {
@@ -224,7 +239,7 @@ namespace KIP {
 
         /**
          * addPromise
-         * 
+         * ----------------------------------------------------------------------------
          * Add a promise to the execution chain
          * @param onThenListener 
          */
@@ -246,7 +261,7 @@ namespace KIP {
 
         /**
          * execute
-         * 
+         * ----------------------------------------------------------------------------
          * Actually run this promise chain 
          * @param params 
          */

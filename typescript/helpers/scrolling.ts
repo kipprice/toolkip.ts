@@ -118,7 +118,7 @@ namespace KIP {
 
 			// if we're in the 2nd half and we're moving fractions of pixels, might as well quit early
 			if ((Math.floor(dy) === 0) && half) {
-				window.scrollBy(curAmt);
+				window.scrollBy({ top: curAmt });
 				return;
 			}
 

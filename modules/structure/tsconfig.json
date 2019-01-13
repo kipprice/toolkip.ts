@@ -1,0 +1,18 @@
+{
+    "compilerOptions" : {
+        "sourceMap" : true,
+        "outDir": "./compiled_js/",
+        //"outFile": "../../../compiled_js/structure.js",
+        "target" : "es5",
+        "module" : "amd",
+        "declaration": true,
+    },
+    "include": [
+        "mvcModule.ts"
+    ],
+
+    "exclude": [
+        "node_modules",
+        "../../../compiled_js"
+    ]
+}

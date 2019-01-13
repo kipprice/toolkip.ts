@@ -9,7 +9,7 @@ namespace KIP.Styles {
      * ----------------------------------------------------------------------------
      * Creates an element that can additionally add CSS styles
      * @author  Kip Price
-     * @version 1.1.0
+     * @version 1.1.2
      * ----------------------------------------------------------------------------
      */
     export abstract class Stylable extends NamedClass {
@@ -21,7 +21,7 @@ namespace KIP.Styles {
         private static _pageStyles: IStandardStyles = {};
 
         /** hold the style tag containing our css class */
-        private static _styleElem: HTMLStyleElement;
+        private static _styleElems: HTMLStyleElement[];
 
         /** keep track of all of the classes without the color substitutions */
         private static _themedStyles: IDictionary<IStandardStyles> = {};
@@ -30,7 +30,7 @@ namespace KIP.Styles {
         private static _themeColors: IThemeColors = {};
 
         /** hold the style tag that contains color-specific classes */
-        private static _colorStyleElems: IDictionary<HTMLStyleElement> = {};
+        private static _colorStyleElems: IDictionary<HTMLStyleElement[]> = {};
 
         /** keep track of the custom fonts for the page */
         private static _customPageFonts: ICustomFonts = {};
@@ -65,13 +65,12 @@ namespace KIP.Styles {
             return outStr;
         }
 
-        /**...........................................................................
+        /**
          * _containedPlaceholder
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * check if a particular value string has a placeholder within it
          * @param   value   The value to check
          * @returns True if a placeholder is found
-         * ...........................................................................
          */
         protected static _containedPlaceholder(value: string): string {
             let placeholderRegex: RegExp = /<(.+?)>/;
@@ -80,13 +79,12 @@ namespace KIP.Styles {
             return result[1];
         }
 
-         /**...........................................................................
-          * _findAllContainedPlaceholders
-          * ...........................................................................
+        /**
+         * _findAllContainedPlaceholders
+         * ----------------------------------------------------------------------------
          * check if a particular value string has a placeholder within it
          * @param   value   The value to check
          * @returns True if a placeholder is found
-         * ...........................................................................
          */
         protected static _findAllContainedPlaceholders(styles: IStandardStyles): string[] {
             // turn the styles into a string for ease of parsing
@@ -108,11 +106,10 @@ namespace KIP.Styles {
             return out;
         }
 
-        /**...........................................................................
+        /**
          * _updateAllThemeColors
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Make sure we have an updated version of our styles
-         * ...........................................................................
          */
         protected static _updateAllThemeColors(): void {
             map(this._themeColors, (value: IStandardStyles, themeColorId: string) => {
@@ -121,6 +118,8 @@ namespace KIP.Styles {
         }
 
         /**
+         * _updateThemeColor
+         * ----------------------------------------------------------------------------
          * updates an individual theme color
          * @param   colorId     The color ID to update
          */
@@ -140,6 +139,8 @@ namespace KIP.Styles {
         }
 
         /**
+         * _updateColorInClassDefinition
+         * ----------------------------------------------------------------------------
          * checks whether a color is replacing a current color ID in the definition
          * @param def 
          * @param colorId 
@@ -192,13 +193,11 @@ namespace KIP.Styles {
         //........................
         //#region MERGING THEMES
 
-        /**...........................................................................
+        /**
          * _mergeIntoStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Add a new set of styles into the set of page styles
-         * 
          * @param   styles  The styles to merge
-         * ...........................................................................
          */
         protected static _mergeIntoStyles(styles: IStandardStyles): void {
             // handle the non-colorables
@@ -208,15 +207,12 @@ namespace KIP.Styles {
             this._themedStyles = this._mergeColorThemes(styles);
         }
 
-        /**...........................................................................
+        /**
          * _mergeThemes
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Mere a set of themes into a single theme
-         * 
          * @param   styles  Sets of themes that should be merged together
-         * 
          * @returns The updated set of themes
-         * ...........................................................................
          */
         protected static _mergeThemes(placeholderToMatch: string, ...styles: IStandardStyles[]): IStandardStyles {
             let flatStyles: IStandardStyles[] = [];
@@ -228,13 +224,12 @@ namespace KIP.Styles {
             return this._combineThemes(placeholderToMatch, ...flatStyles);
         }
 
-        /**...........................................................................
+        /**
          * _mergeColorThemes
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Merge color specific style elements into our color arrays
          * @param   styles  Styles to combine into color-specific sets
          * @returns The created dictionary of theme specific colors 
-         * ...........................................................................
          */
         protected static _mergeColorThemes(...styles: IStandardStyles[]): IDictionary<IStandardStyles> {
             let placeholders: string[];
@@ -259,12 +254,11 @@ namespace KIP.Styles {
             return this._themedStyles;
         }
 
-        /**...........................................................................
+        /**
          * _combineThemes
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * @param   themes  The themes to combine
          * @returns The merged themes
-         * ...........................................................................
          */
         private static _combineThemes(placeholderToMatch: string, ...themes: IStandardStyles[]): IStandardStyles {
             let pageStyles: IStandardStyles = {};
@@ -285,13 +279,12 @@ namespace KIP.Styles {
             return pageStyles;
         }
 
-        /**...........................................................................
+        /**
          * _mergeDefinitions
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * merge a particular set of definitions
          * @param   definitions     The definitions to merge
          * @returns The merged set of definitions
-         * ...........................................................................
          */
         private static _mergeDefinition(placeholderToMatch: string, ...definitions: TypedClassDefinition[]): TypedClassDefinition {
             let mergedDef: TypedClassDefinition = {}
@@ -311,11 +304,11 @@ namespace KIP.Styles {
             return mergedDef;
         }
 
-        /**...........................................................................
+        /**
          * _mergeIntoFonts
-         * ...........................................................................
+         * 
          * @param fonts 
-         * ...........................................................................
+         * 
          */
         protected static _mergeIntoFonts(fonts: ICustomFonts): void {
             map(fonts, (fontDef: IFontFaceDefinition[], fontName: string) => {
@@ -328,24 +321,30 @@ namespace KIP.Styles {
         //........................
         //#region CREATING STYLES
 
-        /**...........................................................................
+        /**
          * _createStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create the styles for this class 
          * @param   forceOverride   True if we should create the classes even if they 
          *                          already exist
-         * ...........................................................................
          */
         protected static _createStyles(forceOverride?: boolean): void {
 
             // grab our updated colors
             let styles: IStandardStyles = Stylable._pageStyles;
-            this._styleElem = this._sharedCreateStyles(styles, this._styleElem, forceOverride);
+            
+
+            this._styleElems = this._sharedCreateStyles(styles, this._styleElems, forceOverride);
 
             this._createFontStyles(forceOverride);
 
         }
 
+        /**
+         * _createFontStyles
+         * ----------------------------------------------------------------------------
+         * @param forceOverride 
+         */
         protected static _createFontStyles(forceOverride?: boolean): void {
             // add the font-family pieces
             let fonts: ICustomFonts = Stylable._customPageFonts;
@@ -361,75 +360,92 @@ namespace KIP.Styles {
             });
         }
 
-        /**...........................................................................
+        /**
          * _createColoredStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create all styles for color-affected classes
          * @param   forceOverride   If true, regenerates all styles for colors
-         * ...........................................................................
          */
         protected static _createAllColoredStyles(forceOverride?: boolean): void {
             this._updateAllThemeColors();
         }
 
-        /**...........................................................................
+        /**
          * _createColorStyle
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Create a particular color's style
          * @param   styles          The styles to create for this color
          * @param   colorId         The ID of the color
          * @param   forceOverride   If true, regenerates the classes for this color
-         * ...........................................................................
          */
         protected static _createColoredStyles(styles: IStandardStyles, colorId: string, forceOverride?: boolean): void {
-            let elem: HTMLStyleElement = this._colorStyleElems[colorId];
-            this._colorStyleElems[colorId] = this._sharedCreateStyles(styles, elem, forceOverride);
+            this._colorStyleElems[colorId] = this._sharedCreateStyles(styles, this._colorStyleElems[colorId], forceOverride);
         }
 
-        /**...........................................................................
+        /**
          * _sharedCreateStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Creates styles (either colored or not)
          * @param   styles   
-         * @param   elem 
+         * @param   elems
          * @param   forceOverride 
-         * ...........................................................................
          */
-        protected static _sharedCreateStyles(styles: IStandardStyles, elem: HTMLStyleElement, forceOverride?: boolean): HTMLStyleElement {
+        protected static _sharedCreateStyles(styles: IStandardStyles, elems: HTMLStyleElement[], forceOverride?: boolean): HTMLStyleElement[] {
             if (!styles) { return; }
 
-            // If we have an element, remove it
-            if (elem) {
-                window.setTimeout(() => { document.head.removeChild(elem); }, 100);
+            let length: number = 0;
+            let MAX_STRING = 10000;
+
+            // remove all current style tags so we aren't duplicating every time colors change
+            if (elems && elems.length > 0) {
+                for (let elem of elems) {
+                    window.setTimeout(() => { document.head.removeChild(elem); }, 100);
+                }
             }
+            elems = [];
             
             // spin up a new element to add these styles to
-            let newElem = createStyleElement(false);
-            document.head.appendChild(newElem);
-
+            let newElem = this._addNewElement(elems);
+            
             // create all of the individual styles
             map(styles, (cssDeclaration: Styles.TypedClassDefinition, selector: string) => {
                 let tmpElem: HTMLStyleElement = Styles.createClass(selector, cssDeclaration, true, forceOverride, true);
                 if (!tmpElem) { return; }
+                length += tmpElem.innerHTML.length;
+                if (length >= MAX_STRING) {
+                    newElem = this._addNewElement(elems);
+                }
                 newElem.innerHTML += tmpElem.innerHTML;
             });
 
             // return the new style element
-            return newElem;
+            return elems;
 
+        }
+
+        /**
+         * _addNewElement
+         * ----------------------------------------------------------------------------
+         * @param elems 
+         */
+        protected static _addNewElement(elems): HTMLStyleElement {
+            let newElem = createStyleElement(false);
+            elems.push(newElem);
+            document.head.appendChild(newElem);
+            return newElem;
         }
         //#endregion
         //........................
 
         //........................
         //#region CLEANING STYLES
-        /**...........................................................................
+
+        /**
          * _cleanStyles
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Clean the nested styles data so that we can parse it properly
          * @param   styles  The styles to clean
          * @returns The cleaned styles
-         * ...........................................................................
          */
         protected static _cleanStyles(styles: IStandardStyles, lastSelector?: string): IStandardStyles {
             let outStyles: IStandardStyles = {} as any;
@@ -442,9 +458,9 @@ namespace KIP.Styles {
 
                         let newSelector: string = newSelectors[i];
 
-                        // handle selectors that are modifications of the last selector
-                        if (newSelector[0] === "&") {
-                            newSelectors[i] = lastSelector + rest(newSelector,1);
+                        // handle selectors that specify where the last selector should sit
+                        if (newSelector.indexOf("&") !== -1) {
+                            newSelectors[i] = newSelector.replace(/&/g, lastSelector);
                         
                         // handle all other subclass cases
                         } else {
@@ -464,14 +480,13 @@ namespace KIP.Styles {
             return outStyles;
         }
 
-        /**...........................................................................
+        /**
          * _cleanClassDef
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Clean a particular class definition recursively
          * @param   selector    The CSS selector for this class
          * @param   classDef    The definition for this CSS class
          * @returns The merged styles
-         * ...........................................................................
          */
         protected static _cleanClassDef(selector: string, classDef: TypedClassDefinition): IStandardStyles {
             let topStyles: IStandardStyles = {} as any;
@@ -551,6 +566,54 @@ namespace KIP.Styles {
             // Create the styles
             this._createStyles();
             this._hasCreatedStyles = true;
+
+            // register media listeners
+            this._registerMediaListeners();
+        }
+
+        /**
+         * _registerMediaListeners
+         * ----------------------------------------------------------------------------
+         * Auto-apply various styles for easier mobile-optimizing
+         */
+        protected _registerMediaListeners(): void {
+            
+            // global classes (print, mobile)
+            this._registerMediaListener("print", "print");
+            this._registerMediaListener("(max-width:1200px)", "mobile");
+
+            // various mobile sizes
+            this._registerMediaListener("(max-width:1200px) and (min-width:801px)", "large");
+            this._registerMediaListener("(max-width:800px) and (min-width:601px)", "medium");
+            this._registerMediaListener("(max-width:600px) and (min-width:401px)", "small");
+            this._registerMediaListener("(max-width:400px)", "tiny");
+        }
+
+        /**
+         * _registerMediaListener
+         * ----------------------------------------------------------------------------
+         * Register a listener to detect if a particular media query passes
+         * 
+         * @param   matchQuery   The media query to test for matching
+         * 
+         * @param   classToApply    What class to apply if the query matches
+         * 
+         * @param   elem            If included, the element that should have the class
+         *                          auto-applied 
+         */
+        protected _registerMediaListener(matchQuery: string, classToApply: string, elem?: StandardElement): void {
+            let mediaQueryFunc = window.matchMedia(matchQuery);
+
+            mediaQueryFunc.addListener((media: MediaQueryListEvent) => {
+                if (media.matches) {
+                    KIP.addClass(elem || document.body, classToApply);
+                } else {
+                    KIP.removeClass(elem || document.body, classToApply);
+                }
+            });
+
+            // make sure we also handle the case where we already match
+            if (mediaQueryFunc.matches) { KIP.addClass(elem || document.body, classToApply); }
         }
 
         /**

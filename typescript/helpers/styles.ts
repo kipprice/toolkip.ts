@@ -75,8 +75,7 @@ namespace KIP.Styles {
     /**
      * IMediaQueries
      * ----------------------------------------------------------------------------
-     * @deprecated
-     * Track media queries separate from other CSS elements
+     * 
      */
     export interface IMediaQueries {
         [screenSize: string]: IStandardStyles;
@@ -84,7 +83,8 @@ namespace KIP.Styles {
 
     //#endregion
     //....................................
-
+    
+    //....................................
     //#region HANDLE THE CLASS CREATION
 
     /**
@@ -180,6 +180,7 @@ namespace KIP.Styles {
         return cssRule;
     }
 
+
     /**
      * _generateAnimationClass
      * ----------------------------------------------------------------------------
@@ -238,7 +239,7 @@ namespace KIP.Styles {
      * @returns The created style element
      */
     export function createStyleElement(findExisting?: boolean): HTMLStyleElement {
-        let styles: NodeList;
+        let styles: HTMLCollectionOf<HTMLStyleElement>;
         let cls: HTMLStyleElement;
 
         // try to find an existing tag if requested
@@ -292,9 +293,7 @@ namespace KIP.Styles {
         let outCls: string = "";
         for (let idx = 0; idx < classes.length; idx += 1) {
             if (!classes[idx]) { continue; }
-
-            if (outCls.length > 0) { outCls += " "; }
-            outCls += classes[idx];
+            outCls = KIP.addPiece(outCls, classes[idx], " ");
         }
         return outCls;
     }
@@ -365,7 +364,9 @@ namespace KIP.Styles {
 
         return createClass("@font-face", attr, noAppend, forceOverride);
     }
+    
     //#endregion
+    //....................................
 
     /**
      * preemptivelyCreateStyles

@@ -25,6 +25,11 @@ namespace KIP.Forms {
 
         /** abstract property for the default value of child elements */
         protected abstract get _defaultValue(): T;
+        protected _specifiedDefaultValue: T;
+        protected _getDefaultValue(): T { 
+            if (this._specifiedDefaultValue) { return this._specifiedDefaultValue; }
+            return this._defaultValue;
+        }
 
         /** abstract property for the default class of child elements */
         protected abstract get _defaultCls(): string;
@@ -89,7 +94,7 @@ namespace KIP.Forms {
                 fontSize: "1em",
                 width: "100%",
                 boxSizing: "border-box",
-                fontFamily: "OpenSansLight,Segoe UI,Helvetica",
+                fontFamily: "Segoe UI, Open Sans, Helvetica",
             },
 
             ".kipFormElem": {
@@ -246,7 +251,7 @@ namespace KIP.Forms {
 
             // set the appropriate default value
             this._data = template.value;
-            if (isNullOrUndefined(this._data)) { this._data = this._defaultValue; }
+            if (isNullOrUndefined(this._data)) { this._data = this._getDefaultValue(); }
 
             // create the appropriate layout
             this._layout = template.layout || FormElementLayoutEnum.MULTILINE;
@@ -275,6 +280,11 @@ namespace KIP.Forms {
                     func: (ev: FormElemChangeEvent<any>) => { this._handleOtherChange(ev); },
                     uniqueId: this._id
                 });
+            }
+
+            // grab the default value if specified
+            if (!isNullOrUndefined(template.defaultValue)) {
+                this._specifiedDefaultValue = template.defaultValue;
             }
 
             // save off our template
@@ -320,6 +330,7 @@ namespace KIP.Forms {
                 });
 
                 this._elems.input.addEventListener("change", () => {
+                    console.log("change event fired");
                     this._changeEventFired();
                 });
             }
@@ -471,7 +482,7 @@ namespace KIP.Forms {
          */
         protected _hasBlankRequiredElems(): boolean {
             if (!this._isRequired) { return false; }
-            if (this._data !== this._defaultValue) { return false; }
+            if (this._data !== this._getDefaultValue()) { return false; }
             return true;
         }
 
@@ -484,7 +495,7 @@ namespace KIP.Forms {
          */
         public update(data: T): void {
             this._onClear();
-            if (isNullOrUndefined(data)) { data = this._defaultValue; }
+            if (isNullOrUndefined(data)) { data = this._getDefaultValue(); }
             let changed: boolean = (this._data === data);
 
             this._data = data;
@@ -617,7 +628,7 @@ namespace KIP.Forms {
                 let value: T;
                 switch (this._validationType) {
                     case ValidationType.CLEAR_ERROR_VALUE:
-                        value = this._defaultValue;
+                        value = this._getDefaultValue();
                         break;
                     case ValidationType.KEEP_ERROR_VALUE:
                         value = this._elems.input.value;
@@ -630,7 +641,7 @@ namespace KIP.Forms {
                         value = this._data;
                         break;
                     default:
-                        value = this._defaultValue;
+                        value = this._getDefaultValue();
                         break;
                 }
                 this._elems.input.value = value;
@@ -791,9 +802,9 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected  _onClear(): void {
-            this._data = this._defaultValue;
+            this._data = this._getDefaultValue();
             if (this._elems.input) {
-                this._elems.input.value = this._defaultValue;
+                this._elems.input.value = this._getDefaultValue();
             }
         }
         //#endregion

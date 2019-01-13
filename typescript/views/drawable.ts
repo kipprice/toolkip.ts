@@ -87,6 +87,22 @@ namespace KIP {
 
 			// actually create the elements associated with this class
 			this._createElements();
+
+			window.setTimeout(() => {
+				this._registerMediaListeners();
+			}, 100);
+		}
+
+		/**
+		 * _registerMediaListener
+		 * ----------------------------------------------------------------------------
+		 * Replace the stylable default registerMediaListener to try to apply first to 
+		 * our base element, then the document as a whole
+		 */
+		protected _registerMediaListener(matchQuery: string, classToApply: string): void {
+			if (!this._elems) { return; }
+			super._registerMediaListener(matchQuery, classToApply, this._elems.base);
+			super._registerMediaListener(matchQuery, classToApply, document.body);
 		}
 
 		/**
@@ -252,4 +268,6 @@ namespace KIP {
 		 */
 		protected _createElements(): void { }
 	}
+
+	
 }

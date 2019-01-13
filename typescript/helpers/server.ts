@@ -45,9 +45,9 @@ namespace KIP {
     //#endregion
 
     //#region PUBLIC FUNCTIONS
-    /**...........................................................................
+    /**
      * ajaxRequest
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * Sends an AJAX request to a url of our choice as either a POST or GET
      * 
      * @param   type        Set to either "POST" or "GET" to indicate the type of response we want
@@ -57,7 +57,6 @@ namespace KIP {
      * @param   params      An object with key value pairs
      * 
      * @returns The request that was sent
-     * ...........................................................................
     */
     export function ajaxRequest(type: AjaxTypeEnum, url: string, successCb?: IAjaxSuccessFunction, errorCb?: IAjaxErrorFunction, params?: IAjaxParams | FormData): XMLHttpRequest {
         let request: XMLHttpRequest;
@@ -70,15 +69,45 @@ namespace KIP {
         return request;                                         // return the total request
     };
 
-    /**...........................................................................
+    export interface IAjaxDetails {
+        type: AjaxTypeEnum;
+        requestUrl: string;
+        params: IAjaxParams | FormData;
+        defer?: boolean;
+    }
+
+    /**
+     * ajax
+     * ----------------------------------------------------------------------------
+     * Run an async ajax call to the specified server
+     * @param   ajaxDetails     The type of request to run
+     * @returns A promise that will return the results of the ajax call
+     */
+    export function ajax(ajaxDetails: IAjaxDetails): KipPromise {
+
+        return new KIP.KipPromise((resolve, reject) => {
+            ajaxRequest(
+                ajaxDetails.type,
+                ajaxDetails.requestUrl,
+                (data: any) => {
+                    resolve(data);
+                },
+                () => {
+                    reject("Ajax request failed: " + ajaxDetails.requestUrl)
+                },
+                ajaxDetails.params
+            );
+        }, ajaxDetails.defer);
+    }
+
+    /**
      * loadFile
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * load a file from a particular URL
      * 
      * @param   url         The URL to load a file from
      * @param   success     What to do when the file is loaded successfully
      * @param   error       What do do if the file can't be loaded
-     * ...........................................................................
      */
     export function loadFile(url: string, success?: IAjaxSuccessFunction, error?: IAjaxErrorFunction): void {
         let request: XMLHttpRequest = new XMLHttpRequest();
@@ -98,6 +127,46 @@ namespace KIP {
         // actually send the appropriate request
         request.send();
     };
+
+    export function saveFile(fileName: string, content: string | Blob): void {
+        let blob: Blob;
+
+        // make sure we handle either type of content sent our way
+        if (typeof content === "string") {
+            blob = new Blob([content], { type: "text/plain" });
+        } else {
+            blob = content;
+        }
+
+        // allow the user to download the generated file
+        _generateDownload(fileName, blob);
+    }
+
+    function _generateDownload(filename: string, file: Blob): void {
+		// Save the file to the user's machine
+		// (taken from https://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server)
+
+		// handle IE saving
+		if (window.navigator.msSaveOrOpenBlob) {
+			window.navigator.msSaveBlob(file, "u");
+		}
+
+		// handle all other browsers
+		else {
+			let elem = KIP.createElement({
+				type: "a",
+				attr: {
+					"href": window.URL.createObjectURL(file),
+					"download": filename
+				}
+			});
+
+			// add the element to the document & simulate a click
+			document.body.appendChild(elem);
+			elem.click();
+			document.body.removeChild(elem);
+		}
+	}
 
     //#endregion
 

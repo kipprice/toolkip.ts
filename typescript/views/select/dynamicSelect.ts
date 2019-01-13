@@ -1,22 +1,20 @@
 ///<reference path="../drawable.ts" />
 namespace KIP {
 
-    /**...........................................................................
+    /**
      * IDynamicOption
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * Keep track of a choice for a dynamic selection
-     * ...........................................................................
      */
     export interface IDynamicOption {
         id: string;
         display: string;
     }
 
-    /**...........................................................................
+    /**
      * IDynamicSelectElems
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * Keep track of the elements used in the Dynamic Select field
-     * ...........................................................................
      */
     export interface IDynamicSelectElems extends IDrawableElements {
         input: HTMLInputElement;
@@ -27,14 +25,19 @@ namespace KIP {
         clearBtn: HTMLElement;
     }
 
-    /**...........................................................................
+    /**----------------------------------------------------------------------------
      * @class DynamicSelect
-     * Create a select element
-     * @version 1.0
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
+     * Create a select element that can load dynamic options
+     * // TODO: support more than just an ID being retrieved
+     * // TODO: fix drawer bugs (keyboard input, flicker)
+     * @author  Kip Price
+     * @version 1.0.1
+     * ----------------------------------------------------------------------------
      */
     export abstract class DynamicSelect extends Drawable {
 
+        //.....................
         //#region PROPERTIES
 
         /** keep track of the options that are available for this select field */
@@ -58,8 +61,19 @@ namespace KIP {
         /** keep track of general change listeners */
         protected _changeListeners: Function[];
 
-         /** keep track of the listeners for searching */
-         protected _searchListeners: Function[];
+        /** keep track of the listeners for searching */
+        protected _searchListeners: Function[];
+
+        protected _value: string;
+        public get value(): string { return this._value; }
+        
+        
+
+        //#endregion
+        //.....................
+
+        //...............
+        //#region STYLES
 
         /** keep track of the styles associated with this select field */
         protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
@@ -76,6 +90,7 @@ namespace KIP {
                     "input": {
                         position: "relative",
                         fontSize: "2em",
+                        zIndex: "3"
                     },
 
                     ".clearBtn": {
@@ -108,6 +123,7 @@ namespace KIP {
                         left: "0",
                         top: "3em",
                         display: "inline-block",
+                        zIndex: "2",
 
                         nested: {
                             ".loading": {
@@ -141,10 +157,15 @@ namespace KIP {
         }
 
         //#endregion
+        //...............
 
-        /**...........................................................................
+        //.....................
+        //#region CONSTRUCTOR
+
+        /**
+         * DynamicSelect
+         * ----------------------------------------------------------------------------
          * Create the Dynamic Select element
-         * ...........................................................................
          */
         constructor() {
             super();
@@ -154,7 +175,17 @@ namespace KIP {
             this._availableOptions.addType = CollectionTypeEnum.ReplaceDuplicateKeys;
         }
 
+        //#endregion
+        //.....................
+
+        //........................
         //#region CREATE ELEMENTS
+
+        /**
+         * _createElements
+         * ----------------------------------------------------------------------------
+         * Generate the elements needed by the dynamic select field
+         */
         protected _createElements(): void {
             this._elems = {} as any;
 
@@ -164,13 +195,14 @@ namespace KIP {
 
             this._elems.input = createElement({
                 type: "input",
-                parent: this._elems.base
+                parent: this._elems.base,
+                eventListeners : {
+                    input: (e: Event) => { this._onQueryTextChange(e); },
+                    keydown: (e: KeyboardEvent) => { this._onKeyEvent(e); },
+                    blur: (e: Event) => { this._onBlur(e); },
+                    focus: (e: Event) => { this._onFocus(e); }
+                }
             }) as HTMLInputElement;
-            this._elems.input.addEventListener("input", (e: Event) => { this._onQueryTextChange(e); });
-            //this._elems.input.addEventListener("keyup", (e: KeyboardEvent) => { this._onKeyEvent(e); });
-            this._elems.input.addEventListener("keydown", (e: KeyboardEvent) => { this._onKeyEvent(e); });
-            this._elems.input.addEventListener("blur", (e: Event) => { this._onBlur(e); });
-            this._elems.input.addEventListener("focus", (e: Event) => { this._onFocus(e); })
 
             this._elems.clearBtn = createElement({
                 cls: "clearBtn",
@@ -195,25 +227,29 @@ namespace KIP {
         }
 
         //#endregion
+        //........................
 
+        //...........................
         //#region DRAWER FUNCTIONS
 
-        /**...........................................................................
+        /**
          * _expandDrawer
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Expand the drawer of options
-         * ...........................................................................
          */
         protected _expandDrawer(): void {
             removeClass(this._elems.drawer, "collapsed");
-            transition(this._elems.drawer, { height: "0", opacity: "0" }, { height: "<height>", opacity: "1" }, 300);
+            transition(this._elems.drawer, 
+                { height: "0", opacity: "0" }, 
+                { height: "<height>", opacity: "1" }, 
+                300
+            );
         }
 
-        /**...........................................................................
+        /**
          * _collapseDrawer
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Collapse the drawer of options
-         * ...........................................................................
          */
         protected _collapseDrawer(): void {
             transition(this._elems.drawer, { height: "<height>", opacity: "1" }, { height: "0", opacity: "0" }, 300).then(() => {
@@ -222,16 +258,17 @@ namespace KIP {
         }
 
         //#endregion   
+        //...........................
 
+        //........................
         //#region AUGMENT OPTIONS
 
-        /**...........................................................................
+        /**
          * addOption
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Adds an option to our select field
          * 
          * @param   opt     The option to add
-         * ...........................................................................
          */
         public addOption(opt: IDynamicOption): void {
             let option: DynamicOption = new DynamicOption(opt, this);
@@ -240,12 +277,11 @@ namespace KIP {
             this._elems.innerOptions.appendChild(option.base);
         }
 
-        /**...........................................................................
+        /**
          * addOptions
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Add a set of options to the select element
          * @param   opts    The options to add
-         * ...........................................................................
          */
         public addOptions(opts: IDynamicOption[]): void {
             let opt: IDynamicOption;
@@ -254,9 +290,16 @@ namespace KIP {
             }
         }
         //#endregion
+        //........................
 
+        //........................
         //#region EVENT LISTENERS
 
+        /**
+         * addEventListener
+         * ----------------------------------------------------------------------------
+         * Allow additional listeners on this select field
+         */
         public addEventListener(type: "select" | "change" | "search" | keyof WindowEventMap, func: Function): void {
             switch (type) {
                 case "select":
@@ -279,7 +322,7 @@ namespace KIP {
 
         /**
          * _notifyChangeListeners
-         * 
+         * ----------------------------------------------------------------------------
          * Notify any listeners that some content changed
          */
         protected _notifyChangeListeners(): void {
@@ -293,7 +336,7 @@ namespace KIP {
 
         /**
          * _notifySelectListeners
-         * 
+         * ----------------------------------------------------------------------------
          * Notify any listeners that we have selected an element
          * @param   selectedOption  The option that was selected
          */
@@ -306,27 +349,26 @@ namespace KIP {
             }
         }
 
-        /**................................................................
+        /**
          * _notifySearchListeners
-         * ................................................................
+         * ----------------------------------------------------------------------------
          * @param search 
-         * ................................................................
          */
         protected _notifySearchListeners(search: string): void {
             let listener: Function;
+            if (!this._searchListeners) { return; }
             for (listener of this._searchListeners){
                 if (!listener) { continue; }
                 listener(search);
             }
         }
 
-        /**...........................................................................
+        /**
          * _onChange
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle when the text field changes
          * 
          * @param   e   Change event
-         * ...........................................................................
          */
         protected _onQueryTextChange(e: Event): void {
             let curText: string = this._elems.input.value;
@@ -341,13 +383,12 @@ namespace KIP {
             this._query(curText);
         }
 
-        /**...........................................................................
+        /**
          * _onKeyUp
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Check if we need to handle an enter press in the text field
          * 
          * @param   e   The keyboard event fired
-         * ...........................................................................
          */
         protected _onKeyEvent(e: KeyboardEvent): void {
             let foundNext: boolean = false;
@@ -395,50 +436,46 @@ namespace KIP {
 
         }
 
-        /**...........................................................................
+        /**
          * _onBlur
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle when focus is lost on the search element
          * @param   event   The focus event
-         * ...........................................................................
          */
         protected _onBlur(event: Event): void {
             this._collapseDrawer();
         }
 
-        /**...........................................................................
+        /**
          * _onFocus
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle when focus is given to the search element
          * @param   event   The focus event
-         * ...........................................................................
          */
         protected _onFocus(event: Event): void {
             this._expandDrawer();
             this._availableOptions.resetLoop();
         }
 
-        /**...........................................................................
+        /**
          * select
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle selecting an element in the search field
          * @param   selectedOption  The option that was selected
-         * ...........................................................................
          */
         public select(selectedOption: DynamicOption): void {
             this._collapseDrawer();
             this._elems.input.value = selectedOption.display;
+            this._value = selectedOption.id;
             this._elems.input.blur();
             this._notifySelectListeners(selectedOption);
         }
 
         /**
          * search
-         * 
+         * ----------------------------------------------------------------------------
          * Handle searching for a string that wasn't an option in
          * our search results
-         * 
-         * @param searchStr 
          */
         public search(searchStr: string): void {
             this._collapseDrawer();
@@ -447,33 +484,36 @@ namespace KIP {
             this._notifySearchListeners(searchStr);
         }
         //#endregion
+        //........................
 
+        //...........................
         //#region HANDLE FILTERING
 
-        /**...........................................................................
+        /**
          * _updateFiltering
-         * ...........................................................................
-         * make sure our filtered text reflects the most up-to-date value in the text field
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
+         * make sure our filtered text reflects the most up-to-date value in the 
+         * text field
          */
         public _updateFiltering(curText: string): void {
             // split the text by space for smarter filtering
-            let words: string[] = curText.split(" ");
+            let words: string[] = curText.toLowerCase().split(" ");
             this._availableOptions.map((elem: DynamicOption) => {
                 elem.tryFilter(words);
             });
         }
 
         //#endregion
+        //...........................
 
+        //........................
         //#region QUERY HANDLING
 
-        /**...........................................................................
+        /**
          * _query
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Handle querying for additional options to add
          * @param   queryText   The text to search
-         * ...........................................................................
          */
         protected _query(queryText?: string): void {
 
@@ -505,6 +545,10 @@ namespace KIP {
             });
         }
         //#endregion
+        //........................
+
+        //..................
+        //#region CLEARING
 
         public clear(): void {
             this._elems.input.value = "";
@@ -512,244 +556,28 @@ namespace KIP {
             this._notifyChangeListeners();
         }
 
+        //#endregion
+        //..................
+
+        //...........................
         //#region ABSTRACT FUNCTIONS
+
+        /**
+         * _onQuery
+         * ----------------------------------------------------------------------------
+         * Queries an appropriate source to find new values to add to the select. 
+         * Expectation is that new queries get added to the available options through
+         * addOption(s).
+         * 
+         * @param   queryText   Text that should be used to find new options
+         * 
+         * @returns A promise that will complete the query to the appropriate source
+         */
         protected abstract _onQuery(queryText: string): KipPromise;
+
         //#endregion
+        //...........................
     }
 
-    /**...........................................................................
-     * IDynamicOptionElems
-     * ...........................................................................
-     * 
-     * ...........................................................................
-     */
-    export interface IDynamicOptionElems extends IDrawableElements {
-        base: HTMLElement;
-        text: HTMLElement;
-    }
-
-
-    /**...........................................................................
-     * @class DynamicOption
-     * ...........................................................................
-     * Create an option for a dynamic select field
-     * @version 1.0
-     * @author  Kip Price
-     * ...........................................................................
-     */
-    export class DynamicOption extends Drawable implements IDynamicOption {
-
-        //#region PROPERTIES
-
-        /** unique ID for  */
-        protected _id: string;
-        public get id(): string { return this._id; }
-
-        /** display string for the option */
-        protected _display: string;
-        public get display(): string { return this._display; }
-
-        /** determine whether this option is currently filtered */
-        protected _isFiltered: boolean;
-        public get isFiltered(): boolean { return this._isFiltered; }
-
-        /** determine whether this option is selected */
-        protected _isSelected: boolean;
-        public get isSelected(): boolean { return this._isSelected; }
-
-        /** keep track of the elements */
-        protected _elems: IDynamicOptionElems;
-
-        /** keep track of the dynamic select element for this option */
-        protected _selectParent: DynamicSelect;
-
-        /** track styles for the option field */
-        protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
-            ".dynamicOption": {
-                overflow: "hidden",
-                cursor: "pointer",
-                padding: "5px",
-
-                nested: {
-                    "&.filtered": {
-                        maxHeight: "0",
-                        padding: "0"
-                    },
-
-                    "&:hover, &.hilite": {
-                        backgroundColor: "#eee"
-                    }
-                }
-            }
-        }
-
-        //#endregion
-
-        /**...........................................................................
-         * Create the dynamic option
-         * 
-         * @param   opt     Details of the option we are creating
-         * ...........................................................................
-         */
-        constructor(opt: IDynamicOption, parent: DynamicSelect) {
-            super();
-
-            this._id = opt.id;
-            this._display = opt.display;
-            this._selectParent = parent;
-
-            this._createElements();
-        }
-
-        //#region CREATE ELEMENTS
-
-        /**...........................................................................
-         * _shouldSkipCreateElements
-         * ...........................................................................
-         * Determine if we should avoid creating elements in the constructor
-         * @returns True if we should skip the create elements
-         * ...........................................................................
-         */
-        protected _shouldSkipCreateElements(): boolean { return true; }
-
-        /**...........................................................................
-         * _createElements
-         * ...........................................................................
-         * Create elements for this option
-         * ...........................................................................
-         */
-        protected _createElements(): void {
-
-            this._elems = {} as any;
-            this._isFiltered = true;
-
-            // create the base element
-            this._elems.base = createElement({
-                id: "opt|" + this._id,
-                cls: "dynamicOption filtered",
-                eventListeners: {
-                    click: () => { 
-                        console.log("click processed");
-                        this._selectParent.select(this); 
-                    }
-                }
-            });
-
-            // create the text element
-            this._elems.text = createElement({
-                content: this._display,
-                cls: "optText",
-                parent: this._elems.base
-            });
-
-
-        }
-        //#endregion
-
-        //#region INTERACTION
-
-        /**...........................................................................
-         * select
-         * ...........................................................................
-         * Select this particular element
-         * ...........................................................................
-         */
-        public select(): boolean {
-            if (this._isFiltered) { return false; }
-        }
-
-        /**...........................................................................
-         * hilite
-         * ...........................................................................
-         * Hilite the current selected element
-         * ...........................................................................
-         */
-        public hilite(): boolean {
-            if (this._isFiltered) { return false; }
-            addClass(this._elems.base, "hilite");
-            this._elems.base.scrollIntoView();
-            return true;
-        }
-
-        /**...........................................................................
-         * unhilite
-         * ...........................................................................
-         * ...........................................................................
-         */
-        public unhilite(): boolean {
-            removeClass(this._elems.base, "hilite");
-            return true;
-        }
-
-        /**...........................................................................
-         * _filter
-         * ...........................................................................
-         * Filter out this option if appropriate
-         * ...........................................................................
-         */
-        protected _filter(): void {
-            if (this._isFiltered) { return; }
-            this._isFiltered = true;
-            transition(this._elems.base, { maxHeight: "<height>", padding: "5px" }, { maxHeight: "0", padding: "0" }, 200).then(() => {
-                addClass(this._elems.base, "filtered");
-            });
-        }
-
-        /**...........................................................................
-         * _unfilter
-         * ...........................................................................
-         * Remove filtering for this option if appropriate
-         * ...........................................................................
-         */
-        protected _unfilter(): void {
-            if (!this._isFiltered) { return; }
-            this._isFiltered = false;
-            removeClass(this._elems.base, "filtered");
-            transition(this._elems.base, { maxHeight: "0", padding: "0" }, { maxHeight: "<height>", padding: "5px" }, 200).then;
-        }
-
-        /**...........................................................................
-         * tryFilter
-         * ...........................................................................
-         * Asynchronous call to ensure that options that don't match the current 
-         * select string are filtered out of the results
-         * 
-         * @param   words   The words required in a relevant string for the option 
-         *                  in order to not filter
-         * 
-         * @returns Promise that will run the 
-         * ...........................................................................
-         */
-        public tryFilter(words: string[]): KipPromise {
-            return new KipPromise((resolve: Function) => {
-                window.setTimeout(() => {
-                    let word: string;
-                    let notFound: boolean = false;
-
-                    // loop through the words that were passed in and ensure all are there
-                    for (word of words) {
-                        if (this._display.indexOf(word) === -1) {
-                            if (this._id.indexOf(word) === -1) {
-                                notFound = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    // if a word was missing, filter this element
-                    if (notFound) {
-                        this._filter();
-                    } else {
-                        this._unfilter();
-                    }
-
-                    // return that the promise completed
-                    resolve();
-
-                }, 0);
-            });
-        }
-
-        //#endregion
-    }
+    
 }

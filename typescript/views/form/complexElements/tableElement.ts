@@ -1,3 +1,6 @@
+/// <reference path="./arrayElement.ts" />
+/// <reference path="./arrayChildElement.ts" />
+
 namespace KIP.Forms {
     export class TabledArrayElement<T> extends ArrayElement<T> {
         protected get _defaultCls(): string { return "tableArray"; }

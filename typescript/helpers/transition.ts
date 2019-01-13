@@ -8,9 +8,9 @@ namespace KIP {
         shouldRemove?: boolean;
     }
 
-    /**...........................................................................
+    /**
      * transition
-     * ...........................................................................
+     * ---------------------------------------------------------------------------
      * Transition an element to a particular style, then alert the caller that 
      * it has completed
      * 
@@ -21,7 +21,6 @@ namespace KIP {
      * @param   delay       How long this transition should be delayed
      * 
      * @returns Promise that will be called after transition completes
-     * ...........................................................................
      */
     export function transition (element: HTMLElement, startStyle: ITransitionStyle, endStyle: ITransitionStyle, time: number, delay?: number): KipPromise {
 
@@ -85,9 +84,9 @@ namespace KIP {
     /** keep track of the style element used for generated classes */
     let styleElem: HTMLStyleElement;
 
-    /**...........................................................................
+    /**
      * _createTransitionClass
-     * ...........................................................................
+     * ---------------------------------------------------------------------------
      * Create a CSS class that will be one end of a transition
      * 
      * @param   className   Selector to use for the class
@@ -95,7 +94,6 @@ namespace KIP {
      * @param   elem        Element this class will be applied to
      * 
      * @returns The updated CSS class
-     * ...........................................................................
      */
     function _createTransitionClass(className: string, classDef: ITransitionStyle, elem: HTMLElement): HTMLStyleElement {
 

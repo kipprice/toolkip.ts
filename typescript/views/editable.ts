@@ -144,7 +144,7 @@ namespace KIP {
 
 						nested: {
 							"&:focus": {
-								border: "2px dotted #888",
+								border: "2px dotted rgba(0,0,0,.4)",
 								outline: "none"
 							},
 
@@ -214,7 +214,7 @@ namespace KIP {
 			this._addListeners();
 
 			// add the BG color of an active editable
-			this.setThemeColor("editableLightBG", options.lightBg || "#eee");
+			this.setThemeColor("editableLightBG", options.lightBg || "rgba(0,0,0,.1)");
 		}
 
 		/**...........................................................................

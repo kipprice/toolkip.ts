@@ -2,11 +2,11 @@
 
 namespace KIP {
 
-	/**...........................................................................
+	/**
 	 * CollectionTypeEnum
-	 * ...........................................................................
+	 * 
 	 * Keeps track of the different ways we can add to a collection
-	 * ...........................................................................
+	 * 
 	 */
 	export enum CollectionTypeEnum {
 		ReplaceDuplicateKeys = 1,
@@ -15,51 +15,47 @@ namespace KIP {
 
 	//#region INTERFACES
 
-	/**...........................................................................
+	/**
 	 * CollectionSortFunction
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Sort a collection, same as one would sort an array
 	 * 
 	 * @param	a	The first element to compare
 	 * @param	b	The second element to compare
 	 * 
 	 * @returns	-1 if the elements are in the wrong order, 1 if they are in the correct order, 0 if they are the same
-	 * ...........................................................................
 	 */
 	export interface CollectionSortFunction<T> {
 		(a: ICollectionElement<T>, b: ICollectionElement<T>): number;
 	}
 
-	/**...........................................................................
+	/**
 	 * SortFunction
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * General sort function for comparing two elements of any type
 	 * 
 	 * @param	a	The first element to compare
 	 * @param	b	The second element to compare
 	 * 
 	 * @returns	-1 if the elements are in the wrong order, 1 if they are in the correct order, 0 if they are the same
-	 * ...........................................................................
 	 */
 	export interface SortFunction<T> {
 		(a: T, b: T): number;
 	}
 
-	/**...........................................................................
+	/**
 	 * EqualityFunction
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Check if two elements are equal
-	 * ...........................................................................
 	 */
 	export interface EqualityFunction<T> {
 		(a: T, b: T): boolean;
 	}
 
-	/**...........................................................................
+	/**
 	 * ICollectionElement
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * The class that stores data within a collection
-	 * ...........................................................................
 	 */
 	export interface ICollectionElement<T> {
 
@@ -76,19 +72,27 @@ namespace KIP {
 		origIdx: number;
 	}
 
-	/**...........................................................................
+	/**
 	 * IDisctionaryKeys
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * The array that provides the key index within a collection 
-	 * ...........................................................................
 	 */
 	export interface IDictionaryKeys<T> {
 		[key: string]: ICollectionElement<T>;
 	}
 	//#endregion
 
+	/**----------------------------------------------------------------------------
+	 * @class	Collection
+	 * ----------------------------------------------------------------------------
+	 * Keep track of a set of items in both key-based indices and sortable formats
+	 * @author	Kip Price
+	 * @version	3.0.0
+	 * ----------------------------------------------------------------------------
+	 */
 	export class Collection<T> extends NamedClass implements IEquatable<Collection<T>> {
 
+		//.....................
 		//#region PROPERTIES
 
 		/** Tracks of the data in this collection */
@@ -116,12 +120,17 @@ namespace KIP {
 		public set equalityTest (test: EqualityFunction<T>) { this._equalityTest = test; };
 
 		//#endregion
+		//.....................
 
-		/**...........................................................................
+		//.....................
+		//#region CONSTRUCTOR
+
+		/**
+		 * Collection
+		 * ----------------------------------------------------------------------------
 		 * Creates the collection
-		 * @param  {boolean} replace True if we should override the values in the list
+		 * @param  replace 		True if we should override the values in the list
 		 * @return Collection
-		 * ...........................................................................
 		 */
 		constructor(type?: CollectionTypeEnum, eq_test?: EqualityFunction<T>) {
 			super("Collection");
@@ -141,14 +150,19 @@ namespace KIP {
 			}
 		}
 
-		/**...........................................................................
+		//#endregion
+		//.....................
+
+		//........................
+		//#region ADD AN ELEMENT
+
+		/**
 		 * addElement
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Adds an element to the collection
 		 * @param 	key  	The key to uniquely identify this element
 		 * @param 	val 	The element to add to our collection
 		 * @returns True if the element was successfully added
-		 * ...........................................................................
 		 */
 		public addElement(key: string, val: T): number {
 			let idx: number;
@@ -184,38 +198,30 @@ namespace KIP {
 			return sortedIdx;
 		}
 
-		/**...........................................................................
-		 * insertElement
-		 * ...........................................................................
-		 * inserts an element at a particular index 
-		 * ...........................................................................
-		 */
-		public insertElement(key: string, elem: T, index: number): boolean {
-			//TODO
-			return true;
-		}
+		//#endregion
+		//........................
 
-		/**...........................................................................
+		//........................
+		//#region HANDLE REMOVING
+
+		/**
 		 * removeElement
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * remove the element with the provided key 
-		 * ........................................................................... 
 		 */
 		public removeElement(key: string): ICollectionElement<T>;
 		
-		/**...........................................................................
+		/**
 		 * removeElement
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * remove the element at the provided index 
-		 * ........................................................................... 
 		 */
 		public removeElement(idx: number): ICollectionElement<T>;
 
-		/**...........................................................................
+		/**
 		 * removeElement
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * combination function to handle all overloads 
-		 * ...........................................................................
 		 */
 		public removeElement(param: string | number): ICollectionElement<T> {
 
@@ -226,21 +232,19 @@ namespace KIP {
 			}
 		}
 
-		/**...........................................................................
+		/**
 		 * removeElementByValue
-		 * ...........................................................................
-		 *  remove the element that matches the provided element 
-		 * ........................................................................... 
+		 * ----------------------------------------------------------------------------
+		 * remove the element that matches the provided element 
 		 */
 		public removeElementByValue(value: T): ICollectionElement<T> {
 			return this._removeElementByValue(value);
 		}
 
-		/**...........................................................................
+		/**
 		 * _removeElementByKey
-		 * ...........................................................................
-		 *  removes an element by key 
-		 * ........................................................................... 
+		 * ----------------------------------------------------------------------------
+		 * removes an element by key 
 		 */
 		protected _removeElementByKey(key: string): ICollectionElement<T> {
 			let elem: ICollectionElement<T>;
@@ -262,11 +266,10 @@ namespace KIP {
 			return elem;
 		}
 
-		/**...........................................................................
+		/**
 		 * _removeElementByIndex
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * removes an element by index 
-		 * ........................................................................... 
 		 */
 		protected _removeElementByIndex(idx: number): ICollectionElement<T> {
 			let key: string;
@@ -279,11 +282,10 @@ namespace KIP {
 			return this._removeElementByKey(key);
 		}
 
-		/**...........................................................................
+		/**
 		 * _removeElementByValue
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * removes an element by matching the element to the provided element 
-		 * ........................................................................... 
 		 */
 		protected _removeElementByValue(val: T): ICollectionElement<T> {
 			let key: string;
@@ -292,12 +294,27 @@ namespace KIP {
 			return this._removeElementByKey(e && e.key);
 		}
 
-		/**...........................................................................
+		/**
+		 * clear
+		 * ----------------------------------------------------------------------------
+		 * clear out all elements within the collection
+		 */
+		public clear() {
+			this._data = {};
+			this._sortedData = [];
+		}
+
+		//#endregion
+		//........................
+
+		//........................
+		//#region HANDLE SORTING
+
+		/**
 		 * _resetSortedKeys
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Ensure that the key stored with the element matches its location in the 
 		 * sorted array 
-		 * ........................................................................... 
 		 */
 		private _resetSortedKeys(startFrom?: number, endWith?: number) {
 
@@ -326,17 +343,11 @@ namespace KIP {
 			}
 		}
 
-		public clear() {
-			this._data = {};
-			this._sortedData = [];
-		}
-
-		/**...........................................................................
+		/**
 		 * sort
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Sorts the collection
 		 * @param 	sort_func   	The function we should use to sort
-		 * ...........................................................................
 		 */
 		public sort(sort_func: CollectionSortFunction<T>) {
 			let sTemp: SortFunction<string>;
@@ -360,13 +371,40 @@ namespace KIP {
 			this._resetSortedKeys();
 		}
 
-		/**...........................................................................
+		//#endregion
+		//........................
+
+		//....................................
+		//#region LOOPING OVER THE COLLECTION
+
+		/**
+		 * map
+		 * ----------------------------------------------------------------------------
+		 * handle looping through the collection to get each element 
+		 */
+		public map (mapFunc: IMapFunction<T>): void {
+			if (!mapFunc) { return; }
+
+			this.resetLoop();
+			while (this.hasNext()) {
+				let pair: ICollectionElement<T> = this.getNext();
+				if (!pair) { continue; }
+
+				let value: T = pair.value;
+				let key: string = pair.key;
+				let idx: number = this.getIndex(key);
+
+				mapFunc(value, key, idx);
+			}
+			this.resetLoop();
+		}
+		
+		/**
 		 * resetLoop
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Resets our iteration counter
 		 * 
 		 * @param	reverse		If true, loops through backwards
-		 * ...........................................................................
 		 */
 		public resetLoop(reverse?: boolean): void {
 			if (reverse) {
@@ -376,15 +414,13 @@ namespace KIP {
 			}
 		}
 
-		/**...........................................................................
+		/**
 		 * hasNext
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Checks if we have a next element available for getting
-		 * 
 		 * @param 	reverse 	True if we should loop backwards
 		 * 
 		 * @returns True if there is a next element available
-		 * ...........................................................................
 		 */
 		public hasNext(reverse?: boolean): boolean {
 			if (reverse) {
@@ -394,15 +430,13 @@ namespace KIP {
 			}
 		}
 
-		/**...........................................................................
+		/**
 		 * getNext
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Finds the next element in our loop
-		 * 
 		 * @param 	reverse 	True if we should loop backwards
 		 * 
 		 * @returns The element next in our array
-		 * ...........................................................................
 		 */
 		public getNext(reverse?: boolean): ICollectionElement<T> {
 
@@ -417,16 +451,26 @@ namespace KIP {
 			return this._data[this._sortedData[this._iteration]];
 		}
 
+		/**
+		 * getCurrent
+		 * ----------------------------------------------------------------------------
+		 * Grab the current selected element
+		 */
 		public getCurrent(): ICollectionElement<T> {
 			if (this._iteration === -1) { return null; }
 			return this._data[this._sortedData[this._iteration]];
 		}
 
-		/**...........................................................................
+		//#endregion
+		//....................................
+
+		//........................
+		//#region OUTPUT TO ARRAY
+
+		/**
 		 * toArray
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Return a sorted array of the elements in this collection
-		 * ...........................................................................
 		 */
 		public toArray(): Array<ICollectionElement<T>> {
 			let arr: ICollectionElement<T>[];
@@ -441,7 +485,7 @@ namespace KIP {
 
 		/**
 		 * toValueArray
-		 * 
+		 * ----------------------------------------------------------------------------
 		 * Get an array of just the values in this collection
 		 */
 		public toValueArray(): Array<T> {
@@ -452,99 +496,112 @@ namespace KIP {
 			return arr;
 		}
 
-		/**...........................................................................
+		//#endregion
+		//........................
+
+		//..........................................
+		//#region RETRIEVE DATA FROM THE COLLECTION
+
+		/**
 		 * getElement
-		 * ...........................................................................
-		 * @param key 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get an element within our collection using the specified key
+		 * @returns	The appropriate element for this key
 		 */
 		public getElement(key: string): ICollectionElement<T>;
 
-		/**...........................................................................
+		/**
 		 * getElement
-		 * ...........................................................................
-		 * @param idx 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get an element within our collection using the specified index
+		 * @returns	The appropriate element for this index
 		 */
 		public getElement(idx: number): ICollectionElement<T>;
 
-		/**...........................................................................
+
+		/**
 		 * getElement
-		 * ...........................................................................
-		 * @param param 
-		 * ...........................................................................
+		 * ---------------------------------------------------------------------------- 
+		 * internal function to get an element through an identfier 
 		 */
-		public getElement(param: string | number): ICollectionElement<T> {
+		public getElement(identifier: string | number): ICollectionElement<T> {
 			let out: ICollectionElement<T>;
 
 			// Handle the param being a key
-			if (typeof param === "string") {
-				out = this._data[param];
+			if (typeof identifier === "string") {
+				out = this._data[identifier];
 
 				// Handle the parm being index
-			} else if (typeof param === "number") {
-				if ((param < 0) || (param > this._sortedData.length)) { return null; }
-				out = this._data[this._sortedData[param]];
+			} else if (typeof identifier === "number") {
+				if ((identifier < 0) || (identifier > this._sortedData.length)) { return null; }
+				out = this._data[this._sortedData[identifier]];
 			}
 
 			return out;
 		}
+		
+		//#endregion
 
-		/**...........................................................................
+		//.............................................
+		//#region RETRIEVE VALUES FROM THE COLLECTION
+
+		/**
 		 * getValue
-		 * ...........................................................................
-		 * 
-		 * @param 	key		The key for which we should grab the value 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the value associated with the specified key
+		 * @returns	The value associated with this key
 		 */
 		public getValue(key: string): T;
 
-		/**...........................................................................
+		/**
 		 * getValue
-		 * ...........................................................................
-		 * 
-		 * @param 	idx 	The index for which we should grab the value
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the value associated with the specified index
+		 * @returns	The value associated with this index
 		 */
 		public getValue(idx: number): T;
 
-		/**...........................................................................
+		/**
 		 * getValue
-		 * ...........................................................................
-		 * 
-		 * @param	param
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the value associated with the specified key or index
+		 * @returns	The value associated with this identifier
 		 */
-		public getValue(param: string | number): T {
+		public getValue(identifier: string | number): T {
 			let pair: ICollectionElement<T>;
-			pair = this.getElement(param as string);
+			pair = this.getElement(identifier as string);
 			if (!pair) { return null; }
 			return pair.value;
 		}
+		
+		//#endregion
+		//.............................................
 
-		/**...........................................................................
+		//.......................................
+		//#region RETRIEVE ALTERNATE IDENTFIERS
+
+		/**
 		 * getIndex
-		 * ...........................................................................
-		 * 
-		 * @param key 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the index of the element that matches the specified key 
+		 * @returns The index of the appropriate element
 		 */
 		public getIndex(key: string): number;
 
-		/**...........................................................................
+		/**
 		 * getIndex
-		 * ...........................................................................
-		 * @param val 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the index of the element that matches the specified value 
+		 * @returns The index of the appropriate element
 		 */
 		public getIndex(val: T): number;
 
-		/**...........................................................................
+		/**
 		 * getIndex
-		 * ...........................................................................
-		 * 
-		 * @param param 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Get the index of the element that matches the specified key / value
+		 * @param 	param 	The key or value to match
+		 * @returns The index of the appropriate element
 		 */
 		public getIndex(param: string | T): number {
 
@@ -556,13 +613,17 @@ namespace KIP {
 				return (e && e.sortedIdx);
 			}
 		}
+		
+		//#endregion
+		//.......................................
 
-		/**...........................................................................
+		//.......................................
+		//#region FIND AN ELEMENT BY ITS VALUE
+
+		/**
 		 * _findElement
-		 * ...........................................................................
-		 * 
-		 * @param val 
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Find the associated element with the specified value
 		 */
 		private _findElement(val: T): ICollectionElement<T> {
 			let key: string;
@@ -582,8 +643,36 @@ namespace KIP {
 			return null;
 		}
 
+		//#endregion
+		//.......................................
+
+		//.................................
+		//#region RETRIEVE ASSOCIATED KEYS
+
+		/**
+		 * getKey
+		 * ----------------------------------------------------------------------------
+		 * Retrieve the key for the element located at the specified index
+		 */
 		public getKey(idx: number): string;
+
+		/**
+		 * getKey
+		 * ----------------------------------------------------------------------------
+		 * Retrieve the key for the element matching the specified value
+		 */
 		public getKey(val: T): string;
+
+		/**
+		 * getKey
+		 * ----------------------------------------------------------------------------
+		 * Retrieve the key for the element located at the specified index or with the 
+		 * specified value.
+		 * 
+		 * @param	The index or value to match on
+		 * 
+		 * @returns	The appropriate key for the associated element
+		 */
 		public getKey(param: number | T): string {
 			if (typeof param === "number") {
 				return this._sortedData[param];
@@ -594,9 +683,42 @@ namespace KIP {
 			}
 		}
 
+		//#endregion
+		//.................................
+
+		//..............................
+		//#region CHECK FOR AN ELEMENT
+
+		/**
+		 * hasElement
+		 * ----------------------------------------------------------------------------
+		 * Verify if an element exists inside this collection
+		 * @returns	True if the element is found in this collection
+		 */
 		public hasElement(key: string): boolean;
+
+		/**
+		 * hasElement
+		 * ----------------------------------------------------------------------------
+		 * Verify if an element exists inside this collection
+		 * @returns	True if the element is found in this collection
+		 */
 		public hasElement(val: T): boolean;
+
+		/**
+		 * hasElement
+		 * ----------------------------------------------------------------------------
+		 * Verify if an element exists inside this collection
+		 * @returns	True if the element is found in this collection
+		 */
 		public hasElement(idx: number): boolean;
+
+		/**
+		 * hasElement
+		 * ----------------------------------------------------------------------------
+		 * Verify if an element exists inside this collection
+		 * @returns	True if the element is found in this collection
+		 */
 		public hasElement(param: string | T | number): boolean {
 			if (typeof param === "string") {
 				return (!!this._data[param]);
@@ -607,36 +729,16 @@ namespace KIP {
 			}
 		}
 
-		/**...........................................................................
-		 * map
-		 * ...........................................................................
-		 * handle looping through the collection to get each element 
-		 * ........................................................................... 
-		 */
-		public map (mapFunc: IMapFunction<T>): void {
-			if (!mapFunc) { return; }
+		//#endregion
+		//..............................
 
-			this.resetLoop();
-			while (this.hasNext()) {
-				let pair: ICollectionElement<T> = this.getNext();
-				if (!pair) { continue; }
+		//..................
+		//#region HELPERS
 
-				let value: T = pair.value;
-				let key: string = pair.key;
-				let idx: number = this.getIndex(key);
-
-				mapFunc(value, key, idx);
-			}
-			this.resetLoop();
-		}
-
-		/**...........................................................................
+		/**
 		 * toString
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
 		 * Turns this collection into a human readable string
-		 * 
-		 * @returns	The string version of the collection
-		 * ...........................................................................
 		 */
 		public toString(): string {
 			let outStr: string = "";
@@ -647,15 +749,11 @@ namespace KIP {
 			return outStr;
 		}
 
-		/**...........................................................................
+		/**
 		 * equals
-		 * ...........................................................................
-		 * Determins if this Collection us equal in value to another
-		 * 
-		 * @param	other	The collection to compare to
-		 * 
-		 * @returns	True if the collection is a match for our own
-		 * ...........................................................................
+		 * ----------------------------------------------------------------------------
+		 * Determins if this Collection is equal in value to another Collection
+		 * @returns	True if the specified collection is a match for our own
 		 */
 		public equals(other: Collection<T>): boolean {
 
@@ -686,6 +784,9 @@ namespace KIP {
 			// If we made it this far, we should consider the collections the same
 			return true;
 		}
+
+		//#endregion
+		//...............
 
 	}
 }
