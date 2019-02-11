@@ -19,7 +19,7 @@ namespace KIP {
         protected static _fileSystem;
 
         /** set a default storage size */
-        protected static readonly _DEFAULT_SIZE = 10 * 1024 * 1024;
+        protected static readonly _DEFAULT_SIZE = 100 * 1024 * 1024;
 
         //#ndregion
         //.....................
@@ -140,7 +140,7 @@ namespace KIP {
          * Request some storage for our app
          * @param size  The amount of storage to request, in bytes
          */
-        protected static _requestQuota(size: number): KipPromise {
+        protected static _requestQuota(size: number, deferred?: boolean): KipPromise {
             return new KipPromise((resolve, reject) => {
 
                 // If it's Chrome, we need to get a quota
@@ -160,7 +160,7 @@ namespace KIP {
                 } catch (e) {
                     resolve(size);
                 }
-            });
+            }, deferred);
         }
 
         /**

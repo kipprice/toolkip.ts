@@ -170,12 +170,12 @@ namespace KIP.Forms {
             if (!file) { return; }
 
             let fileReader: FileReader = new FileReader();
-            fileReader.addEventListener("load", () => {
+            fileReader.onload = () => {
                 window.setTimeout(() => {
                     let photoURL = fileReader.result as string;
                     this._elems.display.src = photoURL;
                 }, 0);
-            });
+            };
 
             // read the file
             fileReader.readAsDataURL(file);

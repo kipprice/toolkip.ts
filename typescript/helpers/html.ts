@@ -20,6 +20,8 @@ namespace KIP {
         [key: string]: string;
     }
 
+    export type IKeyedElems = IDictionary<StandardElement>;
+
     /**...........................................................................
      * IElemDefinition
      * ...........................................................................
@@ -27,10 +29,10 @@ namespace KIP {
      * @version 1.2
      * ...........................................................................
      */
-    export interface IElemDefinition {
+    export interface IElemDefinition<T extends IKeyedElems = IKeyedElems> {
 
         /** unique key for this element; used to return an element */
-        key?: string;
+        key?: keyof T;
 
         /** Id to use for the element */
         id?: string;
@@ -129,9 +131,9 @@ namespace KIP {
      * 
      * @returns The HTML element with all attributes specified by the object
      */
-    export function createElement(obj: IElemDefinition, keyedElems?: KIP.IDictionary<HTMLElement>): HTMLElement {
+    export function createElement<T extends IKeyedElems>(obj: IElemDefinition<T>, keyedElems?: T): HTMLElement {
         if (!obj) { return; }
-        return _createElementCore(obj) as HTMLElement;
+        return _createElementCore(obj, keyedElems) as HTMLElement;
     }
 
     /**
@@ -139,10 +141,10 @@ namespace KIP {
      * ---------------------------------------------------------------------------
      * create a SVG element specifically
      */
-    export function createSVGElement(obj: IElemDefinition, keyedElems?: KIP.IDictionary<SVGElement>): SVGElement {
+    export function createSVGElement<T extends IKeyedElems>(obj: IElemDefinition<T>, keyedElems?: T): SVGElement {
         if (!obj) { return; }
         if (!obj.namespace) { obj.namespace = "http://www.w3.org/2000/svg"; }
-        return _createElementCore(obj) as SVGElement;
+        return _createElementCore(obj, keyedElems) as SVGElement;
     }
 
 
@@ -154,7 +156,7 @@ namespace KIP {
      * ---------------------------------------------------------------------------
      * create a DOM element with the specified details
      */
-    function _createElementCore(obj: IElemDefinition, keyedElems?: KIP.IDictionary<StandardElement>): StandardElement {
+    function _createElementCore<T extends IKeyedElems>(obj: IElemDefinition<T>, keyedElems?: T): StandardElement {
 
         let elem = _createStandardElement(obj);
 
@@ -333,10 +335,33 @@ namespace KIP {
 
         // if this is an accessible object and it can take focus, add keybaord listeners too
         if (obj.focusable && obj.eventListeners.click && !obj.eventListeners.keypress) {
+            let clickFunc: Function = obj.eventListeners.click;
             obj.eventListeners.keypress = (e: KeyboardEvent) => {
                 if (e.keyCode !== 13 && e.keyCode !== 32) { return; }
-                obj.eventListeners.click(e);
+                clickFunc(e);
                 e.preventDefault();
+            }
+
+            let preventFocus: boolean = false;
+            obj.eventListeners.mousedown = (e: MouseEvent) => {
+                console.log("mousedown");
+                preventFocus = true;
+                elem.blur();
+            }
+
+            obj.eventListeners.mouseup = (e: MouseEvent) => {
+                console.log("mouseup");
+                preventFocus = false;
+            }
+
+            obj.eventListeners.focus = (e: FocusEvent) => {
+                console.log("focus");
+                if (preventFocus) { 
+                    e.preventDefault(); 
+                    elem.blur();
+                    return false;
+                }
+                
             }
         }
 
