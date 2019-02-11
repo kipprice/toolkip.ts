@@ -152,7 +152,6 @@ namespace KIP.Forms {
          * update the contents of the element 
          * */
         public update(data: boolean): void {
-            if (isNullOrUndefined(data)) { return; }
             this._data = data;
             this._elems.input.checked = data;
         }

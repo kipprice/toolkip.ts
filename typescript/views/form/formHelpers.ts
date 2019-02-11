@@ -32,19 +32,12 @@ namespace KIP.Forms {
      * @version 1.0.2
      */
     export function createSelectElement(id: string, cls: string, options: ISelectOptions, defaultSelection?: string | number): HTMLSelectElement {
-        let optionElems: IElemDefinition[] = [];
-        let optKey: string;
-
-        // if there's no default, add a default blank option before anything else
-        if (isNullOrUndefined(defaultSelection)) {
-            let def: IElemDefinition = _createSelectOption("-- SELECT AN OPTION --", -1, true);
-            def.attr.disabled = true;
-            optionElems.push(def);
-            defaultSelection = -1;
-        }
-
+       
         // turn the option array into something the createElement function will understand
-        optionElems = optionElems.concat(createSelectOptions(options, defaultSelection));
+        let optionElems = createSelectOptions(options, defaultSelection);
+
+        // if there's no default, set the default to be -1
+        if (isNullOrUndefined(defaultSelection)) { defaultSelection = -1; }
 
         // create the general definition for the select element
         let select: HTMLSelectElement = createElement({
@@ -73,7 +66,7 @@ namespace KIP.Forms {
         // if there's no default, add a default blank option before anything else
         if (isNullOrUndefined(defaultSelection)) {
             let def: IElemDefinition = _createSelectOption("-- SELECT AN OPTION --", -1, true);
-            def.attr.disabled = true;
+            def.attr.disabled = "true";
             optElems.push(createElement(def) as HTMLOptionElement);
         }
 
