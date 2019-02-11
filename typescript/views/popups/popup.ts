@@ -22,7 +22,7 @@ namespace KIP {
 	 * ----------------------------------------------------------------------------
 	 * Generic class to show data in a popup form
 	 * @author	Kip Price
-	 * @version 1.0.0
+	 * @version 1.0.2
 	 * ----------------------------------------------------------------------------
 	 */
 	export class Popup extends Drawable {
@@ -98,7 +98,7 @@ namespace KIP {
 				color: "#FFF",
 				cursor: "pointer",
 				marginLeft: "15px",
-				borderRadius: "2px",
+				borderRadius: "30px",
 				transition: "all ease-in-out .1s"
 			},
 
