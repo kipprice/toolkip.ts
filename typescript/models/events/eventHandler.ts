@@ -10,15 +10,10 @@ namespace KIP.Events {
 	 * @version 1.0.5
 	 * ----------------------------------------------------------------------------
 	 */
-	export class EventHandler {
-
-		public static eventTypes: {
-			test: string;
-			[key: string]: string;
-		}
+	export abstract class EventHandler<T = any> {
 
 		/** keep track of all the events that are registered to this event handler */
-		protected static _events: Collection<EventDefinition<any>> = new Collection<EventDefinition<any>>();
+		protected _events: Collection<EventDefinition<any>> = new Collection<EventDefinition<any>>();
 
 		/**
 		 * createEvent
@@ -29,9 +24,9 @@ namespace KIP.Events {
 		 * 
 		 * @returns	True if a new event was created
 		 */
-		public static createEvent<C extends IEventContext>(details: IEventDefinition): boolean {
-			let evt: EventDefinition<C> = new EventDefinition<C>(details);
-			return (this._events.addElement(details.key, evt) !== -1);
+		public createEvent<K extends keyof T>(key: K, name?: string): boolean {
+			let evt: EventDefinition<T[K]> = new EventDefinition<T[K]>(key as string, name);
+			return (this._events.addElement(key as string, evt) !== -1);
 		}
 
 		/**
@@ -42,8 +37,8 @@ namespace KIP.Events {
 		 * @param	key			The key used by this particular event
 		 * @param	context		THe additional context to use for the event
 		 * */
-		public static dispatchEvent<C extends IEventContext>(event: Event<C>): void {
-			let evtDef: EventDefinition<C> = this._events.getValue(event.key);
+		public dispatchEvent<K extends keyof T>(key: K, event: Event<T[K]>): void {
+			let evtDef: EventDefinition<T[K]> = this._events.getValue(event.key);
 			if (!evtDef) { return; }
 			evtDef.notifyListeners(event);
 		}
@@ -56,8 +51,8 @@ namespace KIP.Events {
 		 * @param	key				The key to use for the event
 		 * @param	listenerData	The data to use for the listener being added
 		 */
-		public static addEventListener<C extends IEventContext>(key: string, listenerData: IListenerData<C>): void {
-			let evt: EventDefinition<C> = this._events.getValue(key);
+		public addEventListener<K extends keyof T>(key: K, listenerData: IListenerData<T[K]>): void {
+			let evt: EventDefinition<T[K]> = this._events.getValue(key as string);
 			if (!evt) { return; }
 			evt.addListener(listenerData);
 		}
@@ -70,7 +65,7 @@ namespace KIP.Events {
 		 * @param	uniqueId	The unique ID for this listener
 		 * @param	key			If specified, the particular event to remove from
 		 */
-		public static removeEventListener(uniqueID: string, key?: string): void {
+		public removeEventListener(uniqueID: string, key?: string): void {
 			if (!uniqueID) { return; }
 
 			// If it's only a particular type of event that is being removed, do so
@@ -89,46 +84,5 @@ namespace KIP.Events {
 		}
 
 	}
-
-	//...........................
-	//#region HELPER FUNCTIONS
-
-	/**
-	 * createEvent
-	 * ----------------------------------------------------------------------------
-	 * Creates a new type of event that can now be listened for
-	 * 
-	 * @param 	details 	The specs with which to create the event
-	 * 
-	 * @returns	True if the event was created
-	 */
-	export function createEvent<C extends IEventContext>(details: IEventDefinition): boolean {
-		return EventHandler.createEvent(details); 
-	}
-
-	/**
-	 * dispatchEvent
-	 * ----------------------------------------------------------------------------
-	 * Sends out the notification that an event occurred
-	 * 
-	 * @param 	key 		The key of the event being sent out
-	 * @param 	context 	Any additional context needed by listeners of the event
-	 */
-	export function dispatchEvent<C extends IEventContext>(event: Event<C>): void { 
-		EventHandler.dispatchEvent(event); 
-	}
-
-	/**
-	 * addEventListener
-	 * ----------------------------------------------------------------------------
-	 * @param 	key 			The key of the event to listen on
-	 * @param 	listenerData	Context for the event listener
-	 */
-	export function addEventListener<C extends IEventContext>(key: string, listenerData: IListenerData<C>): void {
-		EventHandler.addEventListener(key, listenerData); 
-	}
-
-	//#endregion
-	//...........................
 
 }

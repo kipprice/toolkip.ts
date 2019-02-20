@@ -16,9 +16,21 @@ namespace KIP {
     [K in keyof T]?: T[K];
   }
 
-  export interface ISelectOptions {
+ //..........................................
+ //#region SELECT OPTIONS
+ 
+  export type ISelectOptions = INumericSelectOptions | IStringSelectOptions;
+
+  export interface INumericSelectOptions {
     [value: number]: string;
   }
+
+  export interface IStringSelectOptions {
+    [value: string]: string;
+  }
+ 
+ //#endregion
+ //..........................................
 
   /**
    * IConstructor

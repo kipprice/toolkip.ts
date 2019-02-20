@@ -315,10 +315,7 @@ namespace KIP.Dates {
 		let min_str: string;
 		let hr_str: string;
 
-		seconds = Math.floor(milli / 1000); milli %= 1000;
-		minutes = Math.floor(seconds / 60); seconds %= 60;
-		hours = Math.floor(minutes / 60); minutes %= 60;
-		days = Math.floor(hours / 24); hours %= 24;
+		
 
 		// Add the leading zeros if appropriate
 		if (!noLeadingZeros) {
@@ -333,6 +330,44 @@ namespace KIP.Dates {
 
 		return days + "D  " + hr_str + ":" + min_str + ":" + sec_str + " '" + milli;
 	};
+
+	function _retrieveCountsFromMilli(milli: number): IDateDifferences {
+		let out: IDateDifferences = {} as any;
+		let remaining: number = milli;
+
+		out.days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+		remaining -= (out.days * 24 * 60 * 60 * 1000);
+
+		out.hours = Math.floor(remaining / (60 * 60 * 1000));
+		remaining -= (out.hours * 60 * 60 * 1000);
+
+		out.minutes = Math.floor(remaining / (60 * 1000));
+		remaining -= (out.minutes * 60 * 1000);
+
+		out.seconds = Math.floor(remaining / 1000);
+		remaining -= (out.seconds * 1000);
+
+		out.milliseconds = remaining;
+
+		return out;
+	}
+
+	export interface IStopwatchOptions {
+		showMilli?: boolean;
+	}
+	export function updatedStopwatchDisplay(milli: number, options: IStopwatchOptions): string {
+		let diffs = _retrieveCountsFromMilli(milli);
+
+		let out: string[] = [];
+
+		if (diffs.days) { out.push(diffs.days + " days");  }
+		if (diffs.hours) { out.push(diffs.hours + " hours"); }
+		if (diffs.minutes) { out.push(diffs.minutes + " minutes"); }
+		if (diffs.seconds) { out.push(diffs.seconds + " seconds"); }
+		if (diffs.milliseconds && options.showMilli) { out.push(diffs.milliseconds + " ms"); }
+
+		return out.join(" ");
+	}
 
 	export function addToDate(date: Date, counts: IDateDifferences): Date {
 

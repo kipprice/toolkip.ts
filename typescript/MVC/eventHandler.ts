@@ -70,10 +70,10 @@ namespace KIP {
      */
     export abstract class StandardEventHandler<C extends Controller<I>, V extends MVCView<I>, ET extends string = string, I extends IModel = IModel> extends EventHandler<C, V, ET, I> {
         protected _registerEventListeners(): void {
-            Events.addEventListener(VIEW_EVENT, { 
-                target: this._view,
-                func: (ev: ViewEvent<ET>) => { this._handleEvent(ev.context.type, ev); }
-            });
+            // Events.addEventListener(VIEW_EVENT, { 
+            //     target: this._view,
+            //     func: (ev: ViewEvent<ET>) => { this._handleEvent(ev.context.type, ev); }
+            // });
         }
     } 
 
@@ -87,10 +87,10 @@ namespace KIP {
     }
 
     export const VIEW_EVENT = "viewevent";
-    KIP.Events.createEvent<IViewEventContext>({
-        name: "View Event",
-        key: VIEW_EVENT
-    });
+    // KIP.Events.createEvent<IViewEventContext>({
+    //     name: "View Event",
+    //     key: VIEW_EVENT
+    // });
 
     export class ViewEvent<ET extends string> extends Events.Event<IViewEventContext<IModel, ET>> {
         protected get _key(): string { return VIEW_EVENT; }

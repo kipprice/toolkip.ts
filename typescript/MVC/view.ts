@@ -64,7 +64,7 @@ namespace KIP {
          * that their view has had some sort of interaction
          */
         protected _dispatchStandardEvent(eventType: E, ...addlParams: any[]): void {
-            Events.dispatchEvent( new ViewEvent({ target: this, type: eventType, addlData: addlParams }) );
+            //Events.dispatchEvent( new ViewEvent({ target: this, type: eventType, addlData: addlParams }) );
         }
 
     }

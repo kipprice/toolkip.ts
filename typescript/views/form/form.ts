@@ -342,7 +342,7 @@ namespace KIP.Forms {
             this._coreFormElem.expand();
 
             // add the event listener to the section changing
-            Events.addEventListener(FORM_ELEM_CHANGE,
+            formEventHandler.addEventListener(FORM_ELEM_CHANGE,
                 {
                     func: (event: FormElemChangeEvent<any>) => {
                         let key: string = event.context.key;
@@ -361,7 +361,7 @@ namespace KIP.Forms {
         }
 
         protected _addSaveButtonUpdater(): void {
-            Events.addEventListener(FORM_SAVABLE_CHANGE, {
+            formEventHandler.addEventListener(FORM_SAVABLE_CHANGE, {
                 func: (event: FormSavableEvent) => {
                     let canSave = this.canSave();
                     if (!canSave) {
@@ -718,23 +718,4 @@ namespace KIP.Forms {
         //#endregion
         //.................................
     }
-
-    //.................................
-    //#region EVENT HANDLER FOR FORMS
-
-    // create a particular event for all form change events
-    export const FORM_ELEM_CHANGE = "formelemchange";
-    KIP.Events.createEvent({
-        name: "Form Element Changed",
-        key: FORM_ELEM_CHANGE
-    });
-
-    export const FORM_SAVABLE_CHANGE = "formsavablechange";
-    KIP.Events.createEvent({
-        name: "Form Savable Change",
-        key: FORM_SAVABLE_CHANGE
-    });
-
-    //#endregion
-    //.................................
 }

@@ -42,4 +42,28 @@ namespace KIP.Forms {
 	export class FormSavableEvent extends Events.Event<Events.IEventContext> {
 		protected get _key(): string { return FORM_SAVABLE_CHANGE; }
 	}
+
+	//.................................
+    //#region EVENT HANDLER FOR FORMS
+
+    // create a particular event for all form change events
+    export const FORM_ELEM_CHANGE = "formelemchange";
+    export const FORM_SAVABLE_CHANGE = "formsavablechange";
+
+    //#endregion
+    //.................................
+
+	// track all of the types of events that forms support
+	export interface IFormEventTypes<T> {
+		"formelemchange": IFormElemChangeEventContext<T>;
+		"formsavablechange": IFormSavableEventContext;
+	}
+
+	/** generate the class that will handle all of the form event handling */
+	class FormEventHandler extends Events.EventHandler<IFormEventTypes<any>> {}
+	export const formEventHandler = new FormEventHandler();
+
+	formEventHandler.createEvent(FORM_ELEM_CHANGE, "Form Element Changed");
+	formEventHandler.createEvent(FORM_SAVABLE_CHANGE, "Form Savable Change");
+
 }

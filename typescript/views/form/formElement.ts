@@ -26,7 +26,7 @@ namespace KIP.Forms {
         /** abstract property for the default value of child elements */
         protected abstract get _defaultValue(): T;
         protected _specifiedDefaultValue: T;
-        protected _getDefaultValue(): T { 
+        protected _getDefaultValue(): T {
             if (this._specifiedDefaultValue) { return this._specifiedDefaultValue; }
             return this._defaultValue;
         }
@@ -49,11 +49,11 @@ namespace KIP.Forms {
         /** elements of the form element */
         protected _elems: IFormHTMLElements;
 
-        public get input(): EvaluableElem { 
-            if (!this._elems.input) { 
-                return null; 
-            } 
-            return this._elems.input; 
+        public get input(): EvaluableElem {
+            if (!this._elems.input) {
+                return null;
+            }
+            return this._elems.input;
         }
 
         /** how this form element should be laid out */
@@ -173,7 +173,7 @@ namespace KIP.Forms {
                 }
             }
         };
-        
+
         //#endregion
 
         //#region Constructing a Form Element
@@ -211,8 +211,8 @@ namespace KIP.Forms {
             // If this is another element, parse it
             if (isFormElement(data)) {
                 this._cloneFromFormElement(data);
-            
-            // otherwise, handle the standard template parsing
+
+                // otherwise, handle the standard template parsing
             } else {
                 this._parseElemTemplate(data);
             }
@@ -259,14 +259,14 @@ namespace KIP.Forms {
             // determine whether we need this element to submit
             this._isRequired = template.required;
             if (this._isRequired) {
-                Events.dispatchEvent(new FormSavableEvent({hasErrors: false, hasMissingRequired: true}));
+                formEventHandler.dispatchEvent(FORM_SAVABLE_CHANGE, new FormSavableEvent({ hasErrors: false, hasMissingRequired: true }));
             }
 
             // ensure a particular order of elements
             this._position = template.position;
 
             // set an appropriate CSS class
-            this._cls = Styles.buildClassString(this._standardCls, this._defaultCls, template.cls, template.required? "required" : "");
+            this._cls = Styles.buildClassString(this._standardCls, this._defaultCls, template.cls, template.required ? "required" : "");
 
             // handle validation options
             this._onValidate = template.onValidate;
@@ -276,7 +276,7 @@ namespace KIP.Forms {
             // If there's an "other changed" function, register a listener
             this._onOtherChange = template.onOtherChange;
             if (this._onOtherChange) {
-                Events.addEventListener(FORM_ELEM_CHANGE, {
+                formEventHandler.addEventListener(FORM_ELEM_CHANGE, {
                     func: (ev: FormElemChangeEvent<any>) => { this._handleOtherChange(ev); },
                     uniqueId: this._id
                 });
@@ -297,7 +297,7 @@ namespace KIP.Forms {
          * wrapper around the cloning method so we don't run into protection issues 
          * ...........................................................................
          */
-        protected _cloneFormElement (template: FormElement<any>, appendToID?: string): FormElement<any> {
+        protected _cloneFormElement(template: FormElement<any>, appendToID?: string): FormElement<any> {
             if (!appendToID) { appendToID = ""; }
             return template._createClonedElement(appendToID);
         }
@@ -504,7 +504,7 @@ namespace KIP.Forms {
             }
 
             // notify other elements that this changed
-            if (changed) { window.setTimeout(() => { this._dispatchChangeEvent(); },0); }
+            if (changed) { window.setTimeout(() => { this._dispatchChangeEvent(); }, 0); }
         }
 
         /** ...........................................................................
@@ -613,7 +613,7 @@ namespace KIP.Forms {
             let msg: string;
 
             if (err) {
-                msg = err.title? err.title + ": " : "Uh-oh: ";
+                msg = err.title ? err.title + ": " : "Uh-oh: ";
                 msg += err.details || (this._id + "'s data couldn't be saved");
             }
             console.log(msg);
@@ -647,17 +647,17 @@ namespace KIP.Forms {
                 this._elems.input.value = value;
             }
 
-            
+
         }
 
-         /**...........................................................................
-         * _dispatchSavableChangeEvent
-         * ...........................................................................
-         * let any listeners know that we updated the savable status of this element
-         * ...........................................................................
-         */
+        /**...........................................................................
+        * _dispatchSavableChangeEvent
+        * ...........................................................................
+        * let any listeners know that we updated the savable status of this element
+        * ...........................................................................
+        */
         protected _dispatchSavableChangeEvent(): void {
-            Events.dispatchEvent(new FormSavableEvent({}));
+            formEventHandler.dispatchEvent(FORM_SAVABLE_CHANGE, new FormSavableEvent({}));
         }
 
         /**...........................................................................
@@ -667,7 +667,7 @@ namespace KIP.Forms {
          * ...........................................................................
          */
         protected _dispatchChangeEvent(subkey?: string): void {
-            Events.dispatchEvent(new FormElemChangeEvent({
+            formEventHandler.dispatchEvent(FORM_ELEM_CHANGE, new FormElemChangeEvent({
                 key: this._id,
                 subkey: subkey,
                 data: this._data
@@ -711,7 +711,7 @@ namespace KIP.Forms {
         protected _createClonedElement(appendToID: string): FormElement<T> {
             return new (this.constructor as IConstructor<FormElement<T>>)(this._id + appendToID, this._template);
         }
-        
+
         //#endregion
 
         //#region Standard functions for reuse
@@ -748,7 +748,7 @@ namespace KIP.Forms {
          */
         protected _createStandardInput(): void {
             let attr: IAttributes = {};
-            
+
             if (this._template.useGhostText) {
                 attr.placeholder = this._template.label;
             }
@@ -765,7 +765,7 @@ namespace KIP.Forms {
             let lbl: string = this._label;
             if (this._template.useGhostText) { lbl = ""; }
 
-        this._elems.lblContainer = createElement({
+            this._elems.lblContainer = createElement({
                 cls: "labelContainer",
                 parent: embedIn
             });
@@ -780,7 +780,7 @@ namespace KIP.Forms {
                     parent: this._elems.lblContainer
                 });
 
-                let tooltip: Tooltip = new Tooltip({content: this._template.helpText}, this._elems.helpTextIcon);
+                let tooltip: Tooltip = new Tooltip({ content: this._template.helpText }, this._elems.helpTextIcon);
             }
         }
 
@@ -792,7 +792,7 @@ namespace KIP.Forms {
          */
         protected _createStandardLabeledInput(shouldEmbed?: boolean): void {
             this._createStandardInput();
-            this._createStandardLabel((shouldEmbed? this._elems.input : null));
+            this._createStandardLabel((shouldEmbed ? this._elems.input : null));
         }
 
         /**...........................................................................
@@ -801,7 +801,7 @@ namespace KIP.Forms {
          * 
          * ...........................................................................
          */
-        protected  _onClear(): void {
+        protected _onClear(): void {
             this._data = this._getDefaultValue();
             if (this._elems.input) {
                 this._elems.input.value = this._getDefaultValue();

@@ -96,9 +96,9 @@ namespace KIP.Events {
 		 * Creates a new Event
 		 * @param 	details 	The specs for this particular event
 		 */
-		constructor(details: IEventDefinition) {
-			this._name = details.name;
-			this._key = details.key;
+		constructor(key: string, name: string) {
+			this._name = name;
+			this._key = key;
 			this._listeners = new Collection<IListenerData<C>>(CollectionTypeEnum.ReplaceDuplicateKeys);
 		}
 

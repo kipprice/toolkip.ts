@@ -1,36 +1,56 @@
 namespace KIP.Forms {
 
+    /** represent the objects that will be selectable by this element */
+    export interface IObjectSelectOptions<T> {
+        [display: string]: T;
+    }
+
     /** select-specific template options */
-    export interface IFormSelectTemplate<T extends string | number> extends IFormElemTemplate<T> {
-        options: ISelectOptions;
+    export interface IFormObjectSelectTemplate<T> extends IFormElemTemplate<T> {
+        options: IObjectSelectOptions<T>;
+    }
+
+    /** create options that correspond to an object */
+    export interface IObjectOption<T> {
+        display: string;
+        value: T;
     }
     
     /**----------------------------------------------------------------------------
-     * @class SelectElement
+     * @class ObjectSelectElement
      * ----------------------------------------------------------------------------
-     * create a dropdown for a form with either numeric or string backing data
+     * create a dropdown for a form
      * @author  Kip Price
-     * @version 2.0.0
+     * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class SelectElement<T extends string | number> extends FormElement<T> {
+    export class ObjectSelectElement<T> extends FormElement<T> {
+        //.....................
+        //#region PROPERTIES
+        
         protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.SELECT; }
+
         protected get _defaultValue(): T { return null; }
+
         protected get _defaultCls(): string { return "select"; }
-        protected _options: ISelectOptions;
+
+        protected _options: IObjectOption<T>[];
 
         protected _elems: {
             core: HTMLElement;
             input: HTMLSelectElement;
             lbl: HTMLElement;
         }
+        
+        //#endregion
+        //.....................
 
         /** 
          * SelectElement
          * ----------------------------------------------------------------------------
          * Create the Select Element
          */
-        constructor(id: string, template: IFormSelectTemplate<T> | SelectElement<T>) {
+        constructor(id: string, template: IFormObjectSelectTemplate<T> | ObjectSelectElement<T>) {
             super(id, template);
         }
 
@@ -39,7 +59,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Generate a cloned version of this form element
          */
-        protected _cloneFromFormElement(data: SelectElement<T>): void {
+        protected _cloneFromFormElement(data: ObjectSelectElement<T>): void {
             super._cloneFromFormElement(data);
             this._options = data._options;
         }
@@ -49,9 +69,17 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Get additional details about how this select field should be set up
          */
-        protected _parseElemTemplate(template: IFormSelectTemplate<T>): void {
+        protected _parseElemTemplate(template: IFormObjectSelectTemplate<T>): void {
             super._parseElemTemplate(template);
-            this._options = template.options;
+
+            // parse options into an array instead of a dictionary
+            this._options = [];
+            KIP.map(template.options, (obj: T, display: string) => {
+                this._options.push({
+                    display: display,
+                    value: obj
+                });
+            })
         }
 
         /**
@@ -60,7 +88,16 @@ namespace KIP.Forms {
          * Create the elements needed for the select field
          */
         protected _onCreateElements(): void {
-            this._elems.input = createSelectElement(this._id, "input", this._options);
+
+            // map the objects to the index in which they are stored
+            let slimOptions: ISelectOptions = {};
+            for (let oIdx = 0; oIdx < this._options.length; oIdx += 1) {
+                let o = this._options[oIdx];
+                slimOptions[oIdx] = o.display;
+            }
+
+            // create a standard select element
+            this._elems.input = createSelectElement(this._id, "input", slimOptions);
             this._createStandardLabel();
             this._handleStandardLayout();
         }
@@ -71,9 +108,8 @@ namespace KIP.Forms {
          * manage when details in this select field changed
          */
         protected _onChange(): boolean {
-            let v: string = this._elems.input.value;
-            let value: T = v as T;
-            if (isNumeric(v)) { value = +v as T;}
+            let idx: string = this._elems.input.value;
+            let value = this._options[idx];
             return this._standardValidation(value);
         }
 
@@ -82,8 +118,8 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Generate the cloned select element
          */
-        protected _createClonedElement(appendToID: string): SelectElement<T> {
-            return new SelectElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): ObjectSelectElement<T> {
+            return new ObjectSelectElement(this._id + appendToID, this);
         }
     }
 }

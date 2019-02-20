@@ -163,7 +163,7 @@ namespace KIP.Forms {
             elem.render(cell);
 
             // add the appropriate listeners
-            Events.addEventListener(FORM_ELEM_CHANGE, {
+            formEventHandler.addEventListener(FORM_ELEM_CHANGE, {
                 func: (event: FormElemChangeEvent<any>) => {
                     let key: string = event.context.key;
                     if (key !== elem.id) { return; }

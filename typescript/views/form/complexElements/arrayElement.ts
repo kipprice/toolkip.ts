@@ -301,7 +301,7 @@ namespace KIP.Forms {
             child.addOrderingListener(this);
 
             // handle the child updating
-            Events.addEventListener(FORM_ELEM_CHANGE,
+            formEventHandler.addEventListener(FORM_ELEM_CHANGE,
                 {
                     func: (event: FormElemChangeEvent<any>) => {
 
