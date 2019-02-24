@@ -277,8 +277,7 @@ namespace KIP.Forms {
             this._onOtherChange = template.onOtherChange;
             if (this._onOtherChange) {
                 formEventHandler.addEventListener(FORM_ELEM_CHANGE, {
-                    func: (ev: FormElemChangeEvent<any>) => { this._handleOtherChange(ev); },
-                    uniqueId: this._id
+                    func: (ev: FormElemChangeEvent<any>) => { this._handleOtherChange(ev); }
                 });
             }
 

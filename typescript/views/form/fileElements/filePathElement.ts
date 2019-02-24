@@ -5,7 +5,7 @@ namespace KIP.Forms {
     }
 
     export interface IFileSaveCallback {
-        (files: FileList): void;
+        (files: FileList, blobs?: Blob[]): void;
     }
 
     export interface IFormFilePathElemTemplate extends IFormFileElemTemplate<string> {

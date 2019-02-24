@@ -1,4 +1,9 @@
 namespace KIP.Forms {
+
+    export interface IPhotoPathElemTemplate extends IFormFilePathElemTemplate {
+        maxSize?: number;
+    }
+
      /**----------------------------------------------------------------------------
      * @class PhotoPathElement
      * ----------------------------------------------------------------------------
@@ -90,9 +95,31 @@ namespace KIP.Forms {
             error: HTMLElement;
         }
 
+        protected _maxSize: number;
+
+        protected _template: IPhotoPathElemTemplate;
+
         //#endregion
         //.....................
 
+        //..........................................
+        //#region CREATE THE ELEMENT
+        
+        public constructor(id: string, template: IPhotoPathElemTemplate) {
+            super(id, template);
+        }
+
+        protected _parseElemTemplate(template: IPhotoPathElemTemplate): void {
+            super._parseElemTemplate(template);
+            this._maxSize = template.maxSize;
+        }
+        
+        //#endregion
+        //..........................................
+
+        //..........................................
+        //#region CREATE ELEMENTS FOR PHOTO UPLOAD
+        
         /**
          * _onCreateElements
          * ----------------------------------------------------------------------------
@@ -130,6 +157,9 @@ namespace KIP.Forms {
                 this._onFileSelected();
             });
         }
+        
+        //#endregion
+        //..........................................
 
         /**
          * _createClonedElement
@@ -139,7 +169,7 @@ namespace KIP.Forms {
          * @returns The created cloned element
          */
         protected _createClonedElement(appendToID: string): PhotoPathElement {
-            return new PhotoPathElement(this.id + appendToID, this);
+            return new PhotoPathElement(this.id + appendToID, this._template);
         }
 
         /**
@@ -169,16 +199,9 @@ namespace KIP.Forms {
             file = this._files[0];
             if (!file) { return; }
 
-            let fileReader: FileReader = new FileReader();
-            fileReader.onload = () => {
-                window.setTimeout(() => {
-                    let photoURL = fileReader.result as string;
-                    this._elems.display.src = photoURL;
-                }, 0);
-            };
-
-            // read the file
-            fileReader.readAsDataURL(file);
+            // load the image as a preview
+            this._readFile(file)
+                .then((photoURL: string) => { this._elems.display.src = photoURL; })
         }
 
         /**
@@ -203,5 +226,110 @@ namespace KIP.Forms {
             this._data = "";
             this._elems.display.src = "";   // reset the photolink
         }
+
+        /**
+         * save
+         * ----------------------------------------------------------------------------
+         * @param   internalOnly    If true, we're only saving to our own data field,
+         *                          not an external callers
+         * 
+         * @returns The file path that is now saved
+         */
+        public save(internalOnly?: boolean): string {
+            if (internalOnly) { return; }                       // Don't do anything if this is an internal change
+            
+            if (this._files) {                                  // Make sure that if we have files, we're uploading them
+                if (!this._onSaveCallback) { return ""; }       // Don't do anything if we don't have a callback
+                this._resizeImages(this._files).then((blobs: Blob[]) => {
+                    this._onSaveCallback(this._files, blobs);              // Run our callback
+                });
+            }
+
+            return this._data;                                  // Return the appropriate data
+        }
+
+        //..........................................
+        //#region HELPERS
+        
+        protected _readFile(file: File, defer?: boolean): KIP.KipPromise {
+            return new KIP.KipPromise((resolve) => {
+                let fileReader: FileReader = new FileReader();
+                fileReader.onload = () => {
+                    window.setTimeout(() => {
+                        resolve(fileReader.result);
+                    }, 0);
+                };
+
+                // read the file
+                fileReader.readAsDataURL(file);
+            }, defer)
+        }
+
+        protected _loadImage(defer?: boolean): KIP.KipPromise {
+            return new KIP.KipPromise((resolve, reject, dataUrl: string) => {
+                let img = new Image();
+                img.onload = () => { resolve(img); }
+                img.src = dataUrl;
+            }, defer)
+        }
+
+        protected _renderOnCanvas(defer?: boolean): KIP.KipPromise {
+            return new KIP.KipPromise((resolve, reject, img: HTMLImageElement) => {
+                let cvs = KIP.createElement({ type: "canvas" }) as HTMLCanvasElement;
+
+                // set default canvas size
+                cvs.width = this._maxSize;
+                cvs.height = this._maxSize;
+
+                // adapt canvas to img size
+                if (img.width > img.height) {
+                    cvs.height = (img.height * this._maxSize) / img.width;
+                } else if (img.height > img.width) {
+                    cvs.width = (img.width * this._maxSize) / img.height;
+                }
+
+                // render the image at this size
+                let ctx = cvs.getContext("2d");
+                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+
+                // return the canvas's data as a file
+                cvs.toBlob(
+                    (blob: Blob) => { resolve(blob); }
+                );
+
+            }, defer)
+        }
+        
+
+        protected _resizeImages(files: FileList): KIP.KipPromise {
+            if (!this._maxSize) { return KIP.KipPromise.resolve(); }
+
+            let outFiles: Blob[] = [];
+            let promiseChain = new KIP.PromiseChain();
+            
+            for (let fIdx = 0; fIdx < files.length; fIdx += 1) {
+                let promise = this._resizeImage(files[fIdx], outFiles);
+                promiseChain.addPromise(promise);
+            }
+
+            // ensure that the last step is spitting out all of the adjusted images
+            promiseChain.addPromise(new KIP.KipPromise((resolve) => {
+                resolve(outFiles);
+            }, true))
+
+            return promiseChain.execute();
+        }
+
+        protected _resizeImage (file: File, outFiles: Blob[]): KIP.KipPromise {
+            let chain = new KIP.PromiseChain();
+            chain.addPromise(this._readFile(file, true));
+            chain.addPromise(this._loadImage(true));
+            chain.addPromise(this._renderOnCanvas(true));
+            chain.addPromise((blob: Blob) => { outFiles.push(blob); });
+            return chain;
+        }
+        
+        //#endregion
+        //..........................................
     }
 }
