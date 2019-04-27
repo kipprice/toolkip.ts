@@ -252,7 +252,7 @@ namespace KIP.Styles {
         }
 
         cls = document.createElement("style");
-        cls.innerHTML = "";
+        cls.innerHTML = "@charset \"utf-8\";\n";
         
         return cls;
     }

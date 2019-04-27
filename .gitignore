@@ -1,3 +1,10 @@
 
 apps/**/*
 compiled_js/**/*
+typescript/MVC/_(old)_controller.ts
+typescript/MVC/_(old)_eventHandler.ts
+typescript/MVC/_(old)_factory.ts
+typescript/MVC/_(old)_viewModel.ts
+compile_tools/closure.sh
+js_version/toolkip.js/
+compile_tools/closure.sh
