@@ -573,7 +573,7 @@ namespace KIP {
          * 
          * @returns A promise that will complete the query to the appropriate source
          */
-        protected abstract _onQuery(queryText: string): KipPromise;
+        protected abstract _onQuery(queryText: string): Promise<any>;
 
         //#endregion
         //...........................

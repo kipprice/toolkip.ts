@@ -203,37 +203,32 @@ namespace KIP {
          * 
          * @returns Promise that will run the filtering logic
          */
-        public tryFilter(words: string[]): KipPromise {
-            return new KipPromise((resolve: Function) => {
-                window.setTimeout(() => {
-                    let word: string;
-                    let notFound: boolean = false;
+        public async tryFilter(words: string[]): Promise<void> {
+            // wait til the next frame render
+            await nextRender();
+            let word: string;
+            let notFound: boolean = false;
 
-                    let display = this._display.toLowerCase();
-                    let id = this._id.toLowerCase();
+            let display = this._display.toLowerCase();
+            let id = this._id.toLowerCase();
 
-                    // loop through the words that were passed in and ensure all are there
-                    for (word of words) {
-                        if (display.indexOf(word) === -1) {
-                            if (id.indexOf(word) === -1) {
-                                notFound = true;
-                                break;
-                            }
-                        }
+            // loop through the words that were passed in and ensure all are there
+            for (word of words) {
+                if (display.indexOf(word) === -1) {
+                    if (id.indexOf(word) === -1) {
+                        notFound = true;
+                        break;
                     }
+                }
+            }
 
-                    // if a word was missing, filter this element
-                    if (notFound) {
-                        this._filter();
-                    } else {
-                        this._unfilter();
-                    }
+            // if a word was missing, filter this element
+            if (notFound) {
+                this._filter();
+            } else {
+                this._unfilter();
+            }
 
-                    // return that the promise completed
-                    resolve();
-
-                }, 0);
-            });
         }
 
         //#endregion

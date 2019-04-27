@@ -73,7 +73,6 @@ namespace KIP {
         type: AjaxTypeEnum;
         requestUrl: string;
         params: IAjaxParams | FormData;
-        defer?: boolean;
     }
 
     /**
@@ -83,9 +82,8 @@ namespace KIP {
      * @param   ajaxDetails     The type of request to run
      * @returns A promise that will return the results of the ajax call
      */
-    export function ajax(ajaxDetails: IAjaxDetails): KipPromise {
-
-        return new KIP.KipPromise((resolve, reject) => {
+    export function ajax(ajaxDetails: IAjaxDetails): Promise<any> {
+        return new Promise((resolve, reject) => {
             ajaxRequest(
                 ajaxDetails.type,
                 ajaxDetails.requestUrl,
@@ -97,7 +95,7 @@ namespace KIP {
                 },
                 ajaxDetails.params
             );
-        }, ajaxDetails.defer);
+        });
     }
 
     /**

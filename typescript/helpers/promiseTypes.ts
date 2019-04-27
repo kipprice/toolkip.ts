@@ -6,10 +6,8 @@ namespace KIP {
      * Set a timeout and resolve a promise when the timeout is done
      * @param   timeInMs    Time to wait before executing the 
      */
-    export function wait(timeInMs: number): KipPromise {
-        return new KipPromise((resolve) => {
-            window.setTimeout(() => { resolve(); }, timeInMs);
-        })
+    export function wait(timeInMs: number): Promise<any> {
+        return new Promise(resolve => window.setTimeout(resolve, timeInMs) );
     }
 
     
@@ -19,8 +17,8 @@ namespace KIP {
      * ----------------------------------------------------------------------------
      * Run some code the next time the screen is rendering
      */
-    export function onNextRender(): KIP.KipPromise {
-        return new KIP.KipPromise((resolve) => {
+    export function nextRender(): Promise<any> {
+        return new Promise((resolve) => {
             requestAnimationFrame(() => {
                 resolve();
             })

@@ -119,14 +119,15 @@ namespace KIP {
 		 * @param	addlData		Anything else that needs to be passed along (e.g. models)
 		 */
 
-		public navigateTo<D extends View, M>(navigationPath: T, constructor?: IConstructor<D>, addlData?: INavigationData<M>, fromHistoryNavigation?: boolean): boolean {
+		public async navigateTo<D extends View, M>(navigationPath: T, constructor?: IConstructor<D>, addlData?: INavigationData<M>, fromHistoryNavigation?: boolean): Promise<boolean> {
 
 			// initialize the additional data array if unpassed
 			if (!addlData) { addlData = {}; }
 
 			// check that we can navigate away from the current screen
 			if (!this._canNavigateAway(addlData.isCancel)) { return false; }
-			if (!this._handleCurrentViewOnNavigate(addlData.isCancel)) { return false; }
+			let currentViewHandled = await this._handleCurrentViewOnNavigate(addlData.isCancel);
+			if (!currentViewHandled) { return false; }
 
 			// try to grab the view from our collection (quit if it doesn't exist and we can't create it)
 			let view: View = this._views.getValue(navigationPath);
@@ -181,13 +182,13 @@ namespace KIP {
 		 * @param 	isCancel 	True if we are moving because of a cancel event
 		 * @returns	True if we could navigate away, false otherwise
 		 */
-		protected _handleCurrentViewOnNavigate<M>(isCancel?: boolean): boolean {
+		protected async _handleCurrentViewOnNavigate<M>(isCancel?: boolean): Promise<boolean> {
 
 			// make sure that we have a current view
 			if (!this._currentView) { return true; }
 
 			// determine if there is any information this view wants to add to the addlData array
-			let navAwayData: INavigationData<M> = this._currentView.value.onNavigateAway(isCancel);
+			let navAwayData: INavigationData<M> = await this._currentView.value.onNavigateAway(isCancel);
 			if (!navAwayData) { return true; }
 
 			// if so, update the history state for this view

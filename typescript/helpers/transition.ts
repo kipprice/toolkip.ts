@@ -22,20 +22,22 @@ namespace KIP {
      * 
      * @returns Promise that will be called after transition completes
      */
-    export function transition (element: HTMLElement, startStyle: ITransitionStyle, endStyle: ITransitionStyle, time: number, delay?: number): KipPromise {
+    export function transition (element: HTMLElement, startStyle: ITransitionStyle, endStyle: ITransitionStyle, time: number, delay?: number, ): Promise<void> {
 
-        if (!element) { return KipPromise.reject("no element"); }
+        if (!element) { return Promise.reject("no element"); }
 
+        // generate the starting class
         let startName: string = _generateRandomClassName();
         _createTransitionClass(startName, startStyle, element);
         
+        // generate the ending class
         let endName: string = _generateRandomClassName();
         if (!endStyle.transition) { endStyle.transition = "all ease-in-out " + (time / 1000) + "s"; }
         _createTransitionClass(endName, endStyle, element);
 
         addClass(element, startName);
 
-        return new KipPromise((resolve, reject) => {
+        return new Promise((resolve) => {
 
             // handle the delay
             window.setTimeout(() => {
@@ -49,7 +51,7 @@ namespace KIP {
 
                     // resolve the promise at the next render
                     window.requestAnimationFrame(() => {
-                        resolve("success");
+                        resolve();
 
                         window.setTimeout(() => {
                             removeClass(element, endName);
@@ -69,9 +71,9 @@ namespace KIP {
         delay?: number;
     }
 
-    function transitionProperty (element: HTMLElement, propertyName: string, startValue: any, endValue: any, duration: number, delay?: number): KipPromise {
+    function transitionProperty (element: HTMLElement, propertyName: string, startValue: any, endValue: any, duration: number, delay?: number): Promise<void> {
         //TODO
-        return KipPromise.reject("not implemented");
+        return Promise.reject("not implemented");
     }
 
     //#region HELPER FUNCTIONS
