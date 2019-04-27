@@ -219,10 +219,17 @@ namespace KIP {
             let out: T = {} as T;
 
             map(this, (val: any, key: string) => {
+
+                // don't try to copy functions
                 if (typeof val === "function") { return; }
+
+                // determine the formatted key
                 let fmtKey: string = key;
                 if (fmtKey[0] === "_") { fmtKey = KIP.rest(fmtKey, 1); }
-                if (fmtKey === "_listeners") { return; }
+                if (fmtKey === "_modelListeners") { return; }
+                if (fmtKey === "_propertyListeners") { return; }
+
+                // save this particular key-value
                 let outVal = this._savePiece(fmtKey as keyof T, val);
                 if (!isNullOrUndefined(outVal)) { out[fmtKey] = outVal; }
             });
@@ -250,25 +257,51 @@ namespace KIP {
             }
 
             let privateName: string = "_" + key;
+            let data = val || this[privateName];
 
             // determine if this is an array of elements, and if so, check if they have the ability to save themselves
-            if (this[privateName] instanceof Array) {
-                let outArr = [];
-                for (let elem of this[privateName]) {
-                    if (elem && elem.saveData) {
-                        outArr.push(elem.saveData());
-                    } else {
-                        outArr.push(elem);
-                    }
-                }
-                return outArr as any as T[K];
+            return this._innerSavePiece(data);
+        }
+
+        protected _innerSavePiece<K extends keyof T>(data: T[K]): T[K] {
+            if (data as any instanceof Array) {
+                return this._saveArray(data);
             }
-            else if (this[privateName] && this[privateName].saveData) {
-                return this[privateName].saveData();
+            else if (data && data.saveData) {
+                return this._saveModel(data);
             } 
-            else {
-                return this[privateName];
+            else if (typeof data === "object") {
+                return this._saveObject(data);
             }
+            else {
+                return this._saveSimple(data);
+            }
+        }
+
+        protected _saveArray<K extends keyof T, A extends Array<T[K]>>(data: A): T[K] {
+            let outArr = [];
+
+            // loop through each element to save appropriately
+            for (let elem of data) {
+                outArr.push(this._innerSavePiece(elem));
+            }
+            return outArr as any as T[K];
+        }
+
+        protected _saveModel<K extends keyof T, M extends Model<T[K]>>(data: M): T[K] {
+            return data.saveData();
+        }
+
+        protected _saveObject<K extends keyof T>(data: T[K]): T[K] {
+            let out: T[K] = {} as T[K];
+            map(data, (elem: any, key: string) => {
+                out[key] = this._innerSavePiece(elem);
+            });
+            return out;
+        }
+
+        protected _saveSimple<K extends keyof T>(data: T[K]): T[K] {
+            return data;
         }
         
         //#endregion
