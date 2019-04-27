@@ -3,16 +3,17 @@ namespace KIP.Timeline {
     export type TimelineBackingElement = CanvasElement | SVG.SVGElem;
     export type TimelineBackingGroup = CanvasGroup | SVG.GroupElement;
 
-    /**...........................................................................
+    /**----------------------------------------------------------------------------
      * @class   TimelineView
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      * Shared view for a timeline
      * @author  Kip Price
      * @version 1.0.0
-     * ...........................................................................
+     * ----------------------------------------------------------------------------
      */
     export abstract class TimelineView<T extends TimelineBackingView, G extends TimelineBackingGroup> extends Drawable {
 
+        //.....................
         //#region PROPERTIES
 
         /** canvas that will actually draw the elements */
@@ -28,6 +29,7 @@ namespace KIP.Timeline {
         protected _controller: Timeline;
 
         //#endregion
+        //.....................
 
 
         /**...........................................................................

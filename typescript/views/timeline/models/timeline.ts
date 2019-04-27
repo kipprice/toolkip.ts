@@ -5,6 +5,14 @@ namespace KIP.Timeline {
 		groups: Collection<ITimedGroup>
 	}
 
+	/**----------------------------------------------------------------------------
+	 * @class	TimelineModel
+	 * ----------------------------------------------------------------------------
+	 * build the collection of timeline events
+	 * @author	Kip Price
+	 * @version	1.0.0
+	 * ----------------------------------------------------------------------------
+	 */
 	export class TimelineModel extends Serializable<ITimeline> implements ITimeline {
 		//#region PROPERTIES
 
@@ -15,11 +23,20 @@ namespace KIP.Timeline {
 
 		//#endregion
 
-		/**  */
+		/**
+		 * _setDefaultValues
+		 * ----------------------------------------------------------------------------
+		 * setup the objects in this model
+		 */
 		protected _setDefaultValues(): void {
 			this._groups = new Collection<TimedGroup>();
 		}
 
+		/**
+		 * _copyGroups
+		 * ----------------------------------------------------------------------------
+		 * copy all groups over
+		 */
 		protected _copyGroups(groups: Collection<ITimedGroup>): void {
 			if (!groups) { return; }
 			this._groups = groups as Collection<TimedGroup>;

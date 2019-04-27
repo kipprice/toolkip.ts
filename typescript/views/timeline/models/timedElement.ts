@@ -6,16 +6,17 @@ namespace KIP.Timeline {
 		backingData: TimedBackingData;
 	}
 
-	/**...........................................................................
+	/**----------------------------------------------------------------------------
 	 * @class	TimedElement
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 * Keep track of timeline elements
 	 * @author	Kip Price
 	 * @version 1.0.0
-	 * ...........................................................................
+	 * ----------------------------------------------------------------------------
 	 */
 	export class TimedElement extends Serializable<ITimedElement> implements ITimedElement {
 
+		//.....................
 		//#region PROPERTIES
 
 		/** the start date for this timed event */
@@ -34,6 +35,7 @@ namespace KIP.Timeline {
 		public set backingData(data: TimedBackingData) { this._backingData = data; }
 
 		//#endregion
+		//.....................
 
 		protected _copyStart(start: string | Date) {
 			this._start = new Date(start as any);

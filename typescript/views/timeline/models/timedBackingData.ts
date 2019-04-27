@@ -1,4 +1,10 @@
 namespace KIP.Timeline {
+
+	/**
+	 * TimedBackingData
+	 * ----------------------------------------------------------------------------
+	 * 
+	 */
 	export interface TimedBackingData {
 		id: string;
 		label: string;
