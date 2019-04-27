@@ -3,7 +3,7 @@
 		"sourceMap" : true,
 		"outDir": "../compiled_js/",
 		"outFile": "../compiled_js/kip.js",
-		"target" : "es5",
+		"target" : "es2015",
 		"module" : "amd",
 		"declaration": true,
 		"watch": true
