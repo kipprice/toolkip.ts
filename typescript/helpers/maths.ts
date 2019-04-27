@@ -25,7 +25,7 @@ namespace KIP {
      * 
      * @param   max             The maximum value accepted
      * @param   min             The minimun value accepted. Defaults to 0
-     * @param   isExclusive     True if we should exclude the max/min values
+     * @param   isExclusive     True if we should not include the max/min values
      * 
      * @returns A random number fitting these parameters
      * ...........................................................................

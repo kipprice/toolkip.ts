@@ -25,7 +25,7 @@ namespace KIP.SVG {
          * @param   type    What type of graph this will become
          */
         constructor(id, type) {
-            "use strict";
+            ;
             super(id, type);
             this.useSVGLabels = false;
         };
@@ -45,7 +45,7 @@ namespace KIP.SVG {
          * @returns The created label
          */
         protected AddTextAroundRing(txt, startAngle, endAngle, r, group, rotate) {
-            "use strict";
+            ;
             var tDeg, tRad, tX, tY, origin, rAng, box;
 
             // Quit if this isn't a circular graph
@@ -109,7 +109,7 @@ namespace KIP.SVG {
          * @returns {object} The SVG coordinates & real-screen coordinates for the appropriate spot on the graph
          */
         CalculateMiddlePointOfSegment(startAngle, endAngle) {
-            "use strict";
+            ;
             var tDeg, tRad, sX, sY, pt, r, dx, dy;
             r = this.radius;
             tDeg = startAngle + (endAngle - startAngle) / 2;
@@ -140,7 +140,7 @@ namespace KIP.SVG {
          * @param   box     The SVG rectangle that appears behind the text
          */
         AddPieceListeners(piece, text, box?) {
-            "use strict";
+            ;
             if (!piece || !text) return;
 
             piece.addEventListener("mouseover", function () {

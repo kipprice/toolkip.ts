@@ -34,7 +34,7 @@ namespace KIP {
 
 		/**
 		 * Creates a named class 
-		 * 
+		 * ---------------------------------------------------------------------------
 		 * @param	classNames		The initial class name to assign
 		 * 
 		 */
@@ -44,13 +44,12 @@ namespace KIP {
 
 		/**
 		 * _addClassName
-		 * 
+		 * ---------------------------------------------------------------------------
 		 * Adds a new layer to our class name
 		 * 
 		 * @param	class_name		The new class name to add
 		 * 
 		 * @returns	True if we added the class name
-		 * 
 		 */
 		protected _addClassName (class_name: string) : boolean {
 			if (contains(this._class_names, class_name)) { return false; }

@@ -1,11 +1,13 @@
 namespace KIP {
 
+	//.....................
 	//#region INTERFACES
 
-	/**--------------------------------------------------------------------------
-	 * @interface IPoint
+	/**---------------------------------------------------------------------------
+	 * @interface 	IPoint
+	 * ---------------------------------------------------------------------------
 	 * Defines a basic point in space
-	 * --------------------------------------------------------------------------
+	 * ---------------------------------------------------------------------------
 	 */
 	export interface IPoint {
 		x: number; 	/** The x-coordinate of the point @type {number} */
@@ -13,10 +15,11 @@ namespace KIP {
 		z?: number;	/** The z-coordinate of the point, if available @type {number} */
 	}
 
-	/**--------------------------------------------------------------------------
-	 * @interface IBasicRect
+	/**---------------------------------------------------------------------------
+	 * @interface 	IBasicRect
+	 * ---------------------------------------------------------------------------
 	 * Defines basic parameters for a rectangle
-	 * --------------------------------------------------------------------------
+	 * ---------------------------------------------------------------------------
 	 */
 	export interface IBasicRect {
 		x: number; /** X-value of the rectangle @type {number} */
@@ -25,29 +28,30 @@ namespace KIP {
 		h: number; /** Height of the rectangle @type {number} */
 	}
 
-	/**...........................................................................
-	 * @type IExtrema
-	 * ...........................................................................
+	/**---------------------------------------------------------------------------
+	 * @type 		IExtrema
+	 * ---------------------------------------------------------------------------
 	 * Interface that stores a max point and a min point
-	 * ...........................................................................
+	 * ---------------------------------------------------------------------------
 	 */
 	export type IExtrema = IGenericExtrema<IPoint>;
 
-	/**...........................................................................
-	 * @class IGenericExtrema
-	 * ...........................................................................
+	/**---------------------------------------------------------------------------
+	 * @interface 	IGenericExtrema
+	 * ---------------------------------------------------------------------------
 	 * Handle any type of extreema
-	 * ...........................................................................
+	 * ---------------------------------------------------------------------------
 	 */
 	export interface IGenericExtrema<T> {
 		max: T,
 		min: T
 	};
 
-	/**--------------------------------------------------------------------------
-	 * @interface IVector
+	/**---------------------------------------------------------------------------
+	 * @interface 	IVector
+	 * ---------------------------------------------------------------------------
 	 * Keeps track of a vector definition
-	 * --------------------------------------------------------------------------
+	 * ---------------------------------------------------------------------------
 	 */
 	export interface IVector {
 		startPoint: IPoint;
@@ -57,12 +61,15 @@ namespace KIP {
 	}
 
 	const DEBUG: boolean = true;
+
 	//#endregion
+	//..................
 
 	// Public namespace wrapper for this functionality
 	export namespace Trig {
 
 		//#region HELPER FUNCTIONS
+
 		/**--------------------------------------------------------------------------
 		 * debugPoint
 		 * --------------------------------------------------------------------------
@@ -124,16 +131,15 @@ namespace KIP {
 
 		//#region VISUAL CHANGES
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * arrangeRadially
-		 * --------------------------------------------------------------------------
+		 * ---------------------------------------------------------------------------
 		 * Arrange a series of elements around a central element, making sure there is enough room for each element
 		 * 
 		 * @param 	centralELem 	the element to use as the center point
 		 * @param 	fringeElems 	the elements to arrange around the central element
 		 * @param 	minAngle 		the angle at which to start (in degrees)
 		 * @param 	maxAngle 		the angle at which to stop (in degrees)
-		 * --------------------------------------------------------------------------
 		 */
 		export function arrangeRadially(centralELem: HTMLElement, fringeElems: HTMLElement[], minAngle?: number, maxAngle?: number): void {
 
@@ -191,7 +197,7 @@ namespace KIP {
 
 
 		}
-		/**--------------------------------------------------------------------------
+		/**
 		 * drawLine
 		 * --------------------------------------------------------------------------
 		 * Draws a line between two points
@@ -203,10 +209,9 @@ namespace KIP {
 		 * @param 	lblNoRotate 	If true, doesn't rotate the text to match the line angle
 		 * 
 		 * @returns The line that was drawn
-		 * --------------------------------------------------------------------------
 		 */
 		export function drawLine(start: IPoint, end: IPoint, host?: HTMLElement, lbl?: string, lblNoRotate?: boolean): HTMLElement {
-			"use strict";
+			;
 			let angle: number;
 			let distance: number;
 			let div: HTMLElement;
@@ -250,14 +255,15 @@ namespace KIP {
 			return div;
 		};
 
-		/**...........................................................................
+		/**
 		 * updateLine
-		 * ...........................................................................
+		 * ---------------------------------------------------------------------------
 		 * Update an existing line to have a new end-point
+		 * 
 		 * @param 	line	The line to update 
 		 * @param 	end		The end point to use for the line
+		 * 
 		 * @returns	The updated line
-		 * ........................................................................... 
 		 */
 		export function updateLine(line: HTMLElement, end: KIP.IPoint): HTMLElement {
 			let start: KIP.IPoint = {
@@ -274,7 +280,7 @@ namespace KIP {
 			return line;
 		}
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * connectElements
 		 * --------------------------------------------------------------------------
 		 * Draws a line between the two provided elements
@@ -283,10 +289,9 @@ namespace KIP {
 		 * @param 	end_elem   	The element to end the line at
 		 *
 		 * @return 	The line that gets drawn
-		 * --------------------------------------------------------------------------
 		 */
 		export function connectElements(start_elem: HTMLElement, end_elem: HTMLElement, lbl?: string, lblNoRotate?: boolean): HTMLElement {
-			"use strict";
+			;
 			let start_point: IPoint;
 			let end_point: IPoint;
 			let x_1: number;
@@ -315,7 +320,7 @@ namespace KIP {
 
 		//#region CONVERSION FUNCTIONS
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * clientRectToShape
 		 * --------------------------------------------------------------------------
 		 * Converts a Client Rect to a basic shape
@@ -323,7 +328,6 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to convert
 		 * 
 		 * @returns The array of points that make up this shape
-		 * --------------------------------------------------------------------------
 		 */
 		export function clientRectToShape(rect: ClientRect): IPoint[] {
 			let out: IPoint[];
@@ -356,7 +360,7 @@ namespace KIP {
 			return out;
 		}
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * svgRectToShape
 		 * --------------------------------------------------------------------------
 		 * Converts a SVG Rect to a basic shape
@@ -364,7 +368,6 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to convert
 		 * 
 		 * @returns The array of points that make up this shape
-		 * --------------------------------------------------------------------------
 		 */
 		export function svgRectToShape(rect: SVGRect): IPoint[] {
 			let out: IPoint[];
@@ -397,7 +400,7 @@ namespace KIP {
 			return out;
 		}
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * svgRectToBasicRect
 		 * --------------------------------------------------------------------------
 		 * Convert a SVG rectangle to a basic rectangle
@@ -405,7 +408,6 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to convert
 		 * 
 		 * @returns The resulting IBasicRect representation of the passed in rect
-		 * --------------------------------------------------------------------------
 		 */
 		export function svgRectToBasicRect(rect: SVGRect): IBasicRect {
 			let out: IBasicRect;
@@ -420,7 +422,7 @@ namespace KIP {
 			return out;
 		};
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * clientRectToBasicRect
 		 * --------------------------------------------------------------------------
 		 * Convert a client rectangle to a basic rectangle
@@ -428,14 +430,13 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to convert
 		 * 
 		 * @returns The resulting IBasicRect representation of the passed in rect
-		 * --------------------------------------------------------------------------
 		 */
 		export function clientRectToBasicRect(rect: ClientRect): IBasicRect {
 			let out: IBasicRect;
 
 			out = {
-				x: rect.left,
-				y: rect.top,
+				x: rect.left + window.scrollX,
+				y: rect.top + window.scrollY,
 				w: rect.width,
 				h: rect.height
 			};
@@ -443,7 +444,7 @@ namespace KIP {
 			return out;
 		}
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * toBasicRect
 		 * --------------------------------------------------------------------------
 		 * Converts any supported rectangle to a basic rectangle
@@ -451,7 +452,6 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to convert
 		 * 
 		 * @returns The basic rect version of this client / svg rect
-		 * -------------------------------------------------------------------------- 
 		 */
 		export function toBasicRect(rect: IBasicRect | ClientRect | SVGRect): IBasicRect {
 			let r: IBasicRect;
@@ -470,7 +470,7 @@ namespace KIP {
 
 		//#region CALCULATION FUNCTIONS
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * getAngle
 		 * --------------------------------------------------------------------------
 		 * Finds the angle between two points
@@ -483,10 +483,9 @@ namespace KIP {
 		 * @param {Number} end.y - The y position of the end point
 		 *
 		 * @return {Number} The angle (in degrees) between the two points
-		 * --------------------------------------------------------------------------
 		 */
 		export function getAngle(start: IPoint, end: IPoint): number {
-			"use strict";
+			;
 			let dx: number;
 			let dy: number;
 			let q_sign: number;
@@ -513,7 +512,7 @@ namespace KIP {
 			return (angle * (180 / Math.PI));
 		};
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * getDistance
 		 * --------------------------------------------------------------------------
 		 * Finds the distance between the two provided points
@@ -522,10 +521,9 @@ namespace KIP {
 		 * @param 	end 	The second enpoint of the segment we are measuring
 		 *
 		 * @return The distance between the two points
-		 * --------------------------------------------------------------------------
 		 */
 		export function getDistance(start: IPoint, end: IPoint): number {
-			"use strict";
+			;
 			let distance: number;
 			let dx: number;
 			let dy: number;
@@ -537,7 +535,7 @@ namespace KIP {
 			return distance;
 		};
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * calculatePolygonInternalAngle
 		 * --------------------------------------------------------------------------
 		 * calculate the internal angle for a given polygon
@@ -545,7 +543,6 @@ namespace KIP {
 		 * @param 	numberOfSides 	The number of sides that the polygon has
 		 * 
 		 * @returns the internal angle for this polygon, in radians
-		 * --------------------------------------------------------------------------
 		 */
 		export function calculatePolygonInternalAngle(numberOfSides: number): number {
 			return roundToPlace(degreesToRadians(360 / numberOfSides), 1000);
@@ -554,7 +551,7 @@ namespace KIP {
 
 		//#region CONTAINMENT FUNCTIONS
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * isWithin
 		 * --------------------------------------------------------------------------
 		 * Checks whether a value is within a max/min range
@@ -565,15 +562,14 @@ namespace KIP {
 		 * @param 	non_inclusive 	True if we shouldn't include the end points
 		 * 
 		 * @returns True if the value is contained in the range
-		 * --------------------------------------------------------------------------
 		 */
 		export function isWithin(val: number, min: number, max: number, non_inclusive?: boolean): boolean {
-			"use strict";
+			;
 			if (non_inclusive) return (val < max && val > min);
 			return (val <= max && val >= min)
 		}
 
-		/**-------------------------------------------------------------------------
+		/**
 		 * isPointContained
 		 * --------------------------------------------------------------------------
 		 * Determines whether a point is contained within a particular rectangle
@@ -582,9 +578,9 @@ namespace KIP {
 		 * @param 	rect 	The rectangle to check
 		 * 
 		 * @returns True if the point is contained in the rectangle
-		 ----------------------------------------------------------------------------*/
+		 */
 		export function isPointContained(pt: IPoint, rect: ClientRect | SVGRect | IBasicRect): boolean {
-			"use strict";
+			;
 			let r: IBasicRect = toBasicRect(rect);
 
 			if (pt.x < r.x) { return false; }
@@ -596,7 +592,7 @@ namespace KIP {
 		}
 
 
-		/**----------------------------------------------------------------------------
+		/**
 		 * isRectContained
 		 * ----------------------------------------------------------------------------
 		 * Checks whether a client rect is entirely contained within another
@@ -605,7 +601,7 @@ namespace KIP {
 		 * @param 	container 	The element to check if the rect is contained within
 		 * 
 		 * @returns True if rect is completely contained by container
-		 ------------------------------------------------------------------------------*/
+		 */
 		export function isRectContained(rect: IBasicRect | ClientRect | SVGRect, container: IBasicRect | ClientRect | SVGRect): boolean {
 			let r: IBasicRect;
 			let c: IBasicRect;
@@ -632,7 +628,7 @@ namespace KIP {
 			return true;
 		}
 
-		/**-----------------------------------------------------------------------------
+		/**
 		 * isElementContained
 		 *------------------------------------------------------------------------------
 		 * Checks if an element is completely contained by another element
@@ -641,7 +637,6 @@ namespace KIP {
 		 * @param 	container 	The element to check if it contains the other elem
 		 * 
 		 * @returns True if the element is completely contained
-		 -------------------------------------------------------------------------------
 		 */
 		export function isElementContained(elem: HTMLElement, container: HTMLElement): boolean {
 			let rect: ClientRect = elem.getBoundingClientRect();
@@ -650,7 +645,7 @@ namespace KIP {
 			return isRectContained(rect, bounds);
 		};
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * isShapeContained
 		 * --------------------------------------------------------------------------
 		 * Checks if a given shape is contained within a given bounding box
@@ -659,7 +654,6 @@ namespace KIP {
 		 * @param 	bounds 	The bounding box to be within
 		 * 
 		 * @returns True if the shape is completely contained in the bounding box
-		 * --------------------------------------------------------------------------
 		 */
 		export function isShapeContained(shape: IPoint[], bounds: ClientRect | SVGRect): boolean {
 			let pt: IPoint;
@@ -670,9 +664,10 @@ namespace KIP {
 		}
 		//#endregion
 
+		//...........................
 		//#region OVERLAP FUNCTIONS
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * doElementsOverlap
 		 * --------------------------------------------------------------------------
 		 * Checks if two given elements overlap
@@ -681,10 +676,9 @@ namespace KIP {
 		 * @param 	elem2 	The second element to check
 		 * 
 		 * @returns True if the elements overlap, false otherwise
-		 * --------------------------------------------------------------------------
 		 */
 		export function doElementsOverlap(elem1: HTMLElement, elem2: HTMLElement): boolean {
-			"use strict";
+			;
 			let rect1: ClientRect
 			let rect2: ClientRect;
 
@@ -694,7 +688,7 @@ namespace KIP {
 			return doRectsOverlap(rect1, rect2);
 		};
 
-		/**--------------------------------------------------------------------------
+		/**
 		 * doRectsOverlap
 		 * --------------------------------------------------------------------------
 		 * Checks if two rectangles overlap at all
@@ -703,7 +697,6 @@ namespace KIP {
 		 * @param 	rect2 	The second rectangle to check
 		 * 
 		 * @returns True if there is any overlap between the rectangles
-		 * --------------------------------------------------------------------------
 		 */
 		export function doRectsOverlap(rect1: IBasicRect | ClientRect | SVGRect, rect2: IBasicRect | ClientRect | SVGRect): boolean {
 			let r1: IBasicRect = toBasicRect(rect1);

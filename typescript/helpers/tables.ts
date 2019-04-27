@@ -18,7 +18,7 @@ namespace KIP {
    *
    * */
   export function createTable(tableID?: string, tableClass?: string, elements?: any[], rowNum?: number, colNum?: number): HTMLTableElement {
-    "use strict";
+    ;
 
     let tbl: HTMLTableElement;
     let row: HTMLTableRowElement;
@@ -64,7 +64,7 @@ namespace KIP {
    * @return {HTMLTableCellElement}      The cell, newly populated with contents
    */
   export function processCellContents(data: any, cell: HTMLTableCellElement): HTMLTableCellElement {
-    "use strict";
+    ;
 
     let content: HTMLElement;
     let key: string;
@@ -110,7 +110,7 @@ namespace KIP {
    * @return {HTMLTableRowElement}       The row that was created
    */
   export function addRow(table: HTMLTableElement, elements?: any[], idx?: number, colNum?: number): HTMLTableRowElement {
-    "use strict";
+    ;
 
     let row: HTMLTableRowElement;
     let cell: HTMLTableCellElement;

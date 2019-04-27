@@ -84,7 +84,7 @@ namespace KIP.Colors {
 	 * ...........................................................................
 	 */
 	export function generateColor(id: string, firstRotate?: HSLPieceEnum): Color {
-		"use strict";
+		;
 		let color: Color;
 		let colorStr: string;
 
@@ -128,7 +128,7 @@ namespace KIP.Colors {
 	 * ...........................................................................
 	 */
 	export function getApparentColor(frontColor: string, backColor: string, opacity: number): string {
-		"use strict";
+		;
 		let col: Color;
 
 		// Create the color object
@@ -246,7 +246,7 @@ namespace KIP.Colors {
 	 * ...........................................................................
 	 */
 	export function fullHexString(val: number, length: number): string {
-		"use strict";
+		;
 		let outHexString: string;
 		let i: number;
 
@@ -273,7 +273,7 @@ namespace KIP.Colors {
 	 * @version 1.1
 	 * ...........................................................................
 	 */
-	export abstract class Color extends NamedClass implements IEquatable<Color>{
+	export abstract class Color extends NamedClass implements IEquatable {
 
 		//#region PROPERTIES
 
@@ -379,7 +379,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public toRgbaString(): string {
-			"use strict";
+			;
 			return this.toRgbString(true);
 		};
 
@@ -394,7 +394,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public toRgbString(with_alpha?: boolean): string {
-			"use strict";
+			;
 			let out: string;
 
 			// Start the string regardless of alpha value
@@ -421,7 +421,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public toHslString(with_alpha?: boolean): string {
-			"use strict";
+			;
 			let out: string;
 
 			// Generate HSL if we need to
@@ -449,7 +449,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public toHslaString(): string {
-			"use strict";
+			;
 			return this.toHslString(true);
 		};
 
@@ -464,7 +464,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public toHexString(with_alpha?: boolean): string {
-			"use strict";
+			;
 			let out: string;
 			out = "#";
 
@@ -491,7 +491,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public generateHslValues(): void {
-			"use strict";
+			;
 			let r: number;
 			let g: number;
 			let b: number;
@@ -583,7 +583,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public generateRgbValues(): void {
-			"use strict";
+			;
 			let hue: number;
 			let saturation: number;
 			let lightness: number;
@@ -655,7 +655,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		protected _parseFromHexColor(hex: string, alpha?: number): boolean {
-			"use strict";
+			;
 			let idx: number;
 			let col: number;
 			let pc: string;
@@ -718,7 +718,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		protected _parseFromRgbColor(rgb: string, alpha?: number): boolean {
-			"use strict";
+			;
 			let rgb_reg: RegExp;
 			let rgba_reg: RegExp;
 			let match: string[];
@@ -759,7 +759,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		protected _parseFromHslColor(hsl: string, alpha?: number): boolean {
-			"use strict";
+			;
 			let hsl_reg: RegExp;
 			let hsla_reg: RegExp;
 			let match: string[];
@@ -815,7 +815,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		protected _parseColorString(str: string, alpha?: number): boolean {
-			"use strict";
+			;
 			let success: boolean;
 
 			// Try to parse the string as a RGB value
@@ -917,7 +917,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getNextColor(firstRotate: HSLPieceEnum, withAlpha?: boolean): string {
-			"use strict";
+			;
 			var toCycle = [], idx;
 
 			// First, convert our internal format to HSL (if needed)
@@ -970,7 +970,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public rotateAppropriateHSLValue(idx: HSLPieceEnum) : boolean {
-			"use strict";
+			;
 			var val, start;
 
 			// Grab the appropriate current value and start value
@@ -1005,7 +1005,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public rotateHue(): number {
-			"use strict";
+			;
 			this._hue = this.rotateHslValue(this._hue, HUE_INTERVAL, 360);
 
 			return this._hue;
@@ -1020,7 +1020,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public rotateSaturation(): number {
-			"use strict";
+			;
 			return this._saturation = this.rotateHslValue(this._saturation, SATURATION_INTERVAL, 100, SATURATION_LIMITS.max, SATURATION_LIMITS.min);
 		};
 
@@ -1051,7 +1051,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public rotateHslValue(startVal: number, inc: number, modBy: number, max?: number, min?: number) {
-			"use strict";
+			;
 			var out;
 
 			// Increment and mod
@@ -1087,7 +1087,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public getApparentColor(backColor: Color | string): boolean {
-			"use strict";
+			;
 			let c: Color;
 			let antiAlpha: number;
 
@@ -1121,7 +1121,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public compare(other_color: Color, multipliers: IColorMultipliers): IColorMultipliers {
-			"use strict";
+			;
 			var diffs;
 
 			// If we didn't get multiplers, set some defaults
@@ -1166,7 +1166,7 @@ namespace KIP.Colors {
 		 * ...........................................................................
 		 */
 		public averageIn(other_color: Color, no_merge: boolean): Color | { hue: number, saturation: number, lightness: number, alpha: number } {
-			"use strict";
+			;
 			let avgs: { hue: number, saturation: number, lightness: number, alpha: number };
 
 			// Make sure we have HSL values for both colors

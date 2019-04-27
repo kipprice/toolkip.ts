@@ -52,7 +52,7 @@ namespace KIP {
    * ...........................................................................
    */
   export function removeClass(elem: DrawableElement, oldClass: string): void {
-    "use strict";
+    ;
     let cls: string;
     let len: number;
     let e: DrawableElement;

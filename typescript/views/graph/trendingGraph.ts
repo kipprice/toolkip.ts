@@ -43,7 +43,7 @@ namespace KIP.SVG {
 
 
         AddDataAppropriateForGraph(idx) {
-            "use strict";
+            ;
             var datum;
 
             datum = this.data[idx];
@@ -52,7 +52,7 @@ namespace KIP.SVG {
         };
 
         AddLineListeners(line, lbl, box) {
-            "use strict";
+            ;
             if (!line || !lbl) return;
 
             line.addEventListener("mouseover", () => {
@@ -75,7 +75,7 @@ namespace KIP.SVG {
 
 
         _refresh() {
-            "use strict";
+            ;
             var datum, sorted, lastLine, dIdx, ptLayer, txtLayer, lastElem, xDiff, yDiff, txt;
 
             // Sort the array by the z value

@@ -91,7 +91,7 @@ namespace KIP.SVG {
 		 * @param 	z_units		The unit used for the z axis
 		 */
 		protected _setUnits (x_units: string, y_units: string, z_units: string): void {
-			"use strict";
+			;
 			this.units.x = x_units || "";
 			this.units.y = y_units || "";
 			this.units.z = z_units || "";
@@ -112,7 +112,7 @@ namespace KIP.SVG {
 		 * @returns The index at which this data is placed
 		 */
 		public addData (label: string, independent: number, dependent: number, depth: number, addl: any): number {
-			"use strict";
+			;
 			var idx;
 		
 			// Find the index at which data should appear
@@ -152,7 +152,7 @@ namespace KIP.SVG {
 		 * @param {function} func - The call back function for the listener
 		 */
 		public addListenerToData (idx, type, func) {
-			"use strict";
+			;
 			var cnt;
 
 			// Create a listener array 
@@ -176,7 +176,7 @@ namespace KIP.SVG {
 		 * @param {SVGElement} pc - The SVG element to add the event listener to
 		 */
 		protected _attachDataListeners (idx, pc) {
-			"use strict";
+			;
 			var type, listenerArr, listener, jdx, that;
 			listenerArr = this.dataListeners[idx];
 
@@ -215,7 +215,7 @@ namespace KIP.SVG {
 		 * @returns True if we successfully resized
 		 */
 		public adjustSize (w: number, h: number): boolean {
-				"use strict";
+				;
 			var x, y, elem, idx, pt;
 
 			// update the size of the SVG
@@ -246,7 +246,7 @@ namespace KIP.SVG {
 		 * @param extra 
 		 */
 		public addHTMLLbl (elem, x, y, extra) {
-			"use strict";
+			;
 			this.htmlLbls.push({
 				elem: elem,
 				x: x, 

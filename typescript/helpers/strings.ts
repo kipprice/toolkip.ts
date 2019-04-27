@@ -227,7 +227,7 @@ namespace KIP {
 	 * @returns All zero-padded numbers that were passed in
 	 */
 	export function addLeadingZeroes(count: number, unpadded: number | string): string {
-		"use strict";
+		;
 		let out: string;
 
 		if (typeof unpadded === "string") {

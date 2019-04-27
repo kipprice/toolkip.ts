@@ -3,7 +3,7 @@
 //     export class SegmentGraph extends Graph {
 
 //         constructor(id, options) {
-//             "use strict";
+//             ;
 //             super(id, GraphTypeEnum.Segment);
 
 //             this.totals = {};
@@ -56,7 +56,7 @@
 //         // SegmentGraph.AddDataAppropriateForGraph
 //         //--------------------------------------------------------------------------------
 //         AddDataAppropriateForGraph(idx) {
-//             "use strict";
+//             ;
 //             var datum;
 
 //             datum = this.data[idx];
@@ -86,7 +86,7 @@
 //         };
 
 //         AddListenerToData(xVal, lbl, type, func) {
-//             "use strict";
+//             ;
 //             var cnt;
 
 //             // Create a listener array 
@@ -106,7 +106,7 @@
 //         };
 
 //         AttachDataListeners(element, xVal, lbl, data) {
-//             "use strict";
+//             ;
 //             var type, listenerArr, listener, jdx, that;
 //             listenerArr = this.dataListeners[xVal] && this.dataListeners[xVal][lbl];
 
@@ -139,7 +139,7 @@
 //         // SegmentGraph.AddGuideLine
 //         //--------------------------------------------------------------------
 //         AddGuideline(level) {
-//             "use strict";
+//             ;
 
 //             // Add the level to our list of guidelines
 //             this.guideLines.push(level);
@@ -148,7 +148,7 @@
 //         // SegmentData.Refresh
 //         //----------------------------------------------------------
 //         Refresh() {
-//             "use strict";
+//             ;
 
 //             // First, draw the actual data
 //             this.DrawData();
@@ -164,7 +164,7 @@
 //         // SegmentGraph.DrawData
 //         //----------------------------------------------------------
 //         DrawData() {
-//             "use strict";
+//             ;
 //             var xValue, group, x;
 
 //             // Initialize our X position
@@ -203,7 +203,7 @@
 //          */
 
 //         DrawBar(data) {
-//             "use strict";
+//             ;
 //             var lbl, zValue, lastY, bar, position, segmentData, x, shadow, c, o, sortable, idx;
 
 //             // Grab the object data from our 
@@ -280,7 +280,7 @@
 //          * @returns {object} An augmented version of the segmentData object that was passed in
 //          */
 //         DrawSegment(segmentData) {
-//             "use strict";
+//             ;
 //             var oldCol, height, startY, elem, lbl, that, lineType, lineColor, lineWidth;
 
 
@@ -338,7 +338,7 @@
 //         // SegmentGraph.DrawLabel
 //         //----------------------------------------------------------------------
 //         DrawLabel(segmentData) {
-//             "use strict";
+//             ;
 //             var elem, pt, unit, fullLbl;
 
 //             if (this.units.y) {
@@ -401,7 +401,7 @@
 //         // SegmentGraph.DrawShadow
 //         //----------------------------------------------------------------
 //         DrawShadow(x, y, width, height) {
-//             "use strict";
+//             ;
 //             var c, o, sIdx, dx, dy, shadow;
 
 //             // Also draw a drop shadow for this bar
@@ -433,7 +433,7 @@
 //         // SegmentGraph.DrawAxes
 //         //----------------------------------------------------------------
 //         DrawAxes() {
-//             "use strict";
+//             ;
 
 //             // Draw the x-axis if appropriate
 //             if (this.options.showXAxis) {
@@ -455,7 +455,7 @@
 //         // SegmentGraph.DrawAxis
 //         //----------------------------------------------------------------
 //         DrawAxis(data) {
-//             "use strict";
+//             ;
 //             var minX, maxX, startY, lineWidth, lineType, lineColor, elem, lbl, idx, x;
 
 //             maxX = this.svg.maxX || this.lastX;
@@ -522,7 +522,7 @@
 //             Draws all guidelines on the graph to indicate a threshold
 //         */
 //         DrawGuidelines() {
-//             "use strict";
+//             ;
 //             var lnY, height, lineType, lineColor, lineWidth, lineDashes, startY, layer, minX, maxX, that;
 
 //             // Set up the line to display properly
@@ -590,7 +590,7 @@
 //         };
 
 //         GenerateColor(lbl) {
-//             "use strict";
+//             ;
 //             var c;
 //             c = Colors.generateColor(lbl, Colors.HSLPieceEnum.HUE);
 //             return c;

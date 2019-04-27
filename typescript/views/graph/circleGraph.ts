@@ -26,7 +26,7 @@ namespace KIP.SVG {
          * @param radius    The size of the graph
          */
         constructor(id: string, center?: IPoint, radius?: number) {
-            "use strict";
+            ;
 
             super(id, GraphTypeEnum.Circle);
             this.center = center || {
@@ -51,7 +51,7 @@ namespace KIP.SVG {
          * Draws all of the pieces of the graph and adds listeners and labels
          */
         _refresh() {
-            "use strict";
+            ;
             var text, dIdx, datum, perc, elem, ring, width, r, nextDeg, c, opacity, layerRings, layerText;
 
             // create the SVG layers that will host our
@@ -125,7 +125,7 @@ namespace KIP.SVG {
          * @param {number} idx - THe index at which the raw data lives
          */
         AddDataAppropriateForGraph(idx) {
-            "use strict";
+            ;
             var ring, datum;
 
             datum = this.data[idx];

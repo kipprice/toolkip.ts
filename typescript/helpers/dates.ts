@@ -106,7 +106,7 @@ namespace KIP.Dates {
 	 * ...........................................................................
 	 */
 	export function getToday(include_time?: boolean): Date {
-		"use strict";
+		;
 		let ret: Date;
 
 		ret = new Date();
@@ -153,7 +153,7 @@ namespace KIP.Dates {
 	 * ...........................................................................
 	 */
 	export function businessDateDiff(a: Date, b: Date, signed?: boolean, includeTime?: boolean, returnMilli?: boolean): number {
-		"use strict";
+		;
 		let diff: number;
 		let dayOfWeek: number;
 		let dir: number;
@@ -201,7 +201,7 @@ namespace KIP.Dates {
 	 * ...........................................................................
 	 */
 	export function shortDate(dt: Date): string {
-		"use strict";
+		;
 		if (!dt) { return ""; }
 		let yr: number;
 		yr = getShortYear(dt);
@@ -216,7 +216,7 @@ namespace KIP.Dates {
 	 * ...........................................................................
 	 */
 	export function inputDateFmt(dt: Date): string {
-		"use strict";
+		;
 		let m: any;
 		let d: any;
 		let y: any;
@@ -265,7 +265,7 @@ namespace KIP.Dates {
 	 * @param {Boolean} withExtra - If true, will display as HH:MM AM/PM instead of military time
 	 */
 	export function shortTime(dt: Date, withExtra?: boolean): string {
-		"use strict";
+		;
 		let min: number;
 		let min_str: string;
 		let hours: number;
@@ -299,12 +299,12 @@ namespace KIP.Dates {
 	 * @param {Boolean} withExtra - If true, uses AM/PM format instead of military time.
 	 */
 	export function shortDateTime(dt: Date, with_extra?: boolean): string {
-		"use strict";
+		;
 		return shortDate(dt) + " " + shortTime(dt, with_extra);
 	};
 
 	export function stopwatchDisplay(milli: number, noLeadingZeros, noBlanks) {
-		"use strict";
+		;
 		let seconds: number;
 		let minutes: number;
 		let hours: number;
@@ -460,7 +460,7 @@ namespace KIP.Dates {
 	 * ...........................................................................
 	 */
 	export function getDayOfWeek(date: Date, short?: boolean): string {
-		"use strict";
+		;
 		switch (date.getDay()) {
 			case 0:
 				if (short) return "Sun";

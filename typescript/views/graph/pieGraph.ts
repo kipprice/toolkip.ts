@@ -26,7 +26,7 @@ namespace KIP.SVG {
          * @param {number} [radius] - The radius of the graph. This is ignored if also changing the height of the graph. Default is 40
          */
         constructor(id, center, radius) {
-            "use strict";
+            ;
             super(id, GraphTypeEnum.Pie);
 
             // Get our requirements around the graph
@@ -68,12 +68,12 @@ namespace KIP.SVG {
         };
 
         GetHoverLabel(segmentData) {
-            "use strict";
+            ;
             return this.GetKeyLabel(segmentData, true);
         };
 
         GetKeyLabel(segmentData, hover?) {
-            "use strict";
+            ;
             var unit, ret, perc;
 
             if (this.units.x) {
@@ -153,7 +153,7 @@ namespace KIP.SVG {
         //PieGraph.DrawSegments
         //----------------------------------------------------------
         DrawSegments() {
-            "use strict";
+            ;
             var sIdx, datum, elem, lastDeg, lbl, color, lastDeg;
 
             lastDeg = 0;
@@ -203,7 +203,7 @@ namespace KIP.SVG {
          * @param {number} startDeg    - The degree at which this segment should start
          */
         DrawSegment(segmentData, color, startDeg) {
-            "use strict";
+            ;
             var dID, perc, r, elem, endDeg, oldCol;
 
             // Get data out of the ddatum
@@ -260,7 +260,7 @@ namespace KIP.SVG {
          * @param {object} segmentData - Data about this segment to use when drawing the key value
          */
         DrawKey(segmentData) {
-            "use strict";
+            ;
             var lbl, color, elem;
             // Make sure we have a div to add to
             if (!this.layers.key) {
@@ -292,7 +292,7 @@ namespace KIP.SVG {
         // PieGraph.DrawLabels
         //----------------------------------------------------------------------
         DrawLabels(datum) {
-            "use strict";
+            ;
             //TODO: investigate
             // let text,
             // if (!this.addLabels) return;
@@ -309,7 +309,7 @@ namespace KIP.SVG {
 
         //
         DrawHoverLabel(segmentData) {
-            "use strict";
+            ;
             var elem, segment, ID, lbl, color, x, y, box, pt, d1, d2, that, c;
 
             that = this;
@@ -410,7 +410,7 @@ namespace KIP.SVG {
         // PieGraph.Sort
         //--------------------------------------------------
         Sort() {
-            "use strict";
+            ;
 
             // Quit if we shouldn't sort
             if (!this.sort) return;
@@ -436,7 +436,7 @@ namespace KIP.SVG {
          * @param {SVGGroup} layer - The SVG group to add this key display to
          */
         AddDataToKey(datum, layer?) {
-            "use strict";
+            ;
             this.DrawKey(datum);
         };
 
@@ -447,7 +447,7 @@ namespace KIP.SVG {
          * @param {number} idx - The index at which the data appears
          */
         AddDataAppropriateForGraph(idx) {
-            "use strict";
+            ;
             var datum;
 
             // Add to the total so we can get the percentages right

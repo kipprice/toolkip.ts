@@ -483,7 +483,7 @@ namespace KIP {
      * ...........................................................................
      */
     export function createSimpleLabeledElement(id: string, cls: string, lbl: string, content: any, attr: IAttributes, children: IChildren, parent: HTMLElement, skipZero: boolean): HTMLElement {
-        "use strict";
+        ;
         let obj: any;
         let cLbl: any;
         let cContent: any;
@@ -608,7 +608,7 @@ namespace KIP {
      * ...........................................................................
      */
     export function globalOffsets(elem: HTMLElement, parent?: HTMLElement, useStandardParent?: boolean): { left: number, top: number } {
-        "use strict";
+        ;
         return {
             left: globalOffsetLeft(elem, parent, useStandardParent),
             top: globalOffsetTop(elem, parent, useStandardParent)
@@ -818,7 +818,7 @@ namespace KIP {
    * ...........................................................................
    */
     export function isChildEventTarget(ev: Event, root: HTMLElement): boolean {
-        "use strict";
+        ;
         return isChild(root, <HTMLElement>ev.target);
     };
 
@@ -836,7 +836,7 @@ namespace KIP {
      * ...........................................................................
      */
     export function isChild(root: HTMLElement, child: HTMLElement): boolean {
-        "use strict";
+        ;
         let parent: HTMLElement;
 
         parent = child;
@@ -864,7 +864,7 @@ namespace KIP {
      * @param   kids    Any children that should be appended
      */
     export function appendChildren(parent: HTMLElement, ...kids: HTMLElement[]): void {
-        "use strict";
+        ;
         let idx: number;
 
         for (idx = 0; idx < kids.length; idx += 1) {
@@ -931,9 +931,12 @@ namespace KIP {
      * ...........................................................................
      */
     export function measureElement(elem: HTMLElement, parent?: HTMLElement): ClientRect {
+        let added: boolean = false;
 
         // add to the document if not already present
         if (!elem.parentNode) {
+            added = true; 
+
             // save off the opacity originally, then set it to 0
             let origOpacity: string = elem.style.opacity;
             elem.style.opacity = "0";
@@ -946,6 +949,9 @@ namespace KIP {
 
         // measure the element on the parent
         let rect: ClientRect = elem.getBoundingClientRect();
+
+        if (added) { parent.removeChild(elem); }
+
         return rect;
     }
 

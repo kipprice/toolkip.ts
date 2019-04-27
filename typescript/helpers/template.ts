@@ -41,7 +41,7 @@ namespace KIP {
      * @param {string} [inObj.name] - Contains the name of the file to load for inObjs of type "file"
      **/
     export function createTemplate<T>(inObj: ITemplateBase<T>): boolean {
-        "use strict";
+        ;
         let content: string;
 
         if (!inObj.id) { return false; }                // Quit if we don't have an ID for this template
@@ -148,7 +148,7 @@ namespace KIP {
      * @returns {array} Array of top-level HTML elements in the template
      **/
     export function loadTemplate <T> (id: string, content: T, excludeBlank?: boolean, suffix?: number, delim?: string) {
-        "use strict";
+        ;
         var elem, out, html, prop, pIdx, i, defaults;
 
         defaults = {};
