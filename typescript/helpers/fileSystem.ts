@@ -10,16 +10,19 @@ namespace KIP {
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class FileStorage {
+    export class _FileStorage {
 
         //.....................
         //#region PROPERTIES
 
         /** store the file system we work within, in order to be more efficient */
-        protected static _fileSystem;
+        protected _fileSystem;
 
         /** set a default storage size */
-        protected static readonly _DEFAULT_SIZE = 100 * 1024 * 1024;
+        protected readonly _DEFAULT_SIZE = 100 * 1024 * 1024;
+
+        /** keep track of the file system type we are using */
+        protected _fileSystemType: any;
 
         //#ndregion
         //.....................
@@ -34,13 +37,13 @@ namespace KIP {
          * @param   fileName    The name of the file to save
          * @param   data        The data within the file to save
          */
-        public static save(fileName: string, data: Blob, directoryPath?: string): KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryPath, true))
-                .then(this._createFile(fileName))
-                .then(this._getFileWriter())
-                .then(this._writeFile(data))
-                .catch((err: any) => { this._handleError(err); })
+        public async save(fileName: string, data: Blob, directoryPath?: string): Promise<boolean> {
+            let fs = await this._getFileSystem();
+            let dirEntry = await this._getDirectoryEntry(fs, directoryPath, true);
+            let file = await this._createFile(dirEntry, fileName);
+            let fw = await this._getFileWriter(file);
+            let success = await this._writeFile(fw, file, data);
+            return success;
         }
 
         /**
@@ -49,49 +52,53 @@ namespace KIP {
          * Load a file from local storage
          * @param fileName 
          */
-        public static load(fileName: string, directoryPath?: string): KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryPath, false))
-                .then(this._getFileEntry(fileName))
-                .then(this._getFile())
-                .then(this._readFile());
+        public async load(fileName: string, directoryPath?: string): Promise<string> {
+            let fs = await this._getFileSystem()
+            let dirEntry = await this._getDirectoryEntry(fs, directoryPath, false);
+            let fileEntry = await this._getFileEntry(dirEntry, fileName);
+            let file = await this._getFile(fileEntry);
+            let content = this._readFile(file);
+            return content;
         }
 
         /**
         * deleteLocalFile
         * ----------------------------------------------------------------------------
-        * @param directoryName 
+        * @param directoryPath 
         * @param fileName 
         */
-        public static deleteLocalFile(directoryName: string, fileName: string): KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryName, false))
-                .then(this._getFileEntry(fileName))
-                .then(this._deleteFile());
+        public async deleteLocalFile(directoryPath: string, fileName: string): Promise<boolean> {
+            let fs = await this._getFileSystem()
+            let dirEntry = await this._getDirectoryEntry(fs, directoryPath, false);
+            let fileEntry = await this._getFileEntry(dirEntry, fileName);
+            let deleted = this._deleteFile(fileEntry);
+            return deleted;
         }
 
         /**
          * createDirectory
          * ----------------------------------------------------------------------------
          * Create a local directory
-         * @param   directoryName   The name of the directory to create
+         * @param   directoryPath   The name of the directory to create
          * @returns Promise that will create a directory
          * 
          */
-        public static createDirectory(directoryName: string): KIP.KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryName, true));
+        public async createDirectory(directoryPath: string): Promise<boolean> {
+            let fs = await this._getFileSystem()
+            let dirEntry = await this._getDirectoryEntry(fs, directoryPath, true);
+            return !!dirEntry;
         }
 
         /**
          * getDirectory
          * ----------------------------------------------------------------------------
-         * @param directoryName 
+         * @param directoryPath 
          * 
          */
-        public static getDirectory(directoryName: string): KIP.KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryName, true));
+        public async getDirectory(directoryPath: string): Promise<DirectoryEntry> {
+            let fs = await this._getFileSystem()
+            let dirEntry = await this._getDirectoryEntry(fs, directoryPath);
+            return dirEntry;
         }
 
         /**
@@ -101,10 +108,11 @@ namespace KIP {
          * @param   directoryName   The directory to find
          *  
          */
-        public static getDirectoryContents(directoryName: string, create?: boolean): KIP.KipPromise {
-            return this._getFileSystem()
-                .then(this._getDirectoryEntry(directoryName, create))
-                .then(this._readDirectoryContents());
+        public async getDirectoryContents(directoryName: string, create?: boolean): Promise<DirectoryContentEntry[]> {
+            let fs = await this._getFileSystem()
+            let dirEntry = await this._getDirectoryEntry(fs, directoryName, create);
+            let contents = await this._readDirectoryContents(dirEntry);
+            return contents;
         }
 
         //#endregion
@@ -118,20 +126,24 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Ensure we have a file system in order to kick off the request
          */
-        protected static _getFileSystem(size?: number): KipPromise {
+        protected async _getFileSystem(size?: number, type?: any): Promise<FileSystem> {
 
             // If we aren't resizing, just use the current file system
-            if (this._fileSystem && !size) { return KipPromise.resolve(this._fileSystem); }
+            if (this._fileSystem && !size) { return Promise.resolve(this._fileSystem); }
 
             // If this browser doesn't support file system, quit with an error
             (window as any).requestFileSystem = (window as any).requestFileSystem || (window as any).webkitRequestFileSystem;
-            if (!requestFileSystem) { return KipPromise.reject("browser doesn't support file system"); }
+            if (!requestFileSystem) { return Promise.reject("browser doesn't support file system"); }
 
             // if a size wasn't provided, set a default of 10mb
             if (!size) { size = this._DEFAULT_SIZE; }
 
-            return this._requestQuota(size)
-                .then(this._requestFileSystem());
+            // if a type wasn't specified, default to persistent
+            if (!type) { type = PERSISTENT; }
+            this._fileSystemType = type;
+
+            let quotaSize = await this._requestQuota(size)
+            return await this._requestFileSystem(type, quotaSize);
         }
 
         /**
@@ -140,8 +152,8 @@ namespace KIP {
          * Request some storage for our app
          * @param size  The amount of storage to request, in bytes
          */
-        protected static _requestQuota(size: number, deferred?: boolean): KipPromise {
-            return new KipPromise((resolve, reject) => {
+        protected _requestQuota(size: number): Promise<number> {
+            return new Promise<number>((resolve, reject) => {
 
                 // If it's Chrome, we need to get a quota
                 try {
@@ -160,7 +172,7 @@ namespace KIP {
                 } catch (e) {
                     resolve(size);
                 }
-            }, deferred);
+            });
         }
 
         /**
@@ -168,11 +180,10 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Retrieve the local file system that we will be saving into
          */
-        protected static _requestFileSystem(): KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, size: number) => {
-                
+        protected _requestFileSystem(type: any, size: number): Promise<FileSystem> {
+            return new Promise((resolve, reject) => {
                 requestFileSystem(
-                    PERSISTENT,
+                    type,
                     size,
                     (fs: FileSystem) => {
                         this._fileSystem = fs;
@@ -195,8 +206,8 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Create a file with a particular name
          */
-        protected static _createFile(fileName: string): KipPromise {
-            return this._getFileEntry(fileName, true);
+        protected async _createFile(dirEntry: DirectoryEntry, fileName: string): Promise<FileEntry> {
+            return await this._getFileEntry(dirEntry, fileName, true);
         }
 
         /**
@@ -204,16 +215,13 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * return a promise that will retrieve a file writer
          */
-        protected static _getFileWriter(): KipPromise {
-            return new KipPromise(
-                (resolve, reject, fileEntry: FileEntry) => {
-                    fileEntry.createWriter(
-                        (writer: FileWriter) => { resolve(writer, fileEntry) },
-                        (err: any) => { this._handleError(err, reject); }
-                    )
-                },
-                true
-            );
+        protected _getFileWriter(fileEntry: FileEntry): Promise<FileWriter> {
+            return new Promise((resolve, reject) => {
+                fileEntry.createWriter(
+                    (writer: FileWriter) => { resolve(writer); },
+                    (err: any) => { this._handleError(err, reject); }
+                )
+            });
         }
 
         /**
@@ -222,8 +230,8 @@ namespace KIP {
          * Add details to a particular file
          * @param data 
          */
-        protected static _writeFile(data: Blob | string, append?: boolean): KipPromise {
-            return new KipPromise((resolve, reject, writer: FileWriter, entry: FileEntry) => {
+        protected _writeFile(writer: FileWriter, entry: FileEntry, data: Blob | string, append?: boolean): Promise<boolean> {
+            return new Promise((resolve, reject) => {
 
                 // handle when the file is done writing
                 writer.onwriteend = () => {
@@ -231,7 +239,7 @@ namespace KIP {
                         writer.seek(0);
                         writer.write(data as Blob);
                     } else {
-                        resolve(true, entry);
+                        resolve(true);
                     }
                 }
 
@@ -250,7 +258,7 @@ namespace KIP {
                     writer.write(data as Blob);
                 }
 
-            }, true);
+            });
         }
 
         //#endregion
@@ -264,8 +272,8 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Retrieve meta-details about a file
          */
-        protected static _getFileEntry(fileName: string, create?: boolean): KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, dir: DirectoryEntry) => {
+        protected _getFileEntry(dir: DirectoryEntry, fileName: string, create?: boolean): Promise<FileEntry> {
+            return new Promise((resolve: Function, reject: Function) => {
                 dir.getFile(
                     fileName,
                     { create: create, exclusive: false },
@@ -276,7 +284,7 @@ namespace KIP {
                         this._handleError(err, reject);
                     }
                 )
-            }, true);
+            });
         }
 
         /**
@@ -284,13 +292,13 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Grab the file object within a FileEntry
          */
-        protected static _getFile(): KipPromise {
-            return new KipPromise((resolve, reject, fileEntry: FileEntry) => {
+        protected _getFile(fileEntry: FileEntry): Promise<File> {
+            return new Promise((resolve, reject) => {
                 fileEntry.file(
                     (file: File) => { resolve(file); },
                     (err: any) => { this._handleError(err, reject); }
                 );
-            }, true);
+            });
         }
 
         /**
@@ -298,11 +306,12 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Read the contents of a file into the resolve function
          */
-        protected static _readFile(): KipPromise {
-            return new KipPromise((resolve, reject, file: File) => {
+        protected _readFile(file: File): Promise<string> {
+            return new Promise((resolve, reject) => {
                 let reader = new FileReader();
+
                 reader.onloadend = (e: Event) => {
-                    resolve(reader.result);
+                    resolve(reader.result as string);
                 }
 
                 reader.onerror = (err: any) => {
@@ -310,7 +319,7 @@ namespace KIP {
                 }
 
                 reader.readAsText(file);
-            }, true);
+            });
         }
 
         //#endregion
@@ -325,27 +334,27 @@ namespace KIP {
          * @param directoryName 
          * @param create 
          */
-        protected static _getDirectoryEntry(directoryName?: string, create?: boolean): KipPromise {
-            let promiseChain: PromiseChain = new PromiseChain();
+        protected async _getDirectoryEntry(fileSystem: FileSystem, directoryName?: string, create?: boolean): Promise<DirectoryEntry> {
 
             // make sure we don't have any characters we don't want in our directory name
             directoryName = _cleanDirectory(directoryName);
 
             // kick things off with the root director for the loaded file system
-            promiseChain.addPromise(this._getFileSystemRoot());
+            let fsRoot = await this._getFileSystemRoot(fileSystem);
 
             // split the directory string to get the appropriate path
             // (for now handle either types of slashes)
+            let curDir = fsRoot;
             let pathPieces: string[] = this._splitDirectoryPathPieces(directoryName);
             for (let pathPiece of pathPieces) {
                 if (!pathPiece) { continue; }
 
                 // create a promise to return this sub-directory
-                promiseChain.addPromise(this._getSubDirectory(pathPiece, create));
+                curDir = await this._getSubDirectory(curDir, pathPiece, create);
             }
 
             // return the chained promises
-            return promiseChain;
+            return curDir;
         }
 
         /**
@@ -353,11 +362,11 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Grab the root directory of our current file system
          */
-        protected static _getFileSystemRoot(): KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, fileSystem: FileSystem) => {
+        protected _getFileSystemRoot(fileSystem: FileSystem): Promise<DirectoryEntry> {
+            return new Promise((resolve: Function, reject: Function) => {
                 if (!fileSystem) { reject("No filesystem"); }
                 resolve(fileSystem.root);
-            }, true);
+            });
         }
 
         /**
@@ -365,7 +374,7 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Split a directory path into its relevant subpaths
          */
-        protected static _splitDirectoryPathPieces(directoryName: string) : string[] {
+        protected _splitDirectoryPathPieces(directoryName: string) : string[] {
             if (!directoryName) { return []; }
             return directoryName.split(/[\/\\]/g);
         }
@@ -375,15 +384,15 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Find a nested directory
          */
-        protected static _getSubDirectory(subPath: string, create?: boolean): KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, directoryEntry: DirectoryEntry) => {
+        protected _getSubDirectory(directoryEntry: DirectoryEntry, subPath: string, create?: boolean): Promise<DirectoryEntry> {
+            return new Promise((resolve: Function, reject: Function) => {
                 directoryEntry.getDirectory(
                     subPath,
                     { create: create },
                     (dir: DirectoryEntry) => { resolve(dir); },
                     (err: any) => { reject(err); }
                 )
-            }, true);
+            });
         }
 
         /**
@@ -391,15 +400,15 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Find the contents of a particular directory
          */
-        protected static _readDirectoryContents(): KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, dirEntry: DirectoryEntry) => {
+        protected _readDirectoryContents(dirEntry: DirectoryEntry): Promise<DirectoryContentEntry[]> {
+            return new Promise((resolve: Function, reject: Function) => {
                 let reader: DirectoryReader = dirEntry.createReader();
 
                 reader.readEntries(
                     (entries: DirectoryContentEntry[]) => { resolve(entries); },
                     (err: any) => { this._handleError(err, reject); }
                 );
-            }, true);
+            });
         }
 
         //#endregion
@@ -412,8 +421,8 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * delete a file from our system
          */
-        protected static _deleteFile(): KIP.KipPromise {
-            return new KipPromise((resolve: Function, reject: Function, file: FileEntry) => {
+        protected _deleteFile(file: FileEntry): Promise<boolean> {
+            return new Promise((resolve: Function, reject: Function) => {
                 file.remove(
                     () => {
                         resolve(true);
@@ -422,7 +431,7 @@ namespace KIP {
                         this._handleError(err, reject);
                     }
                 );
-            }, true);
+            });
         }
 
         //#endregion
@@ -436,7 +445,7 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Log appropriate details when an error occurs
          */
-        protected static _handleError(err: any, reject?: Function): void {
+        protected _handleError(err: any, reject?: Function): void {
             console.error(err);
             if (reject) { reject(err); }
         }
@@ -463,4 +472,6 @@ namespace KIP {
 
         return directoryName;
     }
+
+    export const FileStorage = new _FileStorage();
 }

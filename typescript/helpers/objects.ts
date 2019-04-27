@@ -71,8 +71,8 @@ namespace KIP {
 	 * ----------------------------------------------------------------------------
 	 * allow for map function, similar to Array.map 
 	 */
-	export interface IMapFunction<T,> {
-		(elem: T, key: string | number | keyof any, idx: number) : void;
+	export interface IMapFunction<T,R> {
+		(elem: T, key: string | number | keyof any, idx: number) : R;
 	}
 
 	/**
@@ -97,15 +97,18 @@ namespace KIP {
    * @param   callback    What to do with each element
    * @param   shouldQuit  Function to evaluate whether we are done looping
    */
-  export function map(object: any, callback: IMapFunction<any>, shouldQuit?: IQuitConditionFunction): void {
-    if (!object) { return; }
+  export function map<T = any>(object: any, callback: IMapFunction<any, T>, shouldQuit?: IQuitConditionFunction): T[] {
+    let out: T[] = [];
+    if (!object) { return out; }
 
     // Use the default map function if available
     if (object.map) {
       let done: boolean;
       object.map((value: any, key: any, arr: any) => {
           if (done) { return; }
-          callback(value, key, arr);
+
+          let result = callback(value, key, arr);
+          out.push(result);
 
           // if we have a quit condition, test it & quit if appropriate
           if (!shouldQuit) { return; }
@@ -121,7 +124,10 @@ namespace KIP {
       // Do it safely with the appropriate checks
       for (key in object) {
         if (object.hasOwnProperty(key)) {
-          callback(object[key], key, cnt);
+
+          let result = callback(object[key], key, cnt);
+          if (result) { out.push(result); }
+
           cnt += 1;
 
           // if we have a quit condition, test it & quit if appropriate
@@ -131,6 +137,8 @@ namespace KIP {
       }
 
     }
+
+    return out;
   }
 
   /**
@@ -294,10 +302,10 @@ namespace KIP {
    * 
    * @returns True if the value is null or undefined
    */
-  export function isNullOrUndefined (value: any) : boolean {
+  export function isNullOrUndefined (value: any, strCheck?: boolean) : boolean {
     if (value === undefined) { return true; }
     if (value === null) { return true; }
-    if (value === "") { return true; }
+    if (strCheck && value === "") { return true; }
     return false;
   }
 
