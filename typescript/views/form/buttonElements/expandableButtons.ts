@@ -1,23 +1,23 @@
-/// <reference path="baseToggleButtons.ts" />
-/// <reference path="./multiSelectButtonElement.ts" />
+/// <reference path="./_toggleButtonField.ts" />
+/// <reference path="./multiSelectButtonField.ts" />
 
 namespace KIP.Forms {
     export interface IExpandableElems extends IToggleButtonElems{
-        core: HTMLElement;
+        base: HTMLElement;
         opts: HTMLElement;
         input: HTMLInputElement;
         addBtn: HTMLElement;
     }
 
     /**----------------------------------------------------------------------------
-     * @class   ExpandableButtonElement
+     * @class   ExpandableButtonField
      * ----------------------------------------------------------------------------
      * Add standard form element to create new buttons inline
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export abstract class ExpandableButtonElement<T> extends MultiSelectButtonElem<T> {
+    export abstract class ExpandableButtonField<M, T extends IFormMultiSelectButtonTemplate<M> = IFormMultiSelectButtonTemplate<M>> extends MultiSelectButtonField<M, T> {
 
         //.......................................
         //#region STATIC COLLECTION OF OPTIONS
@@ -32,7 +32,7 @@ namespace KIP.Forms {
             }
         }
 
-        protected static _instances: ExpandableButtonElement<any>[] = [];
+        protected static _instances: ExpandableButtonField<any>[] = [];
 
         //#endregion
         //.......................................
@@ -92,6 +92,7 @@ namespace KIP.Forms {
                                 marginLeft: "10px",
                                 transition: "all ease-in-out .2",
                                 flexShrink: "0",
+                                borderRadius: "30px",
 
                                 nested: {
                                     "&:hover": {
@@ -108,16 +109,16 @@ namespace KIP.Forms {
         //#endregion
         //..................
 
-        constructor(id: string, template: IFormMultiSelectButtonTemplate<T> | ExpandableButtonElement<T>) {
+        constructor(id: string, template: T | ExpandableButtonField<M, T>) {
             super(id, template);
-            ExpandableButtonElement._instances.push(this);
+            ExpandableButtonField._instances.push(this);
         }
         /**
          * _createClonedElement
          * ----------------------------------------------------------------------------
          * @param appendToId 
          */
-        protected _createClonedElement(appendToId: string): ExpandableButtonElement<T> {
+        protected _createClonedElement(appendToId: string): ExpandableButtonField<M, T> {
             return new (this.constructor as any)(this._id + appendToId, this.template);
         }
  
@@ -126,7 +127,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Changing buttons always succeeds
          */
-        protected _onChange(): boolean { return false; }
+        protected _getValueFromField(): M[] { return this._data; }
 
         /**
          * _onCreateElements
@@ -134,7 +135,7 @@ namespace KIP.Forms {
          * Create the appropriate elements for this 
          */
         protected _onCreateElements(): void {
-            this._elems.core = KIP.createElement({
+            this._elems.base = KIP.createElement({
                 cls: "optElement"
             });
 
@@ -151,7 +152,7 @@ namespace KIP.Forms {
             if (!this._elems.opts) {
                 this._elems.opts = KIP.createElement({
                     cls: "opts",
-                    parent: this._elems.core
+                    parent: this._elems.base
                 });
             } else {
                 this._elems.opts.innerHTML = "";
@@ -174,7 +175,7 @@ namespace KIP.Forms {
          * @param   opt     
          * @returns The created element
          */
-        protected _createAvailableOption(opt: IToggleBtnOption<T>): HTMLElement {
+        protected _createAvailableOption(opt: IToggleBtnOption<M>): HTMLElement {
             let tagElem: HTMLElement = this._createOptionElement(opt);
             return tagElem;
         }
@@ -189,7 +190,7 @@ namespace KIP.Forms {
 
             let inputWrapper: HTMLElement = KIP.createElement({
                 cls: "addOptWrapper",
-                parent: this._elems.core
+                parent: this._elems.base
             });
 
             this._addInputField(inputWrapper);
@@ -282,14 +283,14 @@ namespace KIP.Forms {
          * Update the current selections of the element
          * @param data 
          */
-        public update(data: T[]): void {
+        public update(data: M[], allowEvents: boolean): void {
             this._createAvailableOptions(); 
-            super.update(data);
+            super.update(data, allowEvents);
         }
 
         //#region ABSTRACT FUNCTIONS
         protected abstract _doesElementAlreadyExist(text: string): boolean;
-        protected abstract _createNewOption(text?: string): IToggleBtnOption<T>;
+        protected abstract _createNewOption(text?: string): IToggleBtnOption<M>;
         //#endregion
     }
 }

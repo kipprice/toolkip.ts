@@ -1,4 +1,4 @@
-/// <reference path="../formElement.ts" />
+/// <reference path="../_field.ts" />
 
 namespace KIP.Forms {
 
@@ -9,25 +9,25 @@ namespace KIP.Forms {
         btn: HTMLElement;
     }
 
-    export interface IToggleButtonElems extends IFormHTMLElements {
+    export interface IToggleButtonElems extends IFieldElems {
         postChildrenContainer: HTMLElement;
     }  
 
-    export interface IFormToggleButtonTemplate<T> extends IFormElemTemplate<any> {
+    export interface IFormToggleButtonTemplate<T> extends IFieldConfig<any> {
         options?: IToggleBtnOption<any>[];
     }
     //#endregion
     //.....................
 
     /**----------------------------------------------------------------------------
-     * @class   ToggleButtonElement
+     * @class   ToggleButtonField
      * ----------------------------------------------------------------------------
      * template for toggle buttons
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export abstract class ToggleButtonElement<T> extends FormElement<T> {
+    export abstract class ToggleButtonField<M, T extends IFormToggleButtonTemplate<M> = IFormToggleButtonTemplate<M>> extends Field<M, T> {
 
         //.....................
         //#region PROPERTIES
@@ -42,10 +42,10 @@ namespace KIP.Forms {
         protected _multiSelect: boolean;
 
         /** keep track of our buttons */
-        protected _buttons: IToggleButtonElem<T>[];
+        protected _buttons: IToggleButtonElem<M>[];
 
         /** type for the toggle buttons */
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.TOGGLE_BUTTON; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.TOGGLE_BUTTON; }
 
         /** default class for the toggle buttons */
         protected get _defaultCls(): string { return "toggleBtns"; }
@@ -69,10 +69,12 @@ namespace KIP.Forms {
             },
 
             ".toggleBtn": {
-                borderRadius: "2px",
+                borderRadius: "5px",
                 boxShadow: "1px 1px 4px 2px rgba(0,0,0,.1)",
                 padding: "4px",
-                margin: "4px",
+                margin: "10px",
+                marginLeft: "0",
+                marginRight: "20px",
                 cursor: "pointer",
                 textAlign: "center",
                 fontSize: "0.8em",
@@ -80,6 +82,7 @@ namespace KIP.Forms {
                 opacity: "0.7",
                 transition: "all ease-in-out .1s"
             },
+
 
             ".toggleBtn.selected, .toggleBtn:hover": {
                 border: "1px solid <formTheme>",
@@ -91,6 +94,13 @@ namespace KIP.Forms {
             }
         };
 
+        protected _getUncoloredStyles(): KIP.Styles.IStandardStyles {
+            return this._mergeThemes(
+                Field._uncoloredStyles,
+                ToggleButtonField._uncoloredStyles
+            );
+        }
+
         //#endregion
         //..................
 
@@ -101,30 +111,19 @@ namespace KIP.Forms {
          * @param   id          The ID to use for the toggle button
          * @param   template    The template for this element
          */
-        constructor(id: string, template: IFormToggleButtonTemplate<any> | ToggleButtonElement<any>) {
+        constructor(id: string, template: T | ToggleButtonField<M, T>) {
             super(id, template);
         }
 
         /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * Parse data in the element template
          * @param   template    Handle the element
          */
-        protected _parseElemTemplate(template: IFormToggleButtonTemplate<any>): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._options = template.options;
-        }
-
-        /**
-         * _cloneFromFormElement
-         * ----------------------------------------------------------------------------
-         * handle cloning an additional element 
-         * @param   data    The form element to clone from
-         */
-        protected _cloneFromFormElement(data: ToggleButtonElement<T>): void {
-            super._cloneFromFormElement(data);
-            this._options = data._options;
         }
 
         /**
@@ -144,14 +143,14 @@ namespace KIP.Forms {
         //#region HANDLE LAYOUT
 
         protected _flexLayout(): void {
-            addClass(this._elems.core, "flex");
-            this._createStandardLabel(this._elems.core);
+            addClass(this._elems.base, "flex");
+            this._createStandardLabel(this._elems.base);
             this._appendChildren();
         }
 
         protected _multiLineLayout(): void {
-            addClass(this._elems.core, "multiline");
-            this._createStandardLabel(this._elems.core);
+            addClass(this._elems.base, "multiline");
+            this._createStandardLabel(this._elems.base);
             this._appendChildren();
         }
 
@@ -164,16 +163,44 @@ namespace KIP.Forms {
         //........................
 
         protected _appendChildren(): void {
-            this._elems.core.appendChild(this._elems.childrenContainer);
+            this._elems.base.appendChild(this._elems.childrenContainer);
             if (this._elems.postChildrenContainer) { 
-                this._elems.core.appendChild(this._elems.postChildrenContainer); 
+                this._elems.base.appendChild(this._elems.postChildrenContainer); 
             }
         }
 
         protected _labelAfterLayout(): void {
-            addClass(this._elems.core, "labelLast");
+            addClass(this._elems.base, "labelLast");
             this._appendChildren();
-            this._createStandardLabel(this._elems.core);
+            this._createStandardLabel(this._elems.base);
+        }
+
+        /**
+         * _updateOptions
+         * ---------------------------------------------------------------------------
+         * update the buttons that are presented as options to the user
+         */
+        protected _updateOptions(options: IToggleBtnOption<M>[]): void {
+            
+            // clear out any existing options
+            this._clearOptions();
+            
+            // update the option arrays
+            this._options = options;
+            this._config.options = options;
+
+            // regenerate the buttons
+            this._createOptionsElements();
+        }
+
+        /**
+         * _clearOptions
+         * ---------------------------------------------------------------------------
+         * clear out the current set of options
+         */
+        protected _clearOptions(): void {
+            this._buttons = [];
+            this._elems.childrenContainer.innerHTML = "";
         }
 
         /**
@@ -181,7 +208,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          */
         protected _createOptionsElements(): void {
-            map(this._options, (elem: IToggleBtnOption<T>) => {
+            map(this._options, (elem: IToggleBtnOption<M>) => {
                 this._createOptionElement(elem);
             });
         }
@@ -220,28 +247,33 @@ namespace KIP.Forms {
         /**
          * _onChange
          * ----------------------------------------------------------------------------
+         * process when the user has changed their selection
          */
-        protected _onChange(): boolean {
-            let value: T = this._data;
-            return this._standardValidation(value);
+        protected _getValueFromField(): M {
+            let value: M = this._data;
+            return value;
         }
 
+        public update(data: M, allowEvents: boolean): void {
+            let changed = !this._testEquality(data);
+            if (!changed) { return; }
+
+            super.update(data, allowEvents);
+        }
         /**
-         * update
+         * updateUI
          * ----------------------------------------------------------------------------
-         * @param data 
+         * update the selected buttons based on the passed in information
          */
-        public update(data: T): void {
-            if (this._data === data) { return; }
-            this._data = data;
+        protected _updateUI(data: M): void {
             let btn: HTMLElement = this._getButtonToUpdate(data);
-            window.setTimeout(() => {
+            KIP.wait(100).then(() => {
                 if (!this._selectBtn) { 
                     console.log("missing _selectBtn: " + this._selectBtn); 
                     throw new Error("missing _select function"); 
                 }
                 this._selectBtn(btn, data);
-            }, 100);
+            });
         }
 
         /**
@@ -253,7 +285,7 @@ namespace KIP.Forms {
             let idx: number = indexOf(
                 this._buttons, 
                 {key: data, btn: null}, 
-                (a: IToggleButtonElem<T>, b: IToggleButtonElem<T>) => {
+                (a: IToggleButtonElem<M>, b: IToggleButtonElem<M>) => {
                     return this._equalityTest(a, b);
                 }
             );
@@ -262,11 +294,13 @@ namespace KIP.Forms {
             return btn;
         }
 
-        protected _equalityTest(a: IToggleButtonElem<T>, b: IToggleButtonElem<T>): boolean {
+        protected _equalityTest(a: IToggleButtonElem<M>, b: IToggleButtonElem<M>): boolean {
             return (a.key === b.key);
         }
 
-        public _onClear(): void { }
+        protected _testEquality(a: any) { return false; }
+
+        public abstract clear(): void;
 
         //..............................
         //#region ABSTRACT FUNCTIONS

@@ -1,27 +1,22 @@
 namespace KIP.Forms {
-    
-    export interface IFileChangeCallback {
-        (files: FileList): string;
-    }
 
     export interface IFileSaveCallback {
-        (files: FileList, blobs?: Blob[]): void;
+        (files: FileList, blobs?: Blob[]): Promise<string>;
     }
 
     export interface IFormFilePathElemTemplate extends IFormFileElemTemplate<string> {
         onSave: IFileSaveCallback;
-        onChange: IFileChangeCallback;
     }
 
     /**----------------------------------------------------------------------------
-     * @class FilePathElement
+     * @class FilePathField
      * ----------------------------------------------------------------------------
      * handle a file-upload field that supports just a file path 
      * @author  Kip Price
      * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class FilePathElement extends FormElement<string> {
+    export class FilePathField<T extends IFormFilePathElemTemplate = IFormFilePathElemTemplate> extends Field<string, T> {
 
         //..................
         //#region STYLES
@@ -55,7 +50,7 @@ namespace KIP.Forms {
         //#region PROPERTIES
 
         /** select the appropriate type for the file path type */
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.FILE_PATH; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.FILE_PATH; }
 
         /** set a default class for file-path elements */
         protected get _defaultCls(): string { return "filepath"; }
@@ -63,15 +58,20 @@ namespace KIP.Forms {
         /** set a default value for file-path elements */
         protected get _defaultValue(): string { return ""; }
 
-        /**  */
+        /** allow the caller to specify how the image gets saved to the server (and the filepath that ultimately gets saved) */
         protected _onSaveCallback: IFileSaveCallback;
-        protected _onChangeCallback: IFileChangeCallback;
+
+        /** track the files that have been uploaded */
         protected _files: FileList;
+
+        /** ??? */
         protected _attr: IAttributes;
+
+        /** determine if the link was the element that changed */
         protected _tempLink: string;
 
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             input: HTMLInputElement;
             inputLabel?: HTMLElement;
             inputContainer?: HTMLElement;
@@ -84,26 +84,14 @@ namespace KIP.Forms {
         //.....................
 
         /**
-         * FilePathElement
-         * ----------------------------------------------------------------------------
-         * Create the file path element
-         * @param   id          Unique ID for this element
-         * @param   template    Template to use to create this element
-         */
-        constructor(id: string, template: IFormFilePathElemTemplate | FilePathElement) {
-            super(id, template);
-        }
-
-        /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * Handle creating this element off of a template
          * @param   template    
          */
-        protected _parseElemTemplate(template: IFormFilePathElemTemplate): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._onSaveCallback = template.onSave;
-            this._onChangeCallback = template.onChange
             this._attr = template.attr;
         }
 
@@ -112,9 +100,9 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          */
         protected _onCreateElements(): void {
-            this._createStandardLabel(this._elems.core);
-            this._elems.display = createSimpleElement("", "display", this._data, null, null, this._elems.core);
-            this._elems.inputContainer = createSimpleElement("", "fileContainer", "", null, null, this._elems.core);
+            this._createStandardLabel(this._elems.base);
+            this._elems.display = createSimpleElement("", "display", this._data, null, null, this._elems.base);
+            this._elems.inputContainer = createSimpleElement("", "fileContainer", "", null, null, this._elems.base);
             this._elems.input = createInputElement(this._id + "|input", "", "file", "", null, null, this._elems.inputContainer);
             this._elems.inputLabel = createLabelForInput("Upload File", this._id + "|input", "filepath", this._elems.inputContainer);
         }
@@ -124,41 +112,40 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * handle when the data in this element changes
          */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): string {
+
             // check if the link is the one that changed, and if so, update that
             if (!isNullOrUndefined(this._tempLink)) {
                 return this._onLinkChange();
             }
 
-            // quit if we can't turn this element into a string (rare)
-            if (!this._onChangeCallback) { return false; }
+            // quit if we don't have any files uploaded
             this._files = (this._elems.input as HTMLInputElement).files;
             console.log(this._files);
-            if (!this._files) { return true; }
+            if (!this._files) { return ""; }
 
-            // Handle the change event
-            let str = this._onChangeCallback(this._files);
-            if (this._standardValidation(str)) {
-                return true;
-            }
+            // treat the file name as the value for now
+            // we will store the real path as part of the save function
+            let str = this._files[0].name;
+            return str;
         }
 
         /**
          * _onLinkChange
          * ----------------------------------------------------------------------------
          */
-        protected _onLinkChange(): boolean {
-            let out: boolean = this._standardValidation(this._tempLink);    // Check if we can set that link
-            this._tempLink = null;                                          // Clear it in either case
-            return out;                                                     // Quit with the result
+        protected _onLinkChange(): string {
+            let out = this._tempLink;
+            this._tempLink = null;
+            return out;
         }
 
         /**
          * update
          * ----------------------------------------------------------------------------
-         * @param data 
+         * update this element to have the appropriate data
          */
-        public update(data: string): void {
+        public update(data: string, allowEvents: boolean): void {
             this._data = data;
             this._elems.display.innerHTML = data;
             this._elems.input.value = "";
@@ -172,13 +159,13 @@ namespace KIP.Forms {
          * 
          * @returns The file path that is now saved
          */
-        public save(internalOnly?: boolean): string {
-            if (internalOnly) { return; }                       // Don't do anything if this is an internal change
-            if (this._files) {                                  // Make sure that if we have files, we're uploading them
-                if (!this._onSaveCallback) { return ""; }       // Don't do anything if we don't have a callback
-                this._onSaveCallback(this._files);              // Run our callback
+        public async save(internalOnly?: boolean): Promise<string> {
+            if (internalOnly) { return; }                               // Don't do anything if this is an internal change
+            if (this._files) {                                          // Make sure that if we have files, we're uploading them
+                if (!this._onSaveCallback) { return ""; }               // Don't do anything if we don't have a callback
+                this._data = await this._onSaveCallback(this._files);   // Run our callback
             }
-            return this._data;                                  // Return the appropriate data
+            return this._data;                                          // Return the appropriate data
         }
 
         /**
@@ -186,8 +173,8 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Duplicate this form element appropriately
          */
-        protected _createClonedElement(appendToID: string): FilePathElement {
-            return new FilePathElement(this.id + appendToID, this);
+        protected _createClonedElement(appendToID: string): FilePathField<T> {
+            return new FilePathField<T>(this.id + appendToID, this);
         }
     }
 }

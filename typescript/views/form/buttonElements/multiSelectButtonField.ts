@@ -5,22 +5,22 @@ namespace KIP.Forms {
     }
     
     /**----------------------------------------------------------------------------
-     * @class   MultiSelectButtonElem
+     * @class   MultiSelectButtonField
      * ----------------------------------------------------------------------------
      * toggle buttons as multi-select options
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class MultiSelectButtonElem<T> extends ToggleButtonElement<T[]> {
+    export class MultiSelectButtonField<M, T extends IFormMultiSelectButtonTemplate<M> = IFormMultiSelectButtonTemplate<M>> extends ToggleButtonField<M[], T> {
 
         //.....................
         //#region PROPERTIES
         
         protected _selectedBtns: HTMLElement[];
         protected get _multiSelect(): boolean { return true; }
-        protected get _defaultValue(): T[] { return []; }
-        protected _options: IToggleBtnOption<T>[];
+        protected get _defaultValue(): M[] { return []; }
+        protected _options: IToggleBtnOption<M>[];
 
         //#endregion
         //.....................
@@ -32,17 +32,17 @@ namespace KIP.Forms {
          * @param id 
          * @param template 
          */
-        constructor(id: string, template: IFormMultiSelectButtonTemplate<T> | MultiSelectButtonElem<T>) {
+        constructor(id: string, template: T | MultiSelectButtonField<M, T>) {
             super(id, template);
         }
 
         /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * @param template 
          */
-        protected _parseElemTemplate(template: IFormMultiSelectButtonTemplate<T>): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._selectedBtns = [];
         }
 
@@ -51,13 +51,13 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * @param data 
          */
-        public update(data: T[]): void {
+        public update(data: M[], allowEvents: boolean): void {
             if (isNullOrUndefined(data)) { return; }
 
-            this._onClear();
+            this.clear();
 
             // map all of the elements
-            data.map((elem: T) => {
+            data.map((elem: M) => {
                 let btn: HTMLElement = this._getButtonToUpdate(elem);
                 this._selectBtn(btn, elem);
             });
@@ -69,7 +69,7 @@ namespace KIP.Forms {
          * @param   elem    The element to potentially select
          * @returns True if a specified button should be selected
          */
-        protected _shouldBeSelected(elem: IToggleBtnOption<T>): boolean {
+        protected _shouldBeSelected(elem: IToggleBtnOption<M>): boolean {
             let dIdx: number = this._indexOf(elem.value);
             return (dIdx !== -1);
         }
@@ -79,8 +79,8 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * @param appendToID 
          */
-        protected _createClonedElement(appendToID: string): MultiSelectButtonElem<T> {
-            return new MultiSelectButtonElem(this.id + appendToID, this);
+        protected _createClonedElement(appendToID: string): MultiSelectButtonField<M, T> {
+            return new MultiSelectButtonField(this.id + appendToID, this);
         }
 
         /**
@@ -89,7 +89,7 @@ namespace KIP.Forms {
          * @param btn 
          * @param value 
          */
-        protected _selectBtn(btn: HTMLElement, value: T): void {
+        protected _selectBtn(btn: HTMLElement, value: M): void {
             if (!btn) { return; }
 
             // handle the case where the button was already selected
@@ -122,10 +122,10 @@ namespace KIP.Forms {
          * @param value 
          * @returns The index of the element in the array, or -1 if it isn't found
          */
-        protected _indexOf(value: T): number {
+        protected _indexOf(value: M): number {
             let outIdx: number = -1;
             for (let idx = 0; idx < this._data.length; idx += 1) {
-                let elem: T = this._data[idx];
+                let elem: M = this._data[idx];
                 if (this._equalTo(elem, value)) {
                     outIdx = idx;
                     break;
@@ -142,7 +142,7 @@ namespace KIP.Forms {
          * @param dataA 
          * @param dataB 
          */
-        protected _equalTo(dataA: T, dataB: T): boolean {
+        protected _equalTo(dataA: M, dataB: M): boolean {
             switch (typeof dataA) {
                 case "string":
                 case "number":
@@ -162,7 +162,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Handle clearing data from this element
          */
-        public _onClear(): void {
+        public clear(): void {
             this._data = [];
 
             // unselect everything

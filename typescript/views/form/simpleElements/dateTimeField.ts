@@ -1,18 +1,28 @@
 namespace KIP.Forms {
 
     /**----------------------------------------------------------------------------
-     * @class DateTimeElement
+     * @class DateTimeField
      * ----------------------------------------------------------------------------
      * create an element to collect date and time for a form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class DateTimeElement extends FormElement<Date> {
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.DATE_TIME; }
+    export class DateTimeField extends Field<Date> {
+        
+        //.....................
+        //#region PROPERTIES
+        
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.DATE_TIME; }
         protected get _defaultValue(): Date { return null; }
         protected get _defaultCls(): string { return "dateTime"; }
+        
+        //#endregion
+        //.....................
 
+        //..........................................
+        //#region STYLES
+        
         protected static _uncoloredStyles: Styles.IStandardStyles = {
             ".kipFormElem.dateTime .inputs": {
                 display: "flex",
@@ -34,18 +44,27 @@ namespace KIP.Forms {
                 marginTop: "4px"
             }
         }
+        
+        //#endregion
+        //..........................................
 
+        //..........................................
+        //#region HTML ELEMENTS
+        
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             label: HTMLElement;
             inputWrapper: HTMLElement;
             timeInput: HTMLInputElement;
             dateInput: HTMLInputElement;
         }
+        
+        //#endregion
+        //..........................................
 
         protected _onCreateElements(): void {
-            this._createStandardLabel(this._elems.core);
-            this._elems.inputWrapper = createSimpleElement("", "inputs", "", null, null, this._elems.core);
+            this._createStandardLabel(this._elems.base);
+            this._elems.inputWrapper = createSimpleElement("", "inputs", "", null, null, this._elems.base);
 
             // draw the date
             let dateLbl: HTMLElement = createSimpleElement("", "lbl", "Date: ", null, null, this._elems.inputWrapper);
@@ -63,20 +82,20 @@ namespace KIP.Forms {
             });
         }
 
-        protected _onChange(): boolean {
+        protected _getValueFromField(): Date {
             let timeStr: string = this._elems.timeInput.value;
             let dateStr: string = this._elems.dateInput.value;
             let date: Date = Dates.inputToDate(dateStr, timeStr);
 
-            return this._standardValidation(date);
+            return date;
         }
 
-        protected _createClonedElement(appendToID: string): DateTimeElement {
-            return new DateTimeElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): DateTimeField {
+            return new DateTimeField(this._id + appendToID, this);
         }
 
-        public update(data: Date): void {
-            this._onClear();
+        public update(data: Date, allowEvents: boolean): void {
+            this.clear();
 
             this._data = data;
 

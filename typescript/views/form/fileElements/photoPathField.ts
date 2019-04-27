@@ -5,14 +5,14 @@ namespace KIP.Forms {
     }
 
      /**----------------------------------------------------------------------------
-     * @class PhotoPathElement
+     * @class PhotoPathField
      * ----------------------------------------------------------------------------
      * create an element to upload photos
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class PhotoPathElement extends FilePathElement {
+    export class PhotoPathField<T extends IPhotoPathElemTemplate = IPhotoPathElemTemplate> extends FilePathField<T> {
 
         //..................
         //#region STYLES
@@ -85,7 +85,7 @@ namespace KIP.Forms {
 
         /** keep track of the elements needed for this element */
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             photoWrapper: HTMLElement;
             display: HTMLImageElement;
             overlay: HTMLElement;
@@ -95,27 +95,8 @@ namespace KIP.Forms {
             error: HTMLElement;
         }
 
-        protected _maxSize: number;
-
-        protected _template: IPhotoPathElemTemplate;
-
         //#endregion
         //.....................
-
-        //..........................................
-        //#region CREATE THE ELEMENT
-        
-        public constructor(id: string, template: IPhotoPathElemTemplate) {
-            super(id, template);
-        }
-
-        protected _parseElemTemplate(template: IPhotoPathElemTemplate): void {
-            super._parseElemTemplate(template);
-            this._maxSize = template.maxSize;
-        }
-        
-        //#endregion
-        //..........................................
 
         //..........................................
         //#region CREATE ELEMENTS FOR PHOTO UPLOAD
@@ -127,14 +108,12 @@ namespace KIP.Forms {
          */
         protected _onCreateElements(): void {
 
-            this._elems.photoWrapper = createSimpleElement("", "photoWrapper", "", null, null, this._elems.core);
+            this._elems.photoWrapper = createSimpleElement("", "photoWrapper", "", null, null, this._elems.base);
 
             this._elems.display = createElement({
                 type: "img",
                 cls: "photo",
-                attr: {
-                    "src": this._data
-                },
+                attr: { "src": this._data },
                 parent: this._elems.photoWrapper
             }) as HTMLImageElement;
 
@@ -145,6 +124,12 @@ namespace KIP.Forms {
             this._elems.linkBtn = createSimpleElement("", "photoBtn link", "CHANGE LINK", null, null, this._elems.overlay);
             this._elems.linkBtn.addEventListener("click", () => {
                 let linkURL: string = window.prompt("What should the link be set to?", this._data);
+
+                // no change or cancel: don't continue
+                if (linkURL === this._data) { return; }
+                if (isNullOrUndefined(linkURL)) { return; }
+
+                // otherwise save off the link and use it in our change function
                 this._tempLink = linkURL;
                 this._changeEventFired();
             });
@@ -168,8 +153,8 @@ namespace KIP.Forms {
          * @param   appendToID  If provided, the ID to append to this element
          * @returns The created cloned element
          */
-        protected _createClonedElement(appendToID: string): PhotoPathElement {
-            return new PhotoPathElement(this.id + appendToID, this._template);
+        protected _createClonedElement(appendToID: string): PhotoPathField<T> {
+            return new PhotoPathField<T>(this.id + appendToID, this._config);
         }
 
         /**
@@ -178,7 +163,8 @@ namespace KIP.Forms {
          * Update the data within this form
          * @param   data    The details to update this element with
          */
-        public update(data: string): void {
+        public update(data: string, allowEvents: boolean): void {
+            this._files = null;
             this._data = data;
             if (!this._data) { return; }
             this._elems.display.src = data;
@@ -210,11 +196,10 @@ namespace KIP.Forms {
          * manage when the details of this photo change
          * @returns True if the link was changed appropriately
          */
-        protected _onLinkChange(): boolean {
-            let link: string = this._tempLink;
-            let out: boolean = super._onLinkChange();
+        protected _onLinkChange(): string {
+            let link = super._onLinkChange();
             this._elems.display.src = link;
-            return out;
+            return link;
         }
 
         /**
@@ -222,7 +207,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * handle clearing details within the file selector
          */
-        protected _onClear(): void {
+        public clear(): void {
             this._data = "";
             this._elems.display.src = "";   // reset the photolink
         }
@@ -235,14 +220,12 @@ namespace KIP.Forms {
          * 
          * @returns The file path that is now saved
          */
-        public save(internalOnly?: boolean): string {
+        public async save(internalOnly?: boolean): Promise<string> {
             if (internalOnly) { return; }                       // Don't do anything if this is an internal change
             
-            if (this._files) {                                  // Make sure that if we have files, we're uploading them
-                if (!this._onSaveCallback) { return ""; }       // Don't do anything if we don't have a callback
-                this._resizeImages(this._files).then((blobs: Blob[]) => {
-                    this._onSaveCallback(this._files, blobs);              // Run our callback
-                });
+            if (this._files && this._onSaveCallback) {                          // Make sure that if we have files, we're uploading them
+                let blobs = await this._resizeImages(this._files);              // resize images as appropriate
+                this._data = await this._onSaveCallback(this._files, blobs);    // Run our callback
             }
 
             return this._data;                                  // Return the appropriate data
@@ -251,82 +234,87 @@ namespace KIP.Forms {
         //..........................................
         //#region HELPERS
         
-        protected _readFile(file: File, defer?: boolean): KIP.KipPromise {
-            return new KIP.KipPromise((resolve) => {
-                let fileReader: FileReader = new FileReader();
+        protected async _readFile(file: File, defer?: boolean): Promise<string | ArrayBuffer> {
+            
+            let fileReader: FileReader = new FileReader();
+            fileReader.readAsDataURL(file);
+
+            return new Promise<string | ArrayBuffer>((resolve) => {
                 fileReader.onload = () => {
-                    window.setTimeout(() => {
-                        resolve(fileReader.result);
-                    }, 0);
+                    resolve(fileReader.result);
                 };
-
-                // read the file
-                fileReader.readAsDataURL(file);
-            }, defer)
+            })
+            
         }
 
-        protected _loadImage(defer?: boolean): KIP.KipPromise {
-            return new KIP.KipPromise((resolve, reject, dataUrl: string) => {
-                let img = new Image();
+        protected async _loadImage(dataUrl: string): Promise<HTMLImageElement> {
+            let img = new Image();
+            img.src = dataUrl;
+
+            return new Promise<HTMLImageElement>((resolve) => {
                 img.onload = () => { resolve(img); }
-                img.src = dataUrl;
-            }, defer)
+            });
         }
 
-        protected _renderOnCanvas(defer?: boolean): KIP.KipPromise {
-            return new KIP.KipPromise((resolve, reject, img: HTMLImageElement) => {
-                let cvs = KIP.createElement({ type: "canvas" }) as HTMLCanvasElement;
+        /**
+         * _renderOnCanvas
+         * ----------------------------------------------------------------------------
+         * generate the files on canvas, in order to resize them
+         */
+        protected async _renderOnCanvas(img: HTMLImageElement): Promise<Blob> {
+            let cvs = KIP.createElement({ type: "canvas" }) as HTMLCanvasElement;
 
-                // set default canvas size
-                cvs.width = this._maxSize;
-                cvs.height = this._maxSize;
+            // set default canvas size
+            cvs.width = this._config.maxSize;
+            cvs.height = this._config.maxSize;
 
-                // adapt canvas to img size
-                if (img.width > img.height) {
-                    cvs.height = (img.height * this._maxSize) / img.width;
-                } else if (img.height > img.width) {
-                    cvs.width = (img.width * this._maxSize) / img.height;
-                }
+            // adapt canvas to img size
+            if (img.width > img.height) {
+                cvs.height = (img.height * this._config.maxSize) / img.width;
+            } else if (img.height > img.width) {
+                cvs.width = (img.width * this._config.maxSize) / img.height;
+            }
 
-                // render the image at this size
-                let ctx = cvs.getContext("2d");
-                ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
+            // render the image at this size
+            let ctx = cvs.getContext("2d");
+            ctx.drawImage(img, 0, 0, cvs.width, cvs.height);
 
-                // return the canvas's data as a file
+            // return the canvas's data as a file
+            return new Promise<Blob>((resolve) => {
                 cvs.toBlob(
                     (blob: Blob) => { resolve(blob); }
                 );
-
-            }, defer)
+            })
+            
         }
         
+        /**
+         * _resizeImages
+         * ----------------------------------------------------------------------------
+         * resize all images included in this image upload
+         */
+        protected async _resizeImages(files: FileList): Promise<Blob[]> {
 
-        protected _resizeImages(files: FileList): KIP.KipPromise {
-            if (!this._maxSize) { return KIP.KipPromise.resolve(); }
+            // quit if there is no resizing to do
+            if (!this._config.maxSize) { return Promise.resolve([]); }
 
             let outFiles: Blob[] = [];
-            let promiseChain = new KIP.PromiseChain();
-            
+    
+            // loop through each file and resize it
             for (let fIdx = 0; fIdx < files.length; fIdx += 1) {
-                let promise = this._resizeImage(files[fIdx], outFiles);
-                promiseChain.addPromise(promise);
+                let blob = await this._resizeImage(files[fIdx], outFiles);
+                outFiles.push(blob);
             }
 
-            // ensure that the last step is spitting out all of the adjusted images
-            promiseChain.addPromise(new KIP.KipPromise((resolve) => {
-                resolve(outFiles);
-            }, true))
-
-            return promiseChain.execute();
+            // return the resized images
+            return outFiles;
         }
 
-        protected _resizeImage (file: File, outFiles: Blob[]): KIP.KipPromise {
-            let chain = new KIP.PromiseChain();
-            chain.addPromise(this._readFile(file, true));
-            chain.addPromise(this._loadImage(true));
-            chain.addPromise(this._renderOnCanvas(true));
-            chain.addPromise((blob: Blob) => { outFiles.push(blob); });
-            return chain;
+        protected async _resizeImage (file: File, outFiles: Blob[]): Promise<Blob> {
+            let dataUrl = await this._readFile(file);
+            let img = await this._loadImage(dataUrl as string);
+            let blob = await this._renderOnCanvas(img);
+            return blob;
         }
         
         //#endregion

@@ -1,10 +1,9 @@
-///<reference path="formElement.ts" />
+///<reference path="_field.ts" />
 
 namespace KIP.Forms {
 
-    export function cloneTemplate<D>(template: IFormElemTemplate<D>): IFormElemTemplate<D> {
-        let temp: IFormElemTemplate<D> = {
-            type: template.type,
+    export function cloneTemplate<D>(template: IFieldConfig<D>): IFieldConfig<D> {
+        let temp: IFieldConfig<D> = {
             value: template.value,
             position: template.position,
             required: template.required,
@@ -212,22 +211,24 @@ namespace KIP.Forms {
     }
 
     /** 
+     * isField
+     * ----------------------------------------------------------------------------
      * determine whether a particular parameter is a form element 
      * @param elem - Either a FormElement or a FormTemplate
      * @returns True if elem is a form Element
      */
-    export function isFormElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is FormElement<T> {
+    export function isField<T>(elem: IFieldConfig<T> | Field<T> | IFields<any> ): elem is Field<T> {
         if (!elem) { return false; }
 
-        return ((elem as FormElement<T>).id !== undefined) &&
-            ((elem as FormElement<T>).type !== undefined) &&
-            ((elem as FormElement<T>).template !== undefined);
+        return ((elem as Field<T>).id !== undefined) &&
+            ((elem as Field<T>).type !== undefined) &&
+            ((elem as Field<T>).template !== undefined);
     }
 
-    export function isArrayChildElement<T>(elem: IFormElemTemplate<T> | FormElement<T>): elem is ArrayChildElement<T> {
+    export function isArrayChildElement<T>(elem: IFieldConfig<T> | Field<T>): elem is ArrayChildField<T> {
         if (!elem) { return false; }
-        if (isFormElement(elem)) {
-            return (elem.type === FormElementTypeEnum.ARRAY_CHILD);
+        if (isField(elem)) {
+            return (elem.type === FieldTypeEnum.ARRAY_CHILD);
         }
         return false;
     }

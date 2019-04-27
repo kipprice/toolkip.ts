@@ -1,56 +1,37 @@
 namespace KIP.Forms {
 
     /** select-specific template options */
-    export interface IFormSelectTemplate<T extends string | number> extends IFormElemTemplate<T> {
+    export interface ISelectFieldTemplate<T extends string | number> extends IFieldConfig<T> {
         options: ISelectOptions;
     }
     
     /**----------------------------------------------------------------------------
-     * @class SelectElement
+     * @class SelectField
      * ----------------------------------------------------------------------------
      * create a dropdown for a form with either numeric or string backing data
      * @author  Kip Price
      * @version 2.0.0
      * ----------------------------------------------------------------------------
      */
-    export class SelectElement<T extends string | number> extends FormElement<T> {
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.SELECT; }
-        protected get _defaultValue(): T { return null; }
+    export class SelectField<M extends string | number, T extends ISelectFieldTemplate<M>> extends Field<M, T> {
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.SELECT; }
+        protected get _defaultValue(): M { return null; }
         protected get _defaultCls(): string { return "select"; }
         protected _options: ISelectOptions;
 
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             input: HTMLSelectElement;
             lbl: HTMLElement;
         }
 
-        /** 
-         * SelectElement
-         * ----------------------------------------------------------------------------
-         * Create the Select Element
-         */
-        constructor(id: string, template: IFormSelectTemplate<T> | SelectElement<T>) {
-            super(id, template);
-        }
-
-        /** 
-         * _cloneFromFormElement
-         * ----------------------------------------------------------------------------
-         * Generate a cloned version of this form element
-         */
-        protected _cloneFromFormElement(data: SelectElement<T>): void {
-            super._cloneFromFormElement(data);
-            this._options = data._options;
-        }
-
         /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * Get additional details about how this select field should be set up
          */
-        protected _parseElemTemplate(template: IFormSelectTemplate<T>): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._options = template.options;
         }
 
@@ -70,11 +51,11 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * manage when details in this select field changed
          */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): M {
             let v: string = this._elems.input.value;
-            let value: T = v as T;
-            if (isNumeric(v)) { value = +v as T;}
-            return this._standardValidation(value);
+            let value: M = v as M;
+            if (isNumeric(v)) { value = +v as M;}
+            return value;
         }
 
         /**
@@ -82,8 +63,8 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Generate the cloned select element
          */
-        protected _createClonedElement(appendToID: string): SelectElement<T> {
-            return new SelectElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): SelectField<M,T> {
+            return new SelectField(this._id + appendToID, this);
         }
     }
 }

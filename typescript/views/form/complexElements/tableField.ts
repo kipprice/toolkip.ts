@@ -1,8 +1,17 @@
-/// <reference path="./arrayElement.ts" />
-/// <reference path="./arrayChildElement.ts" />
+/// <reference path="./arrayField.ts" />
+/// <reference path="./arrayChildField.ts" />
 
 namespace KIP.Forms {
-    export class TabledArrayElement<T> extends ArrayElement<T> {
+
+    /**----------------------------------------------------------------------------
+     * @class	TabledArrayField
+     * ----------------------------------------------------------------------------
+     * keep track of array data in a table in lieu of the standard cards
+     * @author	Kip Price
+     * @version	0.5.1
+     * ----------------------------------------------------------------------------
+     */
+    export class TabledArrayField<M, T extends IFormArrayTemplate<M> = IFormArrayTemplate<M>> extends ArrayField<M,T> {
         protected get _defaultCls(): string { return "tableArray"; }
         protected _emptyRow: HTMLTableRowElement;
 
@@ -32,42 +41,46 @@ namespace KIP.Forms {
 
         protected _getUncoloredStyles(): Styles.IStandardStyles {
             return this._mergeThemes(
-                TabledArrayElement._uncoloredStyles,
-                ArrayElement._uncoloredStyles
+                TabledArrayField._uncoloredStyles,
+                ArrayField._uncoloredStyles
             );
         }
 
-        protected _generateChildElement(): TableRowElement<T> {
+        protected _generateChildElement(): TableRowField<M> {
             let idx: number = this._children.length;
-            let elem: TableRowElement<T>;
+            let elem: TableRowField<M>;
             
             // if this is already an element, just clone it
             if (isArrayChildElement(this._childTemplate)) {
-                elem = this._cloneFormElement(this._childTemplate, this._id + "|" + idx.toString()) as TableRowElement<T>;
+                elem = this._cloneFormElement(this._childTemplate, this._id + "|" + idx.toString()) as TableRowField<M>;
             
             // otherwise, spin up a new child altogether
             } else {
-                elem = new TableRowElement(this._id + "|" + idx.toString(), this._childTemplate);
+                elem = new TableRowField(this._id + "|" + idx.toString(), this._childTemplate);
             }
             return elem;
         }
 
-        /** create the elements for the array */
+        /**
+         * _onCreateElements
+         * ----------------------------------------------------------------------------
+         * generate the elements that make up the tabled element
+         */
         protected _onCreateElements(): void {
 
             // show the title
             this._createCollapsibleTitle();
 
             // handle showing the children
-            this._elems.childrenContainer = createElement({type: "table", cls: "formChildren", parent: this._elems.core});
+            this._elems.childrenContainer = createElement({type: "table", cls: "formChildren", parent: this._elems.base});
             window.setTimeout(() => { this._createEmptyRow(); }, 100);
             
             // add a new row that can be added to
             this._createStyles();
         }
 
-        public update(data: T[]): void {
-            super.update(data);
+        public update(data: M[], allowEvents: boolean): void {
+            super.update(data, allowEvents);
             this._createEmptyRow();
         }
 
@@ -76,14 +89,14 @@ namespace KIP.Forms {
             let cellCnt: number;
 
             // if this is already an element, only spin up a single new input
-            if (isFormElement(this._childTemplate)) {
+            if (isField(this._childTemplate)) {
                 this._createEmptyCell(row, this._childTemplate);
                 this._addEnterListener(this._childTemplate.input, row);
             
             // otherwise, spin up a new set of inputs
             } else {
-                let lastValue: FormElement<any>;
-                map(this._childTemplate, (value: FormElement<any>) => {
+                let lastValue: Field<any>;
+                map(this._childTemplate, (value: Field<any>) => {
                     this._createEmptyCell(row, value);
                     lastValue = value;
                 });
@@ -108,7 +121,7 @@ namespace KIP.Forms {
             elem.focus();
         }
 
-        protected _createEmptyCell(row: HTMLTableRowElement, value: FormElement<any>): HTMLTableCellElement {
+        protected _createEmptyCell(row: HTMLTableRowElement, value: Field<any>): HTMLTableCellElement {
             let cell: HTMLTableCellElement = row.insertCell();
             if (!value.input) { return; }
             let input = value.input.cloneNode();
@@ -124,43 +137,53 @@ namespace KIP.Forms {
             row.parentNode.removeChild(row);
         }
 
-        protected _createClonedElement(appendToID: string): TabledArrayElement<T> {
-            return new TabledArrayElement<T>(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): TabledArrayField<M,T> {
+            return new TabledArrayField<M,T>(this._id + appendToID, this);
         }
     }
 
-    export class TableRowElement<T> extends ArrayChildElement<T> {
+    /**----------------------------------------------------------------------------
+     * @class	TableRowElement
+     * ----------------------------------------------------------------------------
+     * generate a row of a tabled array
+     * @author	Kip Price
+     * @version	0.5.1
+     * ----------------------------------------------------------------------------
+     */
+    export class TableRowField<M, T extends IArrayChildTemplate<M> = IArrayChildTemplate<M>> extends ArrayChildField<M,T> {
+
+        //.....................
+        //#region PROPERTIES
+        
         protected get _defaultCls(): string { return "tableRow"; }
         protected _currentRow: HTMLTableRowElement;
+        
+        //#endregion
+        //.....................
 
-        protected static _uncoloredStyles: Styles.IStandardStyles = {
-            
-        }
-
-        protected _createClonedElement(appendToID: string): TableRowElement<T> {
-            return new TableRowElement<T>(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): TableRowField<M,T> {
+            return new TableRowField<M,T>(this._id + appendToID, this);
         }
 
         protected _onCreateElements(): void {
-            this._elems.core = createElement({type: "tr", cls: "formChildren", parent: this._elems.core});
+            this._elems.base = createElement({type: "tr", cls: "formChildren", parent: this._elems.base});
         }
 
-        /**...........................................................................
+        /**
          * parseChild
-         * ...........................................................................
+         * ----------------------------------------------------------------------------
          * Go through our children array and create the individual children
          * 
          * @param   child   The element to parse
-         * ...........................................................................
          */
-        protected _parseChild(child: FormElement<any>): FormElement<any> {
-            let elem: FormElement<any> = this._cloneFormElement(child);
+        protected _parseChild(child: Field<any>): Field<any> {
+            let elem: Field<any> = this._cloneFormElement(child);
 
             this._applyColors(elem);
 
             // draw into the appropriate cell
-            let cell: HTMLTableCellElement = (this._elems.core as HTMLTableRowElement).insertCell();
-            elem.render(cell);
+            let cell: HTMLTableCellElement = (this._elems.base as HTMLTableRowElement).insertCell();
+            elem.draw(cell);
 
             // add the appropriate listeners
             formEventHandler.addEventListener(FORM_ELEM_CHANGE, {
@@ -179,6 +202,11 @@ namespace KIP.Forms {
             return elem;
         }
 
+        /**
+         * isEmpty
+         * ----------------------------------------------------------------------------
+         * check if this row is considered empty
+         */
         public isEmpty(): boolean {
             let isEmpty: boolean = false;
             // TODO: actually check for empty elements

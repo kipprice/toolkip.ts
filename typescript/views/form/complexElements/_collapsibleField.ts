@@ -1,27 +1,28 @@
-///<reference path="../formElement.ts" />
+///<reference path="../_field.ts" />
 
 namespace KIP.Forms {
 
-    export interface IFormCollapsibleTemplate<T> extends IFormElemTemplate<T> {
+    export interface IFormCollapsibleTemplate<T> extends IFieldConfig<T> {
         isExpanded?: boolean;
         hideTitle?: boolean;
         uncollapsible?: boolean;
     }
     
-    export interface ICollapsibleHTMLElements extends IFormHTMLElements {
+    export interface ICollapsibleHTMLElements extends IFieldElems {
         title: HTMLElement;
         collapseElem?: HTMLElement;
         titleContainer?: HTMLElement;
     }
 
     /**----------------------------------------------------------------------------
-     * @class CollapsibleElement
+     * @class CollapsibleField
      * ----------------------------------------------------------------------------
      * Create a collapsible element of the form
-     * @version 1.0
+     * @author  Kip Price
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export abstract class CollapsibleElement<T> extends FormElement<T> {
+    export abstract class CollapsibleField<M, T extends IFormCollapsibleTemplate<M> = IFormCollapsibleTemplate<M>> extends Field<M, T> {
 
         //.....................
         //#region PROPERTIES
@@ -29,11 +30,8 @@ namespace KIP.Forms {
         /** keep track of whether we are currently collapsed */
         protected _isCollapsed: boolean;
 
-        /** determine whether we should show the collapsible elements at all */
-        protected _canCollapse: boolean;
-
-        /** keep track of whether the title should be hidden */
-        protected _shouldHideTitle: boolean;
+        /** track if we are already collapsing or expanding */
+        protected _isTransitioning: boolean;
 
         /** keep track of shared elements for collapsible sections */
         protected _elems: ICollapsibleHTMLElements;
@@ -42,11 +40,11 @@ namespace KIP.Forms {
         protected static _uncoloredStyles: Styles.IStandardStyles = {
 
             ".kipFormElem.collapsible .formChildren": {
-                maxHeight: "100%"
+                
             },
 
             ".kipFormElem.collapsible.collapsed .formChildren": {
-                maxHeight: "0px",
+                height: "0",
                 overflow: "hidden"
             },
 
@@ -56,9 +54,11 @@ namespace KIP.Forms {
                 boxSizing: "border-box",
                 cursor: "pointer",
                 padding: "10px 10px",
-                borderRadius: "3px",
                 alignItems: "center",
-                
+                width: "calc(100% + 20px)",
+                marginLeft: "-10px",
+                borderRadius: "30px",
+
                 nested: {
                     "&.hidden": {
                         display: "none"
@@ -79,7 +79,7 @@ namespace KIP.Forms {
             },
 
             ".kipFormElem.collapsible .sectionHeaderContainer:hover": {
-                backgroundColor: "#eee"
+                backgroundColor: "rgba(0,0,0,.05)"
             }
 
         }
@@ -89,16 +89,9 @@ namespace KIP.Forms {
         //........................
         //#region CREATE ELEMENTS
 
-        constructor(id: string, template: IFormCollapsibleTemplate<T> | CollapsibleElement<T>) {
-            super(id, template);
-        }
-
-        protected _parseElemTemplate(template: IFormCollapsibleTemplate<T>): void {
-            super._parseElemTemplate(template);
-
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._isCollapsed = (!template.isExpanded && !template.hideTitle && !template.uncollapsible);
-            this._shouldHideTitle = template.hideTitle;
-            this._canCollapse = !template.uncollapsible;
         }
 
         /**
@@ -108,27 +101,29 @@ namespace KIP.Forms {
          */
         protected _createCollapsibleTitle(): void {
             let titleCls: string = "sectionHeaderContainer";
-            if (this._shouldHideTitle) { titleCls += " hidden"; }
+            if (this._config.hideTitle) { titleCls += " hidden"; }
 
             this._elems.titleContainer = createElement({
                 cls: titleCls,
-                parent:this._elems.core,
+                parent:this._elems.base,
                 eventListeners: {
                     click: () => { this._onCaretClicked(); }
                 }
             });
-            this._elems.title = createSimpleElement("", "sectionHeader", this._label, null, null, this._elems.titleContainer);
 
-            if (!this._canCollapse) { return; }
+            this._elems.title = createSimpleElement("", "sectionHeader", this._config.label, null, null, this._elems.titleContainer);
+
+            if (this._config.uncollapsible) { return; }
 
             this._elems.collapseElem = createSimpleElement("", "caret", "\u25B5", null, null, this._elems.titleContainer);
 
             // add a tracking class to the core element
-            addClass(this._elems.core, "collapsible");
+            addClass(this._elems.base, "collapsible");
 
             // start collapsed
             if (this._isCollapsed) {
-                this.collapse();
+                addClass(this._elems.base, "collapsed");
+                this._isCollapsed = true;
             }
         }
         //#endregion
@@ -142,7 +137,7 @@ namespace KIP.Forms {
          * Handle the expand/collapse icon being clicked
          */
         protected _onCaretClicked(): void {
-            if (!this._canCollapse) { return; }
+            if (this._config.uncollapsible) { return; }
             if (this._isCollapsed) {
                 this.expand();
             } else {
@@ -156,8 +151,19 @@ namespace KIP.Forms {
          * Handle collapsing the section
          */
         public collapse(): void {
-            addClass(this._elems.core, "collapsed");
+            if (this._isTransitioning) { return; }
+            this._isTransitioning = true;
             this._isCollapsed = true;
+
+            KIP.transition(
+                this._elems.childrenContainer,
+                { height: "<height>", overflow: "hidden" },
+                { height: "0", overflow: "hidden"  },
+                500
+            ).then(() => {
+                addClass(this._elems.base, "collapsed");
+                this._isTransitioning = false;
+            })
         }
 
         /**
@@ -166,8 +172,22 @@ namespace KIP.Forms {
          * Handle expanding the section
          */
         public expand(): void {
-            removeClass(this._elems.core, "collapsed");
+            if (this._isTransitioning) { return; }
+            this._isTransitioning = true;
             this._isCollapsed = false;
+
+            removeClass(this._elems.base, "collapsed");
+            KIP.transition(
+                this._elems.childrenContainer,
+                { height: "0", overflow: "hidden" },
+                { height: "<height>" },
+                500
+            ).then(() => {
+                
+                this._isTransitioning = false;
+            });
+            
+            
         }
 
         //#endregion

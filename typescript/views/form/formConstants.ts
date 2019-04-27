@@ -4,7 +4,7 @@ namespace KIP.Forms {
         //#region ENUMS
 
         /** type of the element */
-        export enum FormElementTypeEnum {
+        export enum FieldTypeEnum {
             TEXT = 1,
             NUMBER = 2,
             DATE = 3,
@@ -24,12 +24,6 @@ namespace KIP.Forms {
             COLOR = 17,
             PERCENTAGE = 18
         };
-
-        export enum DirectionType {
-            FORWARD = 1,
-            BACKWARD = -1,
-            MOVE = 0
-        }
 
         export enum ValidationType {
             KEEP_ERROR_VALUE = 1,
@@ -53,8 +47,8 @@ namespace KIP.Forms {
         //#region TYPES
 
         /** handle more type safeness of form */
-        export type IFormElements<F> = {
-            [P in keyof F]: FormElement<F[P]>;
+        export type IFields<F> = {
+            [P in keyof F]: Field<F[P]>;
         }
 
         /** handle multiple types of evaluable elements */
@@ -78,7 +72,7 @@ namespace KIP.Forms {
 
         /** handle when another element of the form has changed */
         export interface IOtherChangeFunc<T> {
-            (otherID: string, data: any, formElement: FormElement<T>, context?: any): void;
+            (otherID: string, data: any, formElement: Field<T>, context?: any): void;
         }
 
         //#endregion
@@ -88,8 +82,8 @@ namespace KIP.Forms {
         //#region UI INTERFACES
         
         /** consistent set of elements for all Form Elements */
-        export interface IFormHTMLElements {
-            core: HTMLElement;
+        export interface IFieldElems {
+            base: HTMLElement;
             error?: HTMLElement;
             lblContainer?: HTMLElement;
             lbl?: HTMLElement;
@@ -148,7 +142,7 @@ namespace KIP.Forms {
         //#region FUNCTIONALITY INTERFACES
 
          /** handle the template for setting up a form */
-         export interface IFormElemTemplate<T> extends IFormDisplay {
+         export interface IFieldConfig<T> extends IFormDisplay {
             value?: T,
             defaultValue?: T;
             position?: number;
@@ -158,8 +152,6 @@ namespace KIP.Forms {
             onOtherChange?: IOtherChangeFunc<T>;
 
             validationType?: ValidationType;
-           
-            [key: string]: any; 
         }
     
         /** handle an interface for anything that can contain a value */

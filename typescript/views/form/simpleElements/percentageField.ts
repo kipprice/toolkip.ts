@@ -1,7 +1,8 @@
+/// <reference path="./numberField.ts" />
 namespace KIP.Forms {
 
 	/**---------------------------------------------------------------------------
-	 * @class 	PercentageElement
+	 * @class 	PercentageField
 	 * ---------------------------------------------------------------------------
 	 * Show a numeric form specific to percentages. Only differs from a numeric
 	 * element in the display
@@ -10,12 +11,12 @@ namespace KIP.Forms {
 	 * @version 1.0.0
 	 * ---------------------------------------------------------------------------
 	 */
-	export class PercentageElement extends NumberElement {
+	export class PercentageField extends NumberField {
 
         //.....................
 		//#region PROPERTIES
 		
-		protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.PERCENTAGE; }
+		protected get _type(): FieldTypeEnum { return FieldTypeEnum.PERCENTAGE; }
 		protected get _defaultValue(): number { return 0; }
 		protected get _defaultCls(): string { return "percentage"; }
 		
@@ -44,8 +45,8 @@ namespace KIP.Forms {
 
 		protected _getUncoloredStyles(): Styles.IStandardStyles {
 			return this._mergeThemes(
-				PercentageElement._uncoloredStyles,
-				FormElement._uncoloredStyles
+				PercentageField._uncoloredStyles,
+				Field._uncoloredStyles
 			);
 		}
 		
@@ -59,7 +60,7 @@ namespace KIP.Forms {
 			createElement({ 
 				cls: "percentageLbl",
 				content: "%",
-				parent: this._elems.core
+				parent: this._elems.base
 			});
 		}
 		/**
@@ -67,8 +68,8 @@ namespace KIP.Forms {
 		 * ---------------------------------------------------------------------------
 		 * create a new percentage element as required
 		 */
-        protected _createClonedElement(appendToID: string): NumberElement {
-            return new PercentageElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): NumberField {
+            return new PercentageField(this._id + appendToID, this);
         }
 	}
 }

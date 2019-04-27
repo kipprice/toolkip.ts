@@ -1,4 +1,4 @@
-/// <reference path="./sectionElement.ts" />
+/// <reference path="./sectionField.ts" />
 
 namespace KIP.Forms {
 
@@ -14,36 +14,37 @@ namespace KIP.Forms {
     }
 
     /**----------------------------------------------------------------------------
-     * @class   ArrayChildElement
+     * @class   ArrayChildField
      * ----------------------------------------------------------------------------
      * Keep track of a child of an array in the form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class ArrayChildElement<T> extends SectionElement<T> {
+    export class ArrayChildField<M, T extends IArrayChildTemplate<M> = IArrayChildTemplate<M>> extends SectionField<M,T> {
 
         //.....................
         //#region PROPERTIES
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.ARRAY_CHILD; }
-        protected get _defaultValue(): T { return {} as T; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.ARRAY_CHILD; }
+        protected get _defaultValue(): M { return {} as M; }
         protected get _defaultCls(): string { return "arrayChild"; }
 
-        protected _template: IArrayChildTemplate<T>;
-        protected _orderlistener: ArrayElement<T>;
+        protected _config: T;
+        protected _orderlistener: ArrayField<M>;
         protected _elems: IArrayChildHTMLElements;
-        protected _allowReordering: boolean;
+
         //#endregion
         //.....................
 
         //..................
         //#region STYLES
+
         protected static _uncoloredStyles: Styles.IStandardStyles = {
             ".kipFormElem.array .formChildren .kipFormElem.arrayChild": {
                 maxWidth: "calc(33% - 20px)",
                 backgroundColor: "#FFF",
                 borderRadius: "5px",
-                boxShadow: "1px 1px 5px 2px rgba(0,0,0,.2)",
+                boxShadow: "1px 1px 5px 2px rgba(0,0,0,.1)",
                 marginRight: "20px",
                 marginBottom: "10px",
                 padding: "15px",
@@ -67,10 +68,10 @@ namespace KIP.Forms {
                         marginTop: "0"
                     },
 
-                    ".kipBtn": {
+                    ".kipBtn:not(.new)": {
                         position: "absolute",
                         cursor: "pointer",
-                        top: "calc(50% - 8px)",
+                        
                         transition: "all ease-in-out .2",
                         padding: "2px",
                         boxShadow: "none",
@@ -80,30 +81,28 @@ namespace KIP.Forms {
 
                         nested: {
                             "&.close": {
-                                top: "-10px",
-                                opacity: "1",
-                                color: "#FFF"
+                                top: "2px",
+                                left: "calc(100% - 25px)"
                             },
 
                             "&.next, &.prev": {
-                                borderTop: "10px solid transparent",
-                                borderBottom: "10px solid transparent",
+                                color: "<formTheme>",
                                 padding: "0",
                                 width: "20px",
-                                height: "20px"
+                                height: "20px",
+                                borderRadius: "0",
+                                boxShadow: "none",
+                                top: "calc(50% - 8px)",
                             },
 
                             "&.next": {
                                 left: "calc(100% - 20px)",
-                                borderLeft: "10px solid <formTheme>"
                             },
 
                             "&.prev": {
                                 left: "0",
-                                borderRight: "10px solid <formTheme>",
-                                borderTop: "10px solid transparent",
-                                borderBottom: "10px solid transparent"
                             }, 
+
                             "&:hover": {
                                 transform: "scale(1.1)",
                                 opacity: "0.8"
@@ -124,7 +123,7 @@ namespace KIP.Forms {
         }
 
         protected _getUncoloredStyles(): Styles.IStandardStyles {
-            return this._mergeThemes(ArrayChildElement._uncoloredStyles, CollapsibleElement._uncoloredStyles, FormElement._uncoloredStyles);
+            return this._mergeThemes(ArrayChildField._uncoloredStyles, CollapsibleField._uncoloredStyles, Field._uncoloredStyles);
         }
         //#endregion
         //..................
@@ -133,22 +132,17 @@ namespace KIP.Forms {
         //#region CONSTRUCT AN ARRAY CHILD ELEMENT
 
         /** create an element of an array */
-        constructor(id: string, children: IFormElements<T> | FormElement<T>, template?: IArrayChildTemplate<T>) {
-            super(id? id.toString(): "", template || {}, children);
-        }
-
-        protected _parseElemTemplate(template: IArrayChildTemplate<T>): void {
-            super._parseElemTemplate(template);
-            this._allowReordering = template.allowReordering;
+        constructor(id: string, children: IFields<M> | Field<M>, template?: T) {
+            super(id? id.toString(): "", template || {} as any, children);
         }
 
         protected _onCreateElements(): void {
 
-            if (this._allowReordering) {
+            if (this._config.allowReordering) {
                 this._elems.nextBtn = createElement({
                     cls: "next kipBtn",
-                    content: "",
-                    parent: this._elems.core,
+                    content: "&#x276F;",
+                    parent: this._elems.base,
                     eventListeners: {
                         click: () => { this._changeOrder(DirectionType.FORWARD); }
                     }
@@ -156,8 +150,8 @@ namespace KIP.Forms {
 
                 this._elems.prevBtn = createElement({
                     cls: "prev kipBtn",
-                    content: "",
-                    parent: this._elems.core,
+                    content: "&#x276E;",
+                    parent: this._elems.base,
                     eventListeners: {
                         click: () => { this._changeOrder(DirectionType.BACKWARD); }
                     }
@@ -166,21 +160,21 @@ namespace KIP.Forms {
 
             this._elems.closeBtn = createElement({
                 cls: "close kipBtn", 
-                content: "X", 
-                parent: this._elems.core,
+                content: "&#x2715;", 
+                parent: this._elems.base,
                 eventListeners: {
                     click: () => { this._delete(); }
                 }
             });
 
-            this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.core);
+            this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.base);
         }
 
-        protected _createClonedElement(appendToID: string): ArrayChildElement<T> {
-            return new ArrayChildElement<T>(this._id + appendToID, this._children);
+        protected _createClonedElement(appendToID: string): ArrayChildField<M,T> {
+            return new ArrayChildField<M,T>(this._id + appendToID, this._children);
         }
 
-        protected _cloneFormElement(child: FormElement<any>): FormElement<any> {
+        protected _cloneFormElement(child: Field<any>): Field<any> {
             return super._cloneFormElement(child, "|" + this._id);
         }
         //#endregion
@@ -188,17 +182,20 @@ namespace KIP.Forms {
 
         //...........................
         //#region HANDLE DELETION
+
         protected _delete(): void {
-            this._elems.core.parentNode.removeChild(this._elems.core);
+            this._elems.base.parentNode.removeChild(this._elems.base);
             this._data = null;
             this._dispatchChangeEvent();
         }
+
         //#endregion
         //...........................
 
         //.................................
         //#region HANDLE ORDER CHANGING
-        public addOrderingListener(orderListener: ArrayElement<T>): void {
+
+        public addOrderingListener(orderListener: ArrayField<M>): void {
             this._orderlistener = orderListener;
         }
 
@@ -206,6 +203,7 @@ namespace KIP.Forms {
             if (!this._orderlistener) { return; }
             this._orderlistener.onChangeOrder(this, direction)
         }
+        
         //#endregion
         //.................................
     }

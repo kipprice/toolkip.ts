@@ -1,15 +1,15 @@
 namespace KIP.Forms {
     
     /**----------------------------------------------------------------------------
-     * @class NumberElement
+     * @class NumberField
      * ----------------------------------------------------------------------------
      * create a number element for a form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class NumberElement extends FormElement<number> {
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.NUMBER; }
+    export class NumberField extends Field<number> {
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.NUMBER; }
         protected get _defaultValue(): number { return 0; }
         protected get _defaultCls(): string { return "number"; }
 
@@ -18,13 +18,13 @@ namespace KIP.Forms {
             this._handleStandardLayout();
         }
 
-        protected _onChange(): boolean {
+        protected _getValueFromField(): number {
             let value: number = +this._elems.input.value;
-            return this._standardValidation(value);
+            return value;
         }
 
-        protected _createClonedElement(appendToID: string): NumberElement {
-            return new NumberElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): NumberField {
+            return new NumberField(this._id + appendToID, this);
         }
     }
 }

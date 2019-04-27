@@ -1,15 +1,15 @@
 namespace KIP.Forms {
 
     /**----------------------------------------------------------------------------
-     * @class TimeElement
+     * @class TimeField
      * ----------------------------------------------------------------------------
      * create a time element for a form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class TimeElement extends FormElement<Date> {
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.TIME; }
+    export class TimeField extends Field<Date> {
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.TIME; }
         protected get _defaultValue(): Date { return null; }
         protected get _defaultCls(): string { return "time"; }
 
@@ -18,18 +18,18 @@ namespace KIP.Forms {
             this._handleStandardLayout();
         }
 
-        protected _onChange(): boolean {
+        protected _getValueFromField(): Date {
             let value: string = this._elems.input.value;
             let dateValue: Date = Dates.inputToDate("", value);
 
-            return this._standardValidation(dateValue);
+            return dateValue;
         }
 
-        protected _createClonedElement(appendToID: string): TimeElement {
-            return new TimeElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): TimeField {
+            return new TimeField(this._id + appendToID, this);
         }
 
-        public update(data: Date): void {
+        public update(data: Date, allowEvents: boolean): void {
             this._data = data;
             if (!this._elems.input) { return; }
             if (!this._data) { return; }

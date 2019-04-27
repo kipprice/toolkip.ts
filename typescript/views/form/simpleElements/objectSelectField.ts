@@ -6,7 +6,7 @@ namespace KIP.Forms {
     }
 
     /** select-specific template options */
-    export interface IFormObjectSelectTemplate<T> extends IFormElemTemplate<T> {
+    export interface IObjectSelectTemplate<T> extends IFieldConfig<T> {
         options: IObjectSelectOptions<T>;
     }
 
@@ -17,27 +17,27 @@ namespace KIP.Forms {
     }
     
     /**----------------------------------------------------------------------------
-     * @class ObjectSelectElement
+     * @class ObjectSelectField
      * ----------------------------------------------------------------------------
      * create a dropdown for a form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class ObjectSelectElement<T> extends FormElement<T> {
+    export class ObjectSelectField<M, T extends IObjectSelectTemplate<M>> extends Field<M, T> {
         //.....................
         //#region PROPERTIES
         
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.SELECT; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.SELECT; }
 
-        protected get _defaultValue(): T { return null; }
+        protected get _defaultValue(): M { return null; }
 
         protected get _defaultCls(): string { return "select"; }
 
-        protected _options: IObjectOption<T>[];
+        protected _options: IObjectOption<M>[];
 
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             input: HTMLSelectElement;
             lbl: HTMLElement;
         }
@@ -45,36 +45,17 @@ namespace KIP.Forms {
         //#endregion
         //.....................
 
-        /** 
-         * SelectElement
-         * ----------------------------------------------------------------------------
-         * Create the Select Element
-         */
-        constructor(id: string, template: IFormObjectSelectTemplate<T> | ObjectSelectElement<T>) {
-            super(id, template);
-        }
-
-        /** 
-         * _cloneFromFormElement
-         * ----------------------------------------------------------------------------
-         * Generate a cloned version of this form element
-         */
-        protected _cloneFromFormElement(data: ObjectSelectElement<T>): void {
-            super._cloneFromFormElement(data);
-            this._options = data._options;
-        }
-
         /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * Get additional details about how this select field should be set up
          */
-        protected _parseElemTemplate(template: IFormObjectSelectTemplate<T>): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
 
             // parse options into an array instead of a dictionary
             this._options = [];
-            KIP.map(template.options, (obj: T, display: string) => {
+            KIP.map(template.options, (obj: M, display: string) => {
                 this._options.push({
                     display: display,
                     value: obj
@@ -107,10 +88,10 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * manage when details in this select field changed
          */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): M {
             let idx: string = this._elems.input.value;
             let value = this._options[idx];
-            return this._standardValidation(value);
+            return value;
         }
 
         /**
@@ -118,8 +99,8 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Generate the cloned select element
          */
-        protected _createClonedElement(appendToID: string): ObjectSelectElement<T> {
-            return new ObjectSelectElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): ObjectSelectField<M,T> {
+            return new ObjectSelectField(this._id + appendToID, this);
         }
     }
 }

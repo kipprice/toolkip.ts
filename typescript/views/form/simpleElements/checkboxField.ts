@@ -1,25 +1,25 @@
 namespace KIP.Forms {
     
      /**----------------------------------------------------------------------------
-     * @class CheckElement
+     * @class CheckboxField
      * ----------------------------------------------------------------------------
      * create a checkbox form element
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class CheckElement extends FormElement<boolean> {
+    export class CheckboxField extends Field<boolean> {
 
         //.....................
         //#region PROPERTIES
         
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.CHECKBOX; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.CHECKBOX; }
         protected get _defaultValue(): boolean { return false; }
         protected get _defaultCls(): string { return "check"; }
-        protected get _layout(): FormElementLayoutEnum { return FormElementLayoutEnum.LABEL_AFTER; }
+        protected get _defaultLayout(): FormElementLayoutEnum { return FormElementLayoutEnum.LABEL_AFTER; }
 
         protected _elems: {
-            core: HTMLElement;
+            base: HTMLElement;
             error?: HTMLElement;
             lbl?: HTMLElement;
             input?: HTMLInputElement;
@@ -96,7 +96,7 @@ namespace KIP.Forms {
         };
 
         protected _getUncoloredStyles(): Styles.IStandardStyles {
-            return this._mergeThemes(CheckElement._uncoloredStyles, FormElement._uncoloredStyles);
+            return this._mergeThemes(CheckboxField._uncoloredStyles, Field._uncoloredStyles);
         }
         
         //#endregion
@@ -107,7 +107,7 @@ namespace KIP.Forms {
             this._createStandardInput();
 
             // Create the custom UI for the checkbox
-            this._elems.lbl = createLabelForInput("", this._id + "|input", "", this._elems.core);
+            this._elems.lbl = createLabelForInput("", this._id + "|input", "", this._elems.base);
             this._elems.inputBox = createElement({
                 cls: "inputBox", 
                 parent: this._elems.lbl,  
@@ -115,7 +115,6 @@ namespace KIP.Forms {
                 eventListeners: {
                     keypress: (event: KeyboardEvent) => {
                         if (event.keyCode !== 13 && event.keyCode !== 32) { return; }
-
                         this._elems.input.checked = !this._elems.input.checked;
                     }
                 }
@@ -126,15 +125,15 @@ namespace KIP.Forms {
                 parent: this._elems.inputBox
             });
 
-            this._elems.innerLbl = createSimpleElement("", "innerLbl", this._label, null, null, this._elems.lbl);
+            this._elems.innerLbl = createSimpleElement("", "innerLbl", this._config.label, null, null, this._elems.lbl);
 
             this._handleStandardLayout();
         }
 
         /** handle when the checkbox is clicked */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): boolean {
             let value: boolean = (this._elems.input as HTMLInputElement).checked;
-            return this._standardValidation(value);
+            return value;
         }
 
         /** 
@@ -142,8 +141,8 @@ namespace KIP.Forms {
          * ---------------------------------------------------------------------------
          * clone the appropriate element 
          */
-        protected _createClonedElement(appendToID: string): CheckElement {
-            return new CheckElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): CheckboxField {
+            return new CheckboxField(this._id + appendToID, this);
         }
 
         /** 
@@ -151,7 +150,7 @@ namespace KIP.Forms {
          * ---------------------------------------------------------------------------
          * update the contents of the element 
          * */
-        public update(data: boolean): void {
+        public update(data: boolean, allowEvents: boolean): void {
             this._data = data;
             this._elems.input.checked = data;
         }

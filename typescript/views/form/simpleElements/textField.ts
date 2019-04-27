@@ -1,15 +1,15 @@
 namespace KIP.Forms {
     
     /**----------------------------------------------------------------------------
-     * @class TextElement
+     * @class TextField
      * ----------------------------------------------------------------------------
      * create a text element for a form
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class TextElement extends FormElement<string> {
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.TEXT; }
+    export class TextField extends Field<string> {
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.TEXT; }
         protected get _defaultValue(): string { return ""; }
         protected get _defaultCls(): string { return "text"; }
 
@@ -18,13 +18,13 @@ namespace KIP.Forms {
             this._handleStandardLayout();
         }
 
-        protected _onChange(fieldStillHasFocis: boolean): boolean {
+        protected _getValueFromField(): string {
             let value: string = this._elems.input.value;
-            return this._standardValidation(value);
+            return value;
         }
 
-        protected _createClonedElement(appendToID: string): TextElement {
-            return new TextElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): TextField {
+            return new TextField(this._id + appendToID, this);
         }
     }
 }

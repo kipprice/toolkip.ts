@@ -1,26 +1,26 @@
-///<reference path="../formElement.ts" />
+///<reference path="../_field.ts" />
 
 namespace KIP.Forms {
 
-    export interface IFormFileElemTemplate<T> extends IFormElemTemplate<T> {
+    export interface IFormFileElemTemplate<T> extends IFieldConfig<T> {
         attr?: IAttributes;
     }
     
     /**----------------------------------------------------------------------------
-     * @class FileUploadElement
+     * @class FileUploadField
      * ----------------------------------------------------------------------------
      * handle file uploads such that they return a file list 
      * @author  Kip Price
-     * @version 1.0.0
+     * @version 1.0.1
      * ----------------------------------------------------------------------------
      */
-    export class FileUploadElement extends FormElement<FileList> {
+    export class FileUploadField<T extends IFormFileElemTemplate<FileList> = IFormFileElemTemplate<FileList>> extends Field<FileList,T> {
 
         //.....................
         //#region PROPERTIES
 
         /** track the type of form element this is */
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.FILE_UPLOAD; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.FILE_UPLOAD; }
 
         /** give this for element a default CSS class */
         protected get _defaultCls(): string { return "file"; }
@@ -35,23 +35,12 @@ namespace KIP.Forms {
         //.....................
 
         /**
-         * FileUploadElement
-         * ----------------------------------------------------------------------------
-         * Create a FileUploadElement
-         * @param   id          The unqiue ID for the element
-         * @param   template    The template element to use as a basis for this element
-         */
-        constructor(id: string, template: IFormFileElemTemplate<FileList> | FileUploadElement) {
-            super(id, template);
-        }
-
-        /**
-         * _parseElemTemplate
+         * _parseFieldTemplate
          * ----------------------------------------------------------------------------
          * Parse the details of how to render this element
          */
-        protected _parseElemTemplate(template: IFormFileElemTemplate<FileList>): void {
-            super._parseElemTemplate(template);
+        protected _parseFieldTemplate(template: T): void {
+            super._parseFieldTemplate(template);
             this._attr = template.attr;
         }
 
@@ -61,8 +50,8 @@ namespace KIP.Forms {
          * Handle creating elements
          */
         protected _onCreateElements(): void {
-            this._createStandardLabel(this._elems.core);
-            this._elems.input = createInputElement("", "", "file", this._data, null, null, this._elems.core);
+            this._createStandardLabel(this._elems.base);
+            this._elems.input = createInputElement("", "", "file", this._data, null, null, this._elems.base);
         }
 
         /**
@@ -71,9 +60,9 @@ namespace KIP.Forms {
          * Handle when the user has uploaded a file
          * @returns True if the file passes validation
          */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): FileList {
             let files: FileList = (this._elems.input as HTMLInputElement).files;
-            return this._standardValidation(files);
+            return files
         }
 
         /**
@@ -83,8 +72,8 @@ namespace KIP.Forms {
          * @param   appendToId  The ID to append to the cloned element
          * @returns The created cloned element
          */
-        protected _createClonedElement(appendToId: string): FileUploadElement {
-            return new FileUploadElement(this.id + appendToId, this);
+        protected _createClonedElement(appendToId: string): FileUploadField<T> {
+            return new FileUploadField<T>(this.id + appendToId, this);
         }
     }
 

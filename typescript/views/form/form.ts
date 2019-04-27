@@ -29,8 +29,8 @@ namespace KIP.Forms {
         //#region PROPERTIES
 
         /** get the appropriate data out of this form */
-        public get data(): F {
-            return this._coreFormElem.save(true);
+        public async getData(): Promise<F> {
+            return await this._coreFormElem.save(true);
         }
 
         /** internal tracking for whether the form is showing or not */
@@ -49,7 +49,7 @@ namespace KIP.Forms {
         protected _elems: IFormElems;
 
         /** the drawable element containing all other form elements */
-        protected _coreFormElem: SectionElement<F>;
+        protected _coreFormElem: SectionField<F>;
 
         /** any listeners that should be used upon the form saving */
         protected _saveListeners: Collection<IFormSaveFunction>;
@@ -79,108 +79,170 @@ namespace KIP.Forms {
                 padding: "0",
                 width: "100%",
                 height: "100%",
-                fontFamily: "Open Sans,Segoe UI,Helvetica",
-                fontSize: "1.2em",
+                fontFamily: "Open Sans,Segoe UI Light,Helvetica",
+                fontSize: "1em",
                 position: "inherit",
-                boxSizing: "border-box"
-            },
-
-            ".kipForm.hidden": {
-                display: "none"
-            },
-
-            ".kipForm .formOverlay": {
-                position: "fixed",
-                width: "100%",
-                height: "100%",
-                top: "0",
-                left: "0",
-                backgroundColor: "rgba(0,0,0,.6)"
-            },
-
-            ".kipForm .background": {
-                borderRadius: "2px",
-                backgroundColor: "#FFF",
-                width: "60%",
-                marginLeft: "20%",
-                maxHeight: "90%",
-                position: "relative",
-                display: "flex",
-                flexDirection: "column"
-            },
-
-            ".kipForm .formOverlay .background": {
-                marginTop: "2%"
-            },
-
-            ".kipForm .formContent": {
-                overflowY: "auto",
-                position: "relative",
-                padding: "5px",
-                paddingRight: "15px",
-                flexGrow: "1"
-            },
-
-            ".kipForm .kipBtns": {
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: "3px 5px",
-                flexShrink: "0",
-                zIndex: "5"
-            },
-
-            ".kipForm.popup .kipBtns": {
-                boxShadow: "0px -2px 2px 1px rgba(0,0,0,.15)"
-            },   
-
-            ".kipForm .kipBtn": {
-                padding: "5px 20px",
-                marginRight: "10px",
-                cursor: "pointer",
-                borderRadius: "2px",
-                boxShadow: "1px 1px 5px 2px rgba(0,0,0,.1)",
-                fontSize: "1.2em",
                 boxSizing: "border-box",
-                textAlign: "center",
-                transition: "all ease-in-out .1s"
-            },
+                fontWeight: "100",
 
-            ".kipForm .kipBtn:not(.disabled):hover, .kipForm .kipBtn.selected": {
-                transform: "scale(1.05)"
-            },
+                nested: {
+                    "&.hidden": {
+                        display: "none"
+                    },
 
-            ".kipForm .save.kipBtn": {
-                backgroundColor: "<formTheme>",
-                color: "#FFF",
-                width: "20%"
-            },
+                    ".formOverlay": {
+                        position: "fixed",
+                        width: "100%",
+                        height: "100%",
+                        top: "0",
+                        left: "0",
+                        backgroundColor: "rgba(0,0,0,.6)",
 
-            ".kipForm .save.kipBtn.disabled": {
-                backgroundColor: "#888",
-                color: "#FFF",
-                opacity: "0.5",
-                cursor: "unset"
-            },
+                        nested: {
+                            ".background": {
+                                marginTop: "2%",
+                                boxShadow: "1px 1px 8px 3px rgba(0,0,0,.2)",
+                                overflow: "hidden",
 
-            ".kipForm .close.kipBtn": {
-                borderRadius: "100%",
-                border: "2px solid #999",
-                width: "24px",
-                height: "24px",
-                backgroundColor: "#999",
-                color: "#FFF",
-                padding: "0",
-                position: "absolute",
-                top: "-12px",
-                left: "calc(100% - 12px)",
-                boxSizing: "content-box",
-                textAlign: "center",
-                fontSize: "20px"
-            },
+                                nested: {
+                                    ".formContent": {
+                                        overflowY: "auto",
+                                    }
+                                }
+                            }
+                        }
+                    },
 
-            ".kipForm .cancel.kipBtn": {
-                backgroundColor: "#999",
-                color: "#FFF"
+                    ".background": {
+                        borderRadius: "5px",
+                        backgroundColor: "#FFF",
+                        width: "60%",
+                        marginLeft: "20%",
+                        maxHeight: "90%",
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column"
+                    },
+        
+                    ".formContent": {
+                        
+                        position: "relative",
+                        padding: "5px",
+                        paddingRight: "15px",
+                        flexGrow: "1"
+                    },
+        
+                    ".kipBtns": {
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        padding: "3px 5px",
+                        flexShrink: "0",
+                        zIndex: "5",
+                        textTransform: "uppercase",
+                        flexDirection: "row-reverse",
+                        alignItems: "center",
+                    },
+        
+                    "&.popup .kipBtns": {
+                        boxShadow: "0px -2px 2px 1px rgba(0,0,0,.08)",
+                        backgroundColor: "<formSubTheme>",
+
+                        nested: {
+                            ".kipBtn": {
+                                nested: {
+                                    "&.save, &.cancel": {
+                                        backgroundColor: "transparent",
+                                        color: "#FFF",
+                                        boxShadow: "none",
+                                        opacity: "0.7",
+                                    }
+                                }
+                            }
+                        }
+                    },   
+
+                    ".titleBar": {
+                        display: "flex",
+                        backgroundColor: "<formSubTheme>",
+                        color: "#FFF",
+                        flexShrink: "0",
+                        alignItems: "center",
+                        boxShadow: "0px 2px 2px 1px rgba(0,0,0,.08)",
+
+                        nested: {
+                            ".formTitle": {
+                                fontSize: "1.3em",
+                                padding: "5px",
+                                marginLeft: "20px",
+                                flexGrow: "1"
+                            }
+                        }
+                    },
+        
+                    ".kipBtn": {
+                        padding: "5px 20px",
+                        marginRight: "10px",
+                        cursor: "pointer",
+                        borderRadius: "30px",
+                        boxShadow: "1px 1px 5px 2px rgba(0,0,0,.1)",
+                        fontSize: "1.2em",
+                        boxSizing: "border-box",
+                        textAlign: "center",
+                        transition: "all ease-in-out .1s",
+
+                        nested: {
+                            ".kipBtn:not(.disabled):hover, .kipBtn.selected": {
+                                transform: "scale(1.05)"
+                            },
+
+                            "&.save, &.cancel": {
+                                color: "#FFF",
+
+                                nested: {
+                                    "&:hover": {
+                                        opacity: "1",
+                                        transform: "scale(1.1)"
+                                    },
+
+                                    "&.disabled": {
+                                        backgroundColor: "#888",
+                                        color: "#FFF",
+                                        opacity: "0.5",
+                                        cursor: "unset"
+                                    }
+                                }
+                            },
+
+                            "&.save": {
+                                backgroundColor: "<formTheme>",
+                            },
+
+                            "&.cancel": {
+                                fontSize: "0.9em",
+                                backgroundColor: "#888"
+                            },
+
+                            "&.close": {
+                                color: "#FFF",
+                                padding: "0",
+                                boxSizing: "content-box",
+                                textAlign: "center",
+                                fontSize: "20px",
+                                boxShadow: "none",
+                                cursor: "pointer",
+                                zIndex: "1",
+                                opacity: "0.6",
+                
+                                nested: {
+                                    "&:hover": {
+                                        opacity: "1",
+                                        transform: "scale(1.1)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -206,7 +268,7 @@ namespace KIP.Forms {
          * @param   options     Specific way this form should be created
          * @param   elems       Form elements that should be shown for this form
          */
-        constructor(id: string, options: IFormOptions, elems?: IFormElements<F>) {
+        constructor(id: string, options: IFormOptions, elems?: IFields<F>) {
             super();
             this._addClassName("Form");
 
@@ -218,14 +280,14 @@ namespace KIP.Forms {
             this._hasChanges = false;
             this._canSaveTracker = { hasMissingRequired: false, hasErrors: false };
 
-            this._colors = options.colors || {formTheme: "#4A5", formSubTheme: "#284"};
+            this._colors = options.colors || {formTheme: "#EFC500", formSubTheme: "#444"};
             this._applyColors();
 
             // handle listeners
             this._saveListeners = new Collection<IFormSaveFunction>();
             this._cancelListeners = new Collection<IFormCancelFunction>();
 
-            this._createElements();
+            this._createElements(options);
             this._createCoreElem(options, elems);
             this._addWindowEventListeners();
         }
@@ -241,16 +303,16 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Create the elements used by the form 
          */
-        protected _createElements(): void {
+        protected _createElements(options: IFormOptions): void {
             this._elems = {
                 base: createSimpleElement(this._id, "kipForm hidden"),
                 background: createSimpleElement("", "background"),
                 formContent: createSimpleElement("", "formContent")
             };
-            this._createPopupElements();
+
+            this._createPopupElements(options);
             this._elems.background.appendChild(this._elems.formContent);
             this._createButtons();
-            if (!this._noStandardStyles) { this._createStyles(); }
         }
 
         /**
@@ -258,7 +320,7 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * create the elements needed for the popup version of the form 
          */
-        protected _createPopupElements(): void {
+        protected _createPopupElements(options: IFormOptions): void {
 
             // If we aren't showing as a popup, add the BG directly to the base
             if (!this._showAsPopup) {
@@ -277,9 +339,23 @@ namespace KIP.Forms {
 
             this._elems.closeButton = createElement({
                 cls: "close kipBtn", 
-                content: "x", 
-                parent: this._elems.background
+                content: "&#x2715;",
+                eventListeners: {
+                    click: () => { KIP.wait(10).then( () => this._cancelConfirmation() ) }
+                }
             });
+
+            KIP.createElement({
+                cls: "titleBar",
+                children: [
+                    { cls: "formTitle", content: options.hideTitle ? "" : options.label },
+                    this._elems.closeButton
+                ],
+                parent: this._elems.background
+            })
+
+            options.hideTitle = true;
+
         }
 
         /**
@@ -325,21 +401,20 @@ namespace KIP.Forms {
          * @param   elems       Elements associated with this form
          * 
          */
-        protected _createCoreElem(options: IFormOptions, elems: IFormElements<F>): void {
+        protected _createCoreElem(options: IFormOptions, elems: IFields<F>): void {
 
             // create the template that will render the section
             let template: IFormCollapsibleTemplate<F> = {
-                type: FormElementTypeEnum.SECTION,
                 label: options.label,
                 cls: options.cls,
                 layout: options.layout,
-                hideTitle: options.hideTitle
+                hideTitle: options.hideTitle,
+                uncollapsible: !options.hideTitle
             };
 
             // create the core section
-            this._coreFormElem = new SectionElement<F>(this._id, template, elems);
+            this._coreFormElem = new SectionField<F>(this._id, template, elems);
             this._applyColors(this._coreFormElem);
-            this._coreFormElem.expand();
 
             // add the event listener to the section changing
             formEventHandler.addEventListener(FORM_ELEM_CHANGE,
@@ -357,7 +432,7 @@ namespace KIP.Forms {
             this._addSaveButtonUpdater();
 
             // add the section to the overall form UI
-            this._coreFormElem.render(this._elems.formContent);
+            this._coreFormElem.draw(this._elems.formContent);
         }
 
         protected _addSaveButtonUpdater(): void {
@@ -381,15 +456,14 @@ namespace KIP.Forms {
         //#region DATA MANIPULATIONS
 
         /**
-         * save
-         * 
+         * _save
+         * ---------------------------------------------------------------------------
          * Saves data in the form
          * 
          * @returns The data contained in the form
-         * 
          */
-        protected _save(): F {
-            let data: F = this._coreFormElem.save();
+        protected async _save(): Promise<F> {
+            let data: F = await this._coreFormElem.save();
 
             // Alert any listeners of this particular form that 
             this._notifySaveListeners(data);
@@ -399,25 +473,23 @@ namespace KIP.Forms {
 
         /**
          * trySave
-         * 
+         * ---------------------------------------------------------------------------
          * Attempt to save the form
-         * 
          */
-        public trySave(): F {
+        public async trySave(): Promise<F> {
             if (hasClass(this._elems.saveButton, "disabled")) { return null; }
             if (!this.canSave()) {
                 this._showCannotSaveMessage();
                 return null;
             } else {
-                return this._save();
+                return await this._save();
             }
         }
 
         /**
          * _canSave
-         * 
+         * ---------------------------------------------------------------------------
          * Check with our elements that we are able to save
-         * 
          */
         public canSave(): boolean {
             this._canSaveTracker = this._coreFormElem.canSave();
@@ -427,9 +499,8 @@ namespace KIP.Forms {
 
         /**
          * _showCannotSaveMessage
-         * 
+         * ----------------------------------------------------------------------------
          * Show popup indicating why we couldn't save this form
-         * 
          */
         protected _showCannotSaveMessage(): void {
             let msg: string = this._getCannotSaveMessage();
@@ -442,9 +513,8 @@ namespace KIP.Forms {
 
         /**
          * _getCannotSaveMessage
-         * 
+         * ----------------------------------------------------------------------------
          * Determine what message to show as to why the form cannot be saved
-         * 
          */
         protected _getCannotSaveMessage(): string {
             let msg: string = "";
@@ -462,11 +532,10 @@ namespace KIP.Forms {
 
         /**
          * _notifySaveListeners
-         * 
+         * ----------------------------------------------------------------------------
          * lets all listeners know that the form has saved
          *
          * @param  data    The form data that was just saved
-         * 
          */
         protected _notifySaveListeners(data: F): void {
             this._saveListeners.map((listener: IFormSaveFunction) => {
@@ -562,10 +631,12 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * update the data in the form to match a particular data set
          * 
-         * @param   model    The data to update the form with
+         * @param   model           The data to update the form with
+         * @param   allowEvents     If true, also fires change events as a result of 
+         *                          the update
          */
-        public update(model: F): void {
-            this._coreFormElem.update(model);
+        public update(model: F, allowEvents?: boolean): void {
+            this._coreFormElem.update(model, allowEvents);
             this._hasChanges = false;
         }
 
@@ -711,8 +782,12 @@ namespace KIP.Forms {
           * ----------------------------------------------------------------------------
           * Adds a form element to our form after it's been initialized
           */
-        protected addFormElement<K extends keyof F>(key: K, formElem: FormElement<F[K]>): boolean {
+        public addFormElement<K extends keyof F>(key: K, formElem: Field<F[K]>): boolean {
             return this._coreFormElem.addChildElement(key, formElem);
+        }
+
+        public getField(id: string): Field<any> {
+            return this._coreFormElem.getField(id);
         }
 
         //#endregion

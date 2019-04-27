@@ -1,17 +1,17 @@
 namespace KIP.Forms {
     
     /**----------------------------------------------------------------------------
-     * @class   ColorElement
+     * @class   ColorField
      * ----------------------------------------------------------------------------
      * Creates a form element for collecting colors
-     * @version 1.0.0
+     * @version 1.0.1
      * @author  Kip Price
      * ----------------------------------------------------------------------------
      */
-    export class ColorElement extends FormElement<string> {
+    export class ColorField extends Field<string> {
 
         /** type of element */
-        protected get _type(): FormElementTypeEnum { return FormElementTypeEnum.COLOR; }
+        protected get _type(): FieldTypeEnum { return FieldTypeEnum.COLOR; }
 
         /** default value to use */
         protected get _defaultValue(): string { return "#000000"; }
@@ -34,9 +34,9 @@ namespace KIP.Forms {
          * ----------------------------------------------------------------------------
          * Handle the change event for this input
          */
-        protected _onChange(): boolean {
+        protected _getValueFromField(): string {
             let value: string = this._elems.input.value;
-            return this._standardValidation(value);
+            return value;
         }
 
         /**
@@ -45,8 +45,8 @@ namespace KIP.Forms {
          * Clone this element
          * @param   appendToID  Additional ID piece to use
          */
-        protected _createClonedElement(appendToID: string): ColorElement {
-            return new ColorElement(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): ColorField {
+            return new ColorField(this._id + appendToID, this);
         }
     }
 }

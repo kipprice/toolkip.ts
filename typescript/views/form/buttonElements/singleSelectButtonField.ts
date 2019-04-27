@@ -5,30 +5,22 @@ namespace KIP.Forms {
     }
 
     /**----------------------------------------------------------------------------
-     * @class   SingleSelectButtonElem
+     * @class   SingleSelectButtonField
      * ----------------------------------------------------------------------------
      * toggle buttons as equivalent to radio buttons
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export class SingleSelectButtonElem<T> extends ToggleButtonElement<T> {
+    export class SingleSelectButtonField<M,T extends IFormSingleSelectButtonTemplate<M> = IFormSingleSelectButtonTemplate<M>> extends ToggleButtonField<M,T> {
 
         protected _selectedBtn: HTMLElement;
-        protected _options: IToggleBtnOption<T>[];
-        protected get _defaultValue(): T { return null; }
+        protected _options: IToggleBtnOption<M>[];
+        protected get _defaultValue(): M { return null; }
         protected get _multiSelect(): boolean { return false; }
 
-        constructor(id: string, template: IFormSingleSelectButtonTemplate<T> | SingleSelectButtonElem<T>) {
-            super(id, template);
-        }
-
-        protected _parseElemTemplate(template: IFormSingleSelectButtonTemplate<T>): void {
-            super._parseElemTemplate(template);
-        }
-
         /** handle a button being selected */
-        protected _selectBtn(btn: HTMLElement, value: T): void {
+        protected _selectBtn(btn: HTMLElement, value: M): void {
             if (!btn) { return; }
 
             if (this._selectedBtn) {
@@ -46,15 +38,15 @@ namespace KIP.Forms {
             addClass(btn, "selected");
         }
 
-        protected _createClonedElement(appendToID: string): SingleSelectButtonElem<T> {
-            return new SingleSelectButtonElem<T>(this._id + appendToID, this);
+        protected _createClonedElement(appendToID: string): SingleSelectButtonField<M,T> {
+            return new SingleSelectButtonField<M,T>(this._id + appendToID, this);
         }
 
-        protected _shouldBeSelected(elem: IToggleBtnOption<T>): boolean {
+        protected _shouldBeSelected(elem: IToggleBtnOption<M>): boolean {
             return this._data === elem.value;
         }
 
-        public _onClear(): void {
+        public clear(): void {
             if (this._selectedBtn) {
                 removeClass(this._selectedBtn, "selected");
                 this._selectedBtn = null;
