@@ -55,6 +55,8 @@ namespace KIP.Forms {
         protected _hasErrors: boolean;
         public get hasErrors(): boolean { return this._hasErrors; }
 
+        protected _isHidden: boolean;
+
         //#endregion
         //.....................
 
@@ -96,6 +98,11 @@ namespace KIP.Forms {
             ".kipFormElem": {
                 marginTop: "10px",
                 position: "relative"
+            },
+
+            ".kipFormElem.hidden": {
+                display: "none"
+                // TODO: allow for transitions
             },
 
             ".kipFormElem input, .kipFormElem textarea, .kipFormElem select": {
@@ -329,6 +336,9 @@ namespace KIP.Forms {
             // (we need to do this manually because form elements aren't 
             //  Drawable elements)
             this._createStyles();
+
+            // detect whether the element starts hidden
+            if (hasClass(this._elems.base, "hidden")) { this._isHidden = true; }
         }
 
         /**
@@ -927,6 +937,48 @@ namespace KIP.Forms {
         public getField(id: string): Field<any> {
             if (id === this._id) { return this; }
             return null;
+        }
+        
+        //#endregion
+        //..........................................
+
+        //..........................................
+        //#region HANDLE SHOWING OR HIDING THE FIELD
+        
+        /**
+         * show
+         * ----------------------------------------------------------------------------
+         * ensure that this field is shown
+         */
+        public async show(): Promise<void> {
+            if (!this._isHidden) { return; }
+            this._isHidden = false;
+
+            removeClass(this._elems.base, "hidden");
+            await transition(
+                this._elems.base,
+                { height: "0" },
+                { height: "<height>" },
+                200
+            );
+        }
+
+        /**
+         * hide
+         * ----------------------------------------------------------------------------
+         * ensure that this field isn't shown
+         */
+        public async hide(): Promise<void> {
+            if (this._isHidden) { return; }
+            this._isHidden = true;
+
+            await transition(
+                this._elems.base,
+                { maxHeight: "<height>", overflow: "hidden" },
+                { maxHeight: "0 !important", overflow: "hidden" },
+                200
+            );
+            addClass(this._elems.base, "hidden");
         }
         
         //#endregion

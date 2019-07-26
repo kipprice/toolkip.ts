@@ -70,7 +70,7 @@ namespace KIP.SVG {
 			elem.style.merge(this._style);
 
 			// add the element to our internal array
-			this._svgElems.addElement(elem.id, elem);
+			this._svgElems.add(elem.id, elem);
 
 			// prevent scaling of the element if appropriate
 			if (elem.preventScaling) {

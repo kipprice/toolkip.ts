@@ -231,7 +231,7 @@ namespace KIP {
 
                 // save this particular key-value
                 let outVal = this._savePiece(fmtKey as keyof T, val);
-                if (!isNullOrUndefined(outVal)) { out[fmtKey] = outVal; }
+                if (!isNullOrUndefined(outVal)) { out[fmtKey as keyof T] = outVal; }
             });
             
             return out;
@@ -471,6 +471,9 @@ namespace KIP {
         /** track the last ID used in a model */
         protected static _lastId: number = 0;
 
+        /** allow classes to specify a prefix to their ID easily */
+        protected static get _prefix(): string { return ""; }
+
         //#endregion
         //.....................
 
@@ -483,7 +486,7 @@ namespace KIP {
          */
         protected static _generateNewId(): string {
             this._lastId += 1;
-            return this._lastId.toString();
+            return this._prefix + this._lastId.toString();
         }
 
         /**
@@ -493,6 +496,11 @@ namespace KIP {
          * @param   lastId  Most recent iD used in a model  
          */
         protected static _updateLastId(lastId: string): void {
+
+            // make sure we aren't including the prefix
+            let prefixReg = new RegExp(this._prefix, "g");
+            lastId = lastId.replace(prefixReg, "");
+
             let lastNumericId = parseInt(lastId);
             if (isNaN(lastNumericId)) {
                 this._lastId += 1;      // don't fail on NaN conditions; just increment

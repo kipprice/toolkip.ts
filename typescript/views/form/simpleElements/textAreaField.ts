@@ -34,8 +34,9 @@ namespace KIP.Forms {
         }
 
         public update(data: string, allowEvents: boolean): void {
+            if (isNullOrUndefined(data)) { data = ""; }
             this._data = data;
-            if (!this._data) { return; }
+            
             let displayStr: string = data.replace(/<br>/g, "\n");
             displayStr = displayStr.replace(/\&nbsp;/g, " ");
             this._elems.input.value = displayStr;

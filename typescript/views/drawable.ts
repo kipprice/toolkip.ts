@@ -1,6 +1,6 @@
 ///<reference path="../helpers/styles.ts" />
 ///<reference path="./stylable.ts" />
-///<reference path="../helpers/html.ts" />
+///<reference path="../helpers/html/generalHelpers.ts" />
 
 namespace KIP {
 

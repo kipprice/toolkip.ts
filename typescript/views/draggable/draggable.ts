@@ -31,6 +31,8 @@ namespace KIP {
         /** track whether this draggable is currently dragging */
         protected _isDragging: boolean;
 
+        protected _signifier: HTMLElement;
+
         /** size of the grid to snap to for this element */
         protected _gridSize: number;
         public get gridSize(): number { return this._gridSize; }
@@ -76,6 +78,35 @@ namespace KIP {
                         opacity: "1",
                         transformOrigin: "50% 50%",
                         transform: "rotate(0deg)"
+                    },
+
+                    ".dragSignifier": {
+                        display: "flex",
+                        position: "absolute",
+                        left: "5px",
+                        top: "5px",
+                        width: "19px",
+                        flexWrap: "wrap",
+                        opacity: "0.5",
+
+                        nested: {
+                            "&:hover": {
+                                opacity: "1"
+                            },
+
+                            ".mobile &": {
+                                display: "none"
+                            },
+
+                            ".dot": {
+                                borderRadius: "50%",
+                                width: "3px",
+                                height: "3px",
+                                margin: "1px",
+                                backgroundColor: "rgba(0,0,0,.3)",
+                                flexShrink: "0",
+                            }
+                        }
                     }
                 }
 			},
@@ -109,6 +140,24 @@ namespace KIP {
                 addClass(this._elems.base, "draggable");
             }
 
+        }
+
+        protected _addDraggingSignifier(): void {
+            this._signifier = KIP.createElement({
+                cls: "dragSignifier", 
+                children: [
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                    { cls: "dot" },
+                ],
+                parent: this._elems.base,
+            });
         }
 
         /**
@@ -258,6 +307,8 @@ namespace KIP {
          * @param   event   The event causing the drop
          */
         protected _onDrop(event: Event): void {
+            if (!this._isDragging) { return; }
+
             if (DraggableTarget.currentDraggableTarget) {
                 GenericDraggable.currentDraggable = null;
                 this._startMousePoint = null;
@@ -334,7 +385,6 @@ namespace KIP {
          * (Does nothing; can be overridden by child classes)
          */
         protected _createElements(): void {}
-        
         //#endregion
         //....................................
 

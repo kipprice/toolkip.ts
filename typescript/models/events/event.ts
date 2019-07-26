@@ -112,7 +112,7 @@ namespace KIP.Events {
 		 */
 		public addListener(listenerData: IListenerData<C>): void {
 			listenerData.uniqueId = listenerData.uniqueId || (this._key + this._numOfListeners.toString());
-			this._listeners.addElement(listenerData.uniqueId, listenerData);
+			this._listeners.add(listenerData.uniqueId, listenerData);
 			this._numOfListeners += 1;
 		}
 
@@ -126,7 +126,7 @@ namespace KIP.Events {
 		 */
 		public removeEventListener(uniqueId: string): void {
 			if (!uniqueId) { return; }
-			this._listeners.removeElement(uniqueId);
+			this._listeners.remove(uniqueId);
 		}
 
 		/**

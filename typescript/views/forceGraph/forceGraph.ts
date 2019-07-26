@@ -36,7 +36,7 @@ namespace KIP.ForceGraph {
         //#region ADD NEW NODES
         public addNode(id: string, data: T): Node<T> {
             let node: Node<T> = new Node(data, this._isDirected);
-            this._nodes.addElement(id, node);
+            this._nodes.add(id, node);
             return node;
         }
 

@@ -165,8 +165,8 @@ namespace KIP.Forms {
          */
         public update(data: string, allowEvents: boolean): void {
             this._files = null;
+            if (!data) { data = ""; }
             this._data = data;
-            if (!this._data) { return; }
             this._elems.display.src = data;
         }
 

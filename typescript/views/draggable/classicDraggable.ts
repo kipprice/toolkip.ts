@@ -17,7 +17,12 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * (Does nothing; can be overidden by child classes)
          */
-        protected _createElements(): void {}
+        protected _createElements(): void {
+            addClass(this._elems.base, "draggable");
+            this._addEventListeners();
+
+            this._addDraggingSignifier();
+        }
 
         /**
          * _onDrop
@@ -26,8 +31,10 @@ namespace KIP {
          * @param   event   The mouse event triggering the drop 
          */
         protected _onDrop(event: MouseEvent): void {
-
-            // Attach to the appropriate parent
+            if (!this._isDragging) { return; }
+            super._onDrop(event);
+            // update the style of the element
+            removeClass(this._elems.base, "dragging");
         }
 
         /**
@@ -38,7 +45,14 @@ namespace KIP {
         protected _addEventListeners(): void {
 
             this.addEventListener("mousedown", (e: MouseEvent) => {
-				this._onDragStart(e);
+                if (
+                    (e.target !== this._elems.base) &&
+                    (e.target !== this._signifier)
+                )
+                { return; }
+                
+                this._onDragStart(e);
+                e.preventDefault();
             });
 
             window.addEventListener("mousemove", (e: MouseEvent) => {
@@ -51,7 +65,7 @@ namespace KIP {
             });
 
 			window.addEventListener("mouseout", (e: MouseEvent) => {
-                this._onDrop(e);
+                //this._onDrop(e);
             });
         }
 

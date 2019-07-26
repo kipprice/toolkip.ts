@@ -3,14 +3,14 @@
 namespace KIP {
 
     /**----------------------------------------------------------------------------
-     * @class   MVCView
+     * @class   UpdateableView
      * ----------------------------------------------------------------------------
      * Create a view that will be used in a MVC world
      * @author  Kip Price
      * @version 1.0.0
      * ----------------------------------------------------------------------------
      */
-    export abstract class MVCView<I> extends Drawable {
+    export abstract class UpdateableView<I> extends Drawable {
 
         //.....................
         //#region PROPERTIES
@@ -53,7 +53,7 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * Clear out the contents of this view
          */
-        protected abstract _clear();
+        public abstract clear();
 
         /**
          * update

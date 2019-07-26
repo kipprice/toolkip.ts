@@ -1,88 +1,9 @@
 ///<reference path="../interfaces/iclass.ts" />
-///<reference path="html.ts" />
+///<reference path="html/createElement.ts" />
 
 namespace KIP.Styles {
 
-    //....................................
-    //#region INTERFACES AND DEFINITIONS
-
-    /**
-     * IStandardStyles
-     * ----------------------------------------------------------------------------
-     * Keep track of a style definition 
-     */
-    export interface IStandardStyles {
-        [selector: string]: TypedClassDefinition;
-    }
-
-    /**
-     * IPlaceholderMatchFunction
-     * ----------------------------------------------------------------------------
-     * Check if a particular placeholder matches the expected placeholder
-     */
-    export interface IPlaceholderMatchFunction {
-        (valuePiece: string): number | string;
-    }
-
-    /**
-     * TypeClassDefinition
-     * ----------------------------------------------------------------------------
-     * Allow TS users to create a new class
-     */
-    export interface TypedClassDefinition extends IMappedType<CSSStyleDeclaration> {
-        WebkitAppearance?: string;
-        WebkitUserSelect?: string;
-        MozUserSelect?: string;
-        WebkitFilter?: string;
-        khtmlUserSelect?: string;
-        oUserSelect?: string;
-        appearance?: string;
-        nested?: IStandardStyles;
-        from?: TypedClassDefinition;
-        to?: TypedClassDefinition;
-        objectFit?: string;
-        src?: string;
-    }
-
-    /**
-     * IThemeColors
-     * ----------------------------------------------------------------------------
-     * Keeps track of the appropriate theme colors
-     */
-    export interface IThemeColors {
-        [id: string]: string;
-    }
-
-    /**
-     * IFontFaceDefinition
-     * ----------------------------------------------------------------------------
-     * Declare particulars of custom fonts
-     */
-    export interface IFontFaceDefinition {
-        url: string;
-        format: string;
-    }
-
-    /**
-     * ICustomFonts
-     * ----------------------------------------------------------------------------
-     * Define the custom fonts that should be part of this app
-     */
-    export interface ICustomFonts {
-        [fontName: string]: IFontFaceDefinition[];
-    }
-
-    /**
-     * IMediaQueries
-     * ----------------------------------------------------------------------------
-     * 
-     */
-    export interface IMediaQueries {
-        [screenSize: string]: IStandardStyles;
-    }
-
-    //#endregion
-    //....................................
+    
     
     //....................................
     //#region HANDLE THE CLASS CREATION
@@ -102,7 +23,7 @@ namespace KIP.Styles {
     export function createClass(selector: string, attr: TypedClassDefinition, noAppend?: boolean, forceOverride?: boolean, skipExistingSelector?: boolean): HTMLStyleElement {
 
         // generate the contents of the class to created
-        let styleString: string = _generateContentForCSSClass(selector, attr, skipExistingSelector);
+        let styleString: string = generateContentForCSSClass(selector, attr, skipExistingSelector);
 
         // If we created an empty class, just return nothing
         if (!styleString && !forceOverride) { return null; }
@@ -112,7 +33,7 @@ namespace KIP.Styles {
     }
 
     /**
-     * _generateContentForCSSClass
+     * generateContentForCSSClass
      * ----------------------------------------------------------------------------
      * Create the inner HTML for the CSS class that will be used for this styleset
      * @param   selector                CSS selector
@@ -121,7 +42,7 @@ namespace KIP.Styles {
      * 
      * @returns Appropriate content for the CSS class specified by the definition
      */
-    function _generateContentForCSSClass(selector: string, attr: TypedClassDefinition, skipExistingSelector?: boolean): string {
+    export function generateContentForCSSClass(selector: string, attr: TypedClassDefinition, skipExistingSelector?: boolean): string {
 
         // generate the style string from our attributes
         let styleString = _generateCSSStringContent(selector, attr, skipExistingSelector);
@@ -382,4 +303,85 @@ namespace KIP.Styles {
         }, 0);
         
     }
+
+    //....................................
+    //#region INTERFACES AND DEFINITIONS
+
+    /**
+     * IStandardStyles
+     * ----------------------------------------------------------------------------
+     * Keep track of a style definition 
+     */
+    export interface IStandardStyles {
+        [selector: string]: TypedClassDefinition;
+    }
+
+    /**
+     * IPlaceholderMatchFunction
+     * ----------------------------------------------------------------------------
+     * Check if a particular placeholder matches the expected placeholder
+     */
+    export interface IPlaceholderMatchFunction {
+        (valuePiece: string): number | string;
+    }
+
+    /**
+     * TypeClassDefinition
+     * ----------------------------------------------------------------------------
+     * Allow TS users to create a new class
+     */
+    export interface TypedClassDefinition extends IMappedType<CSSStyleDeclaration> {
+        WebkitAppearance?: string;
+        WebkitUserSelect?: string;
+        MozUserSelect?: string;
+        WebkitFilter?: string;
+        khtmlUserSelect?: string;
+        oUserSelect?: string;
+        appearance?: string;
+        nested?: IStandardStyles;
+        from?: TypedClassDefinition;
+        to?: TypedClassDefinition;
+        objectFit?: string;
+        src?: string;
+    }
+
+    /**
+     * IThemeColors
+     * ----------------------------------------------------------------------------
+     * Keeps track of the appropriate theme colors
+     */
+    export interface IThemeColors {
+        [id: string]: string;
+    }
+
+    /**
+     * IFontFaceDefinition
+     * ----------------------------------------------------------------------------
+     * Declare particulars of custom fonts
+     */
+    export interface IFontFaceDefinition {
+        url: string;
+        format: string;
+    }
+
+    /**
+     * ICustomFonts
+     * ----------------------------------------------------------------------------
+     * Define the custom fonts that should be part of this app
+     */
+    export interface ICustomFonts {
+        [fontName: string]: IFontFaceDefinition[];
+    }
+
+    /**
+     * IMediaQueries
+     * ----------------------------------------------------------------------------
+     * 
+     */
+    export interface IMediaQueries {
+        [screenSize: string]: IStandardStyles;
+    }
+
+    //#endregion
+    //....................................
 }

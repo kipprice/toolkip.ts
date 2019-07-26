@@ -151,7 +151,7 @@ namespace KIP {
 			elem.adjustDimensions(this._referencePoint);
 
 			// Add the element to our internal array, and ensure it has a way to get back to us
-			this._elements.addElement(elem.id, elem);
+			this._elements.add(elem.id, elem);
 			elem.parent =  this;
 
 			// If we have a canvas assigned, also add it to this element
@@ -268,7 +268,7 @@ namespace KIP {
 
 		/** remove elements from layers */
 		public removeElement (id: string): boolean {
-			let tmp: ICollectionElement<CanvasElement> = this._elements.removeElement(id);
+			let tmp: ICollectionElement<CanvasElement> = this._elements.remove(id);
 			if (!tmp) { return false; }
 
 			this._canvas.needsRedraw = true;

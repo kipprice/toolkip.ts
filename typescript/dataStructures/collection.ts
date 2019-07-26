@@ -4,9 +4,8 @@ namespace KIP {
 
 	/**
 	 * CollectionTypeEnum
-	 * 
+	 * ----------------------------------------------------------------------------
 	 * Keeps track of the different ways we can add to a collection
-	 * 
 	 */
 	export enum CollectionTypeEnum {
 		ReplaceDuplicateKeys = 1,
@@ -90,7 +89,7 @@ namespace KIP {
 	 * @version	3.0.0
 	 * ----------------------------------------------------------------------------
 	 */
-	export class Collection<T> extends NamedClass implements IEquatable<Collection<T>> {
+	export class Collection<T> extends NamedClass implements IEquatable {
 
 		//.....................
 		//#region PROPERTIES
@@ -164,7 +163,7 @@ namespace KIP {
 		 * @param 	val 	The element to add to our collection
 		 * @returns True if the element was successfully added
 		 */
-		public addElement(key: string, val: T): number {
+		public add(key: string, val: T): number {
 			let idx: number;
 			let elem: ICollectionElement<T>;
 			let sortedIdx: number;
@@ -207,29 +206,10 @@ namespace KIP {
 		/**
 		 * removeElement
 		 * ----------------------------------------------------------------------------
-		 * remove the element with the provided key 
-		 */
-		public removeElement(key: string): ICollectionElement<T>;
-		
-		/**
-		 * removeElement
-		 * ----------------------------------------------------------------------------
-		 * remove the element at the provided index 
-		 */
-		public removeElement(idx: number): ICollectionElement<T>;
-
-		/**
-		 * removeElement
-		 * ----------------------------------------------------------------------------
 		 * combination function to handle all overloads 
 		 */
-		public removeElement(param: string | number): ICollectionElement<T> {
-
-			if (typeof param === "string") {
-				return this._removeElementByKey(param as string);
-			} else if (typeof param === "number") {
-				return this._removeElementByIndex(param as number);
-			}
+		public remove(key: string): ICollectionElement<T> {
+			return this._removeElementByKey(key);
 		}
 
 		/**
@@ -288,7 +268,6 @@ namespace KIP {
 		 * removes an element by matching the element to the provided element 
 		 */
 		protected _removeElementByValue(val: T): ICollectionElement<T> {
-			let key: string;
 			let e: ICollectionElement<T>;
 			e = this._findElement(val);
 			return this._removeElementByKey(e && e.key);
@@ -382,7 +361,7 @@ namespace KIP {
 		 * ----------------------------------------------------------------------------
 		 * handle looping through the collection to get each element 
 		 */
-		public map (mapFunc: IMapFunction<T>): void {
+		public map <R> (mapFunc: IMapFunction<T, R>): void {
 			if (!mapFunc) { return; }
 
 			this.resetLoop();

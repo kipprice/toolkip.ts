@@ -32,7 +32,7 @@ namespace KIP {
 	export interface IEditableElems extends KIP.IDrawableElements {
 		base: HTMLElement;
 		display: HTMLElement;
-		input: HTMLElement;
+		input: HTMLInputElement;
 	}	
 
 	/**
@@ -91,7 +91,7 @@ namespace KIP {
 		public get value(): T { return this._value; }
 		public set value(val: T) {
 			this._value = val;
-			this._elems.input.innerHTML = this.format(val);
+			this._elems.input.value = this.format(val);
 		}
 
 		protected _defaultValue: string;
@@ -128,14 +128,14 @@ namespace KIP {
 			},
 
 			".editable": {
-				fontFamily: "Segoe UI, Calibri, Helvetica",
+				fontFamily: "Open Sans, Segoe UI, Helvetica",
 				fontSize: "1em",
 				cursor: "pointer",
 				
 				nested: {
 
-					".input": {
-						fontFamily: "Segoe UI, Calibri, Helvetica",
+					"input": {
+						fontFamily: "Open Sans, Segoe UI, Helvetica",
 						fontSize: "1em",
 						backgroundColor: "<editableLightBG>",
 						border: "2px solid #AAA",
@@ -301,21 +301,14 @@ namespace KIP {
 			});
 
 			this._elems.input = createElement({
+				type: "input",
 				cls: "input hidden",
 				content: "",
 				attr: {
 					"type": this.type,
-					"contenteditable": "true",
-					"draggable": "true"
-				},
-				eventListeners: {
-					"dragstart": (ev: DragEvent) => {
-						ev.preventDefault();
-						ev.stopPropagation();
-					}
 				},
 				parent: this._elems.base
-			});
+			}) as HTMLInputElement;
 
 			this._renderDisplayView();
 		}
@@ -374,7 +367,7 @@ namespace KIP {
 		 */
 		private _save(): boolean {
 			let validated: IValidateResult
-			let content: string = this._elems.input.innerHTML;
+			let content: string = this._elems.input.value;
 
 			validated = this._validate(content);
 
@@ -492,14 +485,18 @@ namespace KIP {
 			this._isModifying = true;
 
 			// Grab the appropriately formatted string for this element
-			this._elems.input.innerHTML = this.format(this.value, true);
+			this._elems.input.value = this.format(this.value, true);
+
+			// get the appropriate size for the element
+			let size = this._elems.display.offsetWidth;
+			this._elems.input.style.width = (size - 6) + "px";
 
 			// Update the HTML to have an editable field
 			this._hideElement(this._elems.display);
 			this._showElement(this._elems.input);
 
 			// Select our input
-			select(this._elems.input);
+			window.setTimeout(() => select(this._elems.input), 100);
 			this._elems.input.focus();
 
 			return true;

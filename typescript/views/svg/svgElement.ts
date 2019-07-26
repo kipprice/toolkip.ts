@@ -59,7 +59,7 @@ namespace KIP.SVG {
                 id = this._nextListenerId;
             }
 
-            this._onUpdateListeners.addElement(id, listener);
+            this._onUpdateListeners.add(id, listener);
         }
 
         /** notify listeners of a change */

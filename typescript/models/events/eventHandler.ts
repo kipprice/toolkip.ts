@@ -1,4 +1,4 @@
-/// <reference path="../collection.ts" />
+/// <reference path="../../dataStructures/collection.ts" />
 
 namespace KIP.Events {
 
@@ -26,7 +26,7 @@ namespace KIP.Events {
 		 */
 		public createEvent<K extends keyof T>(key: K, name?: string): boolean {
 			let evt: EventDefinition<T[K]> = new EventDefinition<T[K]>(key as string, name);
-			return (this._events.addElement(key as string, evt) !== -1);
+			return (this._events.add(key as string, evt) !== -1);
 		}
 
 		/**

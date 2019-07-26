@@ -53,7 +53,7 @@ namespace KIP.SVG {
 		 * ...........................................................................
 		 */
 		protected _setStyle(key: keyof ISVGStyle, value: string | number) {
-			this._innerStyle[key] = value;
+			this._innerStyle[key] = (value as string & number);
 			this._needsNewString = true;
 		}
 

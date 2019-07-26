@@ -1,4 +1,4 @@
-///<reference path="../../helpers/html.ts" />
+///<reference path="../../helpers/html/generalHelpers.ts" />
 ///<reference path="../drawable.ts" />
 namespace KIP {
 

@@ -732,7 +732,7 @@ namespace KIP.Forms {
          */
         public registerSaveListener(listener: IFormSaveFunction): string {
             let key: string = this._saveListeners.length.toString();
-            this._saveListeners.addElement(key, listener);
+            this._saveListeners.add(key, listener);
             return key;
         }
 
@@ -747,7 +747,7 @@ namespace KIP.Forms {
          */
         public registerCancelListener(listener: IFormCancelFunction): string {
             let key: string = this._cancelListeners.length.toString();
-            this._cancelListeners.addElement(key, listener);
+            this._cancelListeners.add(key, listener);
             return key;
         }
 

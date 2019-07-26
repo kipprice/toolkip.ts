@@ -48,7 +48,7 @@ namespace KIP.Forms {
 
         /** handle more type safeness of form */
         export type IFields<F> = {
-            [P in keyof F]: Field<F[P]>;
+            [P in keyof F]?: Field<F[P]>;
         }
 
         /** handle multiple types of evaluable elements */

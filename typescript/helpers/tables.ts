@@ -1,4 +1,4 @@
-///<reference path="html.ts" />
+///<reference path="html/createElement.ts" />
 
 namespace KIP {
 

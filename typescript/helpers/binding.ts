@@ -19,7 +19,7 @@ namespace KIP {
 	 * 
 	 * @returns	The current state of the value
 	 */
-	export function bind<T>(evalFunc: BoundEvalFunction<T>, updateFunc?: BoundUpdateFunction<T>): T {
+	export function bind<T>(evalFunc: BoundEvalFunction<T>, updateFunc: BoundUpdateFunction<T>): T {
 		if (!evalFunc || !updateFunc) { return; }
 
 		let originalValue: T = evalFunc();

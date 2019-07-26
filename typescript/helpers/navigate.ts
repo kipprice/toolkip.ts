@@ -1,4 +1,4 @@
-///<reference path="../models/collection.ts" />
+///<reference path="../dataStructures/collection.ts" />
 
 namespace KIP {
 
@@ -136,7 +136,7 @@ namespace KIP {
 			// if we couldn't find it, create it
 			if (!view) {
 				view = this._createView(constructor, addlData);
-				this._views.addElement(navigationPath, view);
+				this._views.add(navigationPath, view);
 
 				// otherwise, check if this can receive an update
 			} else {

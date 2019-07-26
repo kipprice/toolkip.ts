@@ -34,8 +34,26 @@ namespace KIP {
         public constructor() {
             this._data = {};
             this._inFlight = {};
+            this._populateWithDefaultData();
         }
 
+        /**
+         * _populateWithDefaultData
+         * ----------------------------------------------------------------------------
+         * overridable function that can assign default data to this manager
+         */
+        protected _populateWithDefaultData(): void { }
+
+        /**
+         * _createAndAddDefault
+         * ----------------------------------------------------------------------------
+         * add a default value
+         */
+        protected _createAndAddDefault(d: Partial<I>): void {
+            let model = this.create(d);
+            this.add(model);
+        }
+        
         //#endregion
         //..........................................
 
@@ -174,7 +192,7 @@ namespace KIP {
          * ----------------------------------------------------------------------------
          * create a new element
          */
-        public abstract create(d: I): M;
+        public abstract create(d: Partial<I>): M;
 
         /**
          * load

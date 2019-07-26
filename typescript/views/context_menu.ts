@@ -176,7 +176,7 @@ namespace KIP {
 			}
 
 			// Add the option to our collection
-			this._options.addElement(opt.label, opt);
+			this._options.add(opt.label, opt);
 
 			// Loop through suboptions and add them as well
 			let sub_success: boolean = true;
@@ -296,7 +296,7 @@ namespace KIP {
 			let opt: Option;
 			let iCol: ICollectionElement<Option>;
 
-			iCol = this._options.removeElement(lbl);
+			iCol = this._options.remove(lbl);
 			if (!iCol) { return false; }
 			opt = iCol.value;
 

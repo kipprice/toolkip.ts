@@ -259,5 +259,4 @@ namespace KIP {
 		return out;
 	}
 
-
 }

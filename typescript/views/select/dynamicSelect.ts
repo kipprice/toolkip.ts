@@ -272,7 +272,7 @@ namespace KIP {
          */
         public addOption(opt: IDynamicOption): void {
             let option: DynamicOption = new DynamicOption(opt, this);
-            if (this._availableOptions.addElement(option.id, option) === -1) { return; };
+            if (this._availableOptions.add(option.id, option) === -1) { return; };
             this._updateFiltering(this._elems.input.value);
             this._elems.innerOptions.appendChild(option.base);
         }
