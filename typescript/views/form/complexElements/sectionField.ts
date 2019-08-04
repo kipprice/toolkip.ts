@@ -224,6 +224,7 @@ namespace KIP.Forms {
         protected async _updateInternalData<K extends keyof M>(internalOnly?: boolean): Promise<any> {
             let elem: Field<M[K]>;
             let data: M;
+            
             if (isField(this._children)) {
                 data = await this._children.save(internalOnly);
             } else {

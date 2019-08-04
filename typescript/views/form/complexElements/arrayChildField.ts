@@ -189,6 +189,20 @@ namespace KIP.Forms {
             this._dispatchChangeEvent();
         }
 
+        /**
+         * _updateInternalData
+         * ----------------------------------------------------------------------------
+         * handle updating parent elements with the details of this child
+         */
+        protected async _updateInternalData(internalOnly?: boolean): Promise<any> {
+
+            // if we purposefully set the data to null, don't go further
+            if (this._data === null) { return null; }
+
+            // otherwise run the standard update function
+            return super._updateInternalData(internalOnly);
+        }
+
         //#endregion
         //...........................
 
