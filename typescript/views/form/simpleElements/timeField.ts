@@ -33,7 +33,8 @@ namespace KIP.Forms {
             this._data = data;
             if (!this._elems.input) { return; }
             if (!this._data) { return; }
-            this._elems.input.value = Dates.shortTime(data);
+
+            this._elems.input.value = Dates.inputTimeFmt(data);
         }
     }
 }

@@ -282,4 +282,17 @@ namespace KIP {
         parent.insertBefore(replacement, nextChild);
 
     }
+
+    /**
+     * isVisible
+     * ----------------------------------------------------------------------------
+     * determine if a particular element is visible to the end user
+     * @param   elem    The element to check
+     * @returns True if the element is visible; false otherwise
+     */
+    export function isVisible(elem: HTMLElement): boolean {
+        if (elem.offsetWidth !== 0) { return true; }
+        if (elem.offsetHeight !== 0) { return true; }
+        return false;
+    }
 }

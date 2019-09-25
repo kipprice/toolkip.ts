@@ -58,6 +58,7 @@ namespace KIP {
             if (!src) { src = ""; }
             if (this._src === src) { return; }
             this._src = src; 
+            this._clearClasses();
             this._elems.img.setAttribute("src", src);
             this._checkForImageLoad();
         }
@@ -81,7 +82,7 @@ namespace KIP {
         protected _createElements(): void {
             KIP.createElement({
                 key: "base",
-                cls: "imageWrapper",
+                cls: "imageWrapper" + (this._src? "" : " noImage"),
                 children: [{
                     key: "img",
                     type: "img",
@@ -130,6 +131,7 @@ namespace KIP {
         }
 
         protected _resize(): void {
+            this._clearClasses();
 
             // no picture
             if (!this._src) {
@@ -149,6 +151,13 @@ namespace KIP {
             } else {
                 addClass(this._elems.base, "squareImage");
              }
+        }
+
+        protected _clearClasses(): void {
+            removeClass(this._elems.base, "noImage");
+            removeClass(this._elems.base, "verticalImage");
+            removeClass(this._elems.base, "horizontalImage");
+            removeClass(this._elems.base, "squareImage");
         }
         
         //#endregion

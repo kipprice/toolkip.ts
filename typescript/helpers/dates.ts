@@ -245,8 +245,11 @@ namespace KIP.Dates {
 		if (iDt) {
 			let dtArr: string[] = iDt.split("-");
 			outDate = new Date(+dtArr[0], +dtArr[1] - 1, +dtArr[2])
-		} else {
+		} else if (iTime) {
 			outDate = getToday();
+		} else {
+			outDate = null;
+			return outDate;
 		}
 
 		// Handle the input time string
@@ -287,11 +290,29 @@ namespace KIP.Dates {
 			half = " AM";
 			if (hours >= 12) half = " PM";
 			if (hours > 12) hours -= 12;
+			if (hours === 0) { hours = 12; }
 		}
 
 		//Return unpadded hours (but in military time) and padded minutes.
 		return hours + ":" + min_str + half;
 	};
+
+	export function inputTimeFmt(time: Date, includeSeconds?: boolean): string {
+		let out: string[] = [];
+
+		let hours = time.getHours();
+		out.push(Numbers.padToDigits(hours, 2));
+
+		let minutes = time.getMinutes();
+		out.push(Numbers.padToDigits(minutes, 2));
+
+		if (includeSeconds) {
+			let seconds = time.getSeconds();
+			out.push(Numbers.padToDigits(seconds, 2));
+		}
+
+		return out.join(":");
+	}
 
 	/**
 	 * Gets the display string for a date and time
@@ -299,12 +320,11 @@ namespace KIP.Dates {
 	 * @param {Boolean} withExtra - If true, uses AM/PM format instead of military time.
 	 */
 	export function shortDateTime(dt: Date, with_extra?: boolean): string {
-		;
 		return shortDate(dt) + " " + shortTime(dt, with_extra);
 	};
 
 	export function stopwatchDisplay(milli: number, noLeadingZeros, noBlanks) {
-		;
+
 		let seconds: number;
 		let minutes: number;
 		let hours: number;

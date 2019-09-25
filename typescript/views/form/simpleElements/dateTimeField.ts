@@ -27,10 +27,16 @@ namespace KIP.Forms {
             ".kipFormElem.dateTime .inputs": {
                 display: "flex",
                 width: "100%",
-                justifyContent: "space-between",
                 alignItems: "center",
-                flexWrap: "wrap"
+                flexWrap: "wrap",
+
+                nested: {
+                    ".dateWrapper": {
+                        marginRight: "10px"
+                    }
+                }
             },
+            
 
             ".kipFormElem.dateTime .inputs input": {
                 marginRight: "20px",
@@ -67,16 +73,18 @@ namespace KIP.Forms {
             this._elems.inputWrapper = createSimpleElement("", "inputs", "", null, null, this._elems.base);
 
             // draw the date
-            let dateLbl: HTMLElement = createSimpleElement("", "lbl", "Date: ", null, null, this._elems.inputWrapper);
-            this._elems.dateInput = createInputElement("", "dateInput", "date", this._data, null, null, this._elems.inputWrapper);
+            let dateWrapper = KIP.createElement({ cls: "dateWrapper", parent: this._elems.inputWrapper })
+            let dateLbl: HTMLElement = createSimpleElement("", "lbl", "Date: ", null, null, dateWrapper);
+            this._elems.dateInput = createInputElement("", "dateInput", "date", this._data, null, null, dateWrapper);
             this._elems.dateInput.addEventListener("change", () => {
                 this._changeEventFired();
             });
 
             // draw the time
             let timeVal: string = (this._data ? Dates.shortTime(this._data) : "");
-            let timeLbl: HTMLElement = createSimpleElement("", "lbl", "Time: ", null, null, this._elems.inputWrapper);
-            this._elems.timeInput = createInputElement("", "timeInput", "time", timeVal, null, null, this._elems.inputWrapper);
+            let timeWrapper = KIP.createElement({ cls: "timeWrapper", parent: this._elems.inputWrapper })
+            let timeLbl: HTMLElement = createSimpleElement("", "lbl", "Time: ", null, null, timeWrapper);
+            this._elems.timeInput = createInputElement("", "timeInput", "time", timeVal, null, null, timeWrapper);
             this._elems.timeInput.addEventListener("change", () => {
                 this._changeEventFired();
             });
@@ -106,7 +114,7 @@ namespace KIP.Forms {
             }
 
             if (this._elems.timeInput) {
-                this._elems.timeInput.value = Dates.shortTime(data);
+                this._elems.timeInput.value = Dates.inputTimeFmt(data);
             }
         }
 

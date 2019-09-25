@@ -51,9 +51,15 @@ namespace KIP.Events {
 		 * @param	key				The key to use for the event
 		 * @param	listenerData	The data to use for the listener being added
 		 */
-		public addEventListener<K extends keyof T>(key: K, listenerData: IListenerData<T[K]>): void {
+		public addEventListener<K extends keyof T>(key: K, listenerData: IListenerData<T[K]> | IListener<T[K]> ): void {
 			let evt: EventDefinition<T[K]> = this._events.getValue(key as string);
 			if (!evt) { return; }
+
+			// ensure we're working with the object
+			if (typeof listenerData === "function") {
+				listenerData = { func: listenerData };
+			}
+
 			evt.addListener(listenerData);
 		}
 

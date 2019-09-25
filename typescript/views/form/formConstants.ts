@@ -22,7 +22,8 @@ namespace KIP.Forms {
             FILE_UPLOAD = 15,
             FILE_PATH = 16,
             COLOR = 17,
-            PERCENTAGE = 18
+            PERCENTAGE = 18,
+            PASSWORD = 19
         };
 
         export enum ValidationType {
@@ -111,6 +112,7 @@ namespace KIP.Forms {
                 formSubTheme?: string;
             };
             addlButtons?: IFormButton[];
+            ignoreChanges?: boolean;
         }
 
         export interface IFormButton {

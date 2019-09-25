@@ -23,7 +23,7 @@ namespace KIP {
      * @returns The created string
      * ...........................................................................
      */
-    export function getObjectString(obj: any, prefix?: string): string {
+    export function getObjectString(obj: any, prefix?: string, isHtml?: boolean): string {
         if (!prefix) { prefix = ""; }
 
         if ((typeof obj === "string") ||
@@ -35,15 +35,18 @@ namespace KIP {
             return obj.toString(); 
         }
 
+        let newLine = isHtml ? "<br>" : "\n";
+        let tab = isHtml ? "&nbsp;&nbsp;&nbsp;&nbsp;" : "\t";
+
         let outputStr: string = "";
-        outputStr += prefix + "{";
+        outputStr += "{";
         map(
             obj, 
             (elem: any, key: string) => {
-                outputStr += "\n  " + prefix + key + " : " + getObjectString(elem, prefix + "  ");
+                outputStr += newLine + tab + prefix + key + " : " + getObjectString(elem, prefix + tab, isHtml);
             }
         );
-        outputStr += "\n" + prefix + "}\n";
+        outputStr += newLine + prefix + "}\n";
 
         return outputStr;
     }

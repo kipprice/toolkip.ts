@@ -389,7 +389,15 @@ namespace KIP {
             if (!listener) { return; }
         }
 
-        //TODO: Unregister listeners
+        /**
+         * unregisterListeners
+         * ----------------------------------------------------------------------------
+         * delete any listeners attached to this model (allows for GC)
+         */
+        public unregisterListeners(): void {
+            this.__propertyListeners = {};
+            this.__modelListeners = [];
+        }
 
         //#endregion
         //...........................
@@ -447,7 +455,7 @@ namespace KIP {
     }
 
     export interface Identifiable {
-        id: string;
+        id: string | number;
     }
 
     /**----------------------------------------------------------------------------

@@ -166,7 +166,7 @@ namespace KIP.Styles {
 
                     if (this._containedPlaceholder(val) !== colorId) { return; }                     
                       
-                    valArray[idx] = color;          
+                    valArray[idx] = val.replace(new RegExp("<?" + colorId + ">?", "g"), color);          
                     replaced = true; 
             
                 }); 

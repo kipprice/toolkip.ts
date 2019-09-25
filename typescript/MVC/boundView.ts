@@ -7,7 +7,7 @@ namespace KIP {
      * ----------------------------------------------------------------------------
      * create a view that binds to a view model
      * @author	Kip Price
-     * @version	1.0.0
+     * @version	1.0.1
      * ----------------------------------------------------------------------------
      */
     export abstract class BoundView<VM = any> extends Drawable {
@@ -100,7 +100,8 @@ namespace KIP {
                     // otherwise, just return the model
                     return this._model;
                 },
-                this._createUpdateFunc(elem, key)
+                this._createUpdateFunc(elem, key),
+                () => this._shouldDelete(elem)
             );
         }
 
@@ -132,7 +133,6 @@ namespace KIP {
                     this._updateBoundView(elem as BoundView<VM[K]>, value);
                 }
 
-
             }
             
         }
@@ -160,6 +160,26 @@ namespace KIP {
             this._updateFunctions[key as string] = updateFunc;
         }
 
+        protected _shouldDelete<K extends keyof VM>(elem: IBindableElement<VM[K] | VM>): boolean {
+
+            // if this element is no longer rendered, we should kill its bindings
+            if (isDrawable(elem)) {
+                return (!elem.base.parentNode);
+            } else {
+                return (!elem.parentNode)
+            }
+        }
+
+        //#endregion
+        //..........................................
+
+        //..........................................
+        //#region UNRENDERING
+        
+        public erase() {
+            super.erase();
+        }
+        
         //#endregion
         //..........................................
 
@@ -179,13 +199,15 @@ namespace KIP {
             let elem = createCustomElement(obj, this._elems as any, recurseFunc);
 
             // if a binding is specified, set it up
-            if (obj.boundTo) { 
-                let boundElem: IBindableElement<any> = elem;
-                if (obj.key && obj.drawable) { boundElem = this._elems[obj.key] as IBindableElement<any>; }
-                this._bind(boundElem, obj.boundTo); 
-            }
+            if (obj.boundTo) { this._bindElement(elem, obj); }
 
             return elem;
+        }
+
+        protected async _bindElement(elem: IBindableElement<any>, obj: IBoundElemDefinition<VM>): Promise<void> {
+            let boundElem: IBindableElement<any> = elem;
+            if (obj.key && obj.drawable) { boundElem = this._elems[obj.key] as IBindableElement<any>; }
+            this._bind(boundElem, obj.boundTo); 
         }
         
         //#endregion

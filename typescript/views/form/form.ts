@@ -63,6 +63,10 @@ namespace KIP.Forms {
         /** keep track of whether there are changes in this form */
         protected _hasChanges: boolean;
 
+        /** if true, will not prompt the user to save when unloading the page, 
+         * regardless of whether there are changes */
+        protected _ignoreChanges: boolean;
+
         /** keep track of whether we can save this form */
         protected _canSaveTracker: ICanSaveTracker;
 
@@ -77,13 +81,19 @@ namespace KIP.Forms {
             ".kipForm": {
                 margin: "0",
                 padding: "0",
+                left: "0",
+                top: "0",
                 width: "100%",
                 height: "100%",
                 fontFamily: "Open Sans,Segoe UI Light,Helvetica",
                 fontSize: "1em",
-                position: "inherit",
+                position: "fixed",
                 boxSizing: "border-box",
                 fontWeight: "100",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                
 
                 nested: {
                     "&.hidden": {
@@ -91,7 +101,7 @@ namespace KIP.Forms {
                     },
 
                     ".formOverlay": {
-                        position: "fixed",
+                        position: "absolute",
                         width: "100%",
                         height: "100%",
                         top: "0",
@@ -116,8 +126,7 @@ namespace KIP.Forms {
                     ".background": {
                         borderRadius: "5px",
                         backgroundColor: "#FFF",
-                        width: "60%",
-                        marginLeft: "20%",
+                        minWidth: "60%",
                         maxHeight: "90%",
                         position: "relative",
                         display: "flex",
@@ -141,6 +150,15 @@ namespace KIP.Forms {
                         textTransform: "uppercase",
                         flexDirection: "row-reverse",
                         alignItems: "center",
+
+                        nested: {
+                            ".standardBtns":{
+                                flexGrow: "1",
+                                display: "flex",
+                                alignItems: "center",
+                                flexDirection: "row-reverse"
+                            }
+                        }
                     },
         
                     "&.popup .kipBtns": {
@@ -149,14 +167,10 @@ namespace KIP.Forms {
 
                         nested: {
                             ".kipBtn": {
-                                nested: {
-                                    "&.save, &.cancel": {
-                                        backgroundColor: "transparent",
-                                        color: "#FFF",
-                                        boxShadow: "none",
-                                        opacity: "0.7",
-                                    }
-                                }
+                                backgroundColor: "transparent",
+                                color: "#FFF",
+                                boxShadow: "none",
+                                opacity: "0.7"
                             }
                         }
                     },   
@@ -191,7 +205,7 @@ namespace KIP.Forms {
                         transition: "all ease-in-out .1s",
 
                         nested: {
-                            ".kipBtn:not(.disabled):hover, .kipBtn.selected": {
+                            "&:not(.disabled):hover, &.selected": {
                                 transform: "scale(1.05)"
                             },
 
@@ -278,6 +292,7 @@ namespace KIP.Forms {
             this._hidden = true;
             this._additionalButtons = options.addlButtons || [];
             this._hasChanges = false;
+            this._ignoreChanges = options.ignoreChanges;
             this._canSaveTracker = { hasMissingRequired: false, hasErrors: false };
 
             this._colors = options.colors || {formTheme: "#EFC500", formSubTheme: "#444"};
@@ -333,9 +348,10 @@ namespace KIP.Forms {
 
             this._elems.overlay = createElement({ 
                 cls: "formOverlay", 
-                parent: this._elems.base, 
-                children: [this._elems.background]}
-            );
+                parent: this._elems.base
+            });
+
+            this._elems.base.appendChild(this._elems.background);
 
             this._elems.closeButton = createElement({
                 cls: "close kipBtn", 
@@ -367,13 +383,17 @@ namespace KIP.Forms {
         protected _createButtons(): void {
             this._elems.buttons = createSimpleElement("", "kipBtns", "", null, null, this._elems.background);
 
-            this._elems.saveButton = createSimpleElement("", "kipBtn save", "Save", null, null, this._elems.buttons);
+            let standardBtnWrapper = KIP.createElement({
+                cls: "standardBtns",
+                parent: this._elems.buttons
+            });
+            this._elems.saveButton = createSimpleElement("", "kipBtn save", "Save", null, null, standardBtnWrapper);
             this._elems.saveButton.addEventListener("click", () => {
                 this.trySave();
                 this.hide();
             });
 
-            this._elems.cancelButton = createSimpleElement("", "kipBtn cancel", "Cancel", null, null, this._elems.buttons);
+            this._elems.cancelButton = createSimpleElement("", "kipBtn cancel", "Cancel", null, null, standardBtnWrapper);
             this._elems.cancelButton.addEventListener("click", () => {
                 window.setTimeout(() => {
                     this._cancelConfirmation();
@@ -381,11 +401,16 @@ namespace KIP.Forms {
             });
 
             // if we have additional buttons add them here
+            let customBtnWrapper = KIP.createElement({
+                cls: "customBtns",
+                parent: this._elems.buttons
+            });
+
             if (!this._additionalButtons) { return; }
             let idx: number = 0;
             for (idx; idx < this._additionalButtons.length; idx += 1) {
                 let btnTemplate: IFormButton = this._additionalButtons[idx];
-                let btn: HTMLElement = createSimpleElement("", "kipBtn " + btnTemplate.cls, btnTemplate.display, null, null, this._elems.buttons);
+                let btn: HTMLElement = createSimpleElement("", "kipBtn " + btnTemplate.cls, btnTemplate.display, null, null, customBtnWrapper);
                 btn.addEventListener("click", () => {
                     btnTemplate.callback();
                 });
@@ -646,9 +671,7 @@ namespace KIP.Forms {
         //........................
         //#region TRACK CHANGES
 
-        /* TODO:
-        * ----------------------------------------------------------------------------
-        * [ ] Actually implement change control
+        /* TODO: actually implement change control
         */
         public undo(): void {
             // TODO
@@ -758,7 +781,7 @@ namespace KIP.Forms {
          */
         protected _addWindowEventListeners(): void {
             window.addEventListener("beforeunload", (e: Event) => {
-                if (this._hasChanges) {
+                if (this._hasChanges && !this._ignoreChanges) {
                     let msg = "You have unsaved changes; are you sure you want to leave this page?";
                     e.returnValue = msg as any;
                     return msg;
@@ -771,11 +794,7 @@ namespace KIP.Forms {
         //.................................
         //#region CHANGE THE FORM DISPLAY
 
-        /*
-         * // TODO:
-         * ----------------------------------------------------------------------------
-         * [ ] Allow changing of the form after it's been created
-         */
+        // TODO: Allow changing of the form after it's been created
 
          /**
           * addFormElement

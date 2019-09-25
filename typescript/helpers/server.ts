@@ -1,5 +1,6 @@
 namespace KIP {
 
+    //.....................
     //#region INTERFACES
 
     /**...........................................................................
@@ -42,9 +43,19 @@ namespace KIP {
         [ajaxKey: string] : string;
     }
 
-    //#endregion
+    export interface IAjaxDetails {
+        type: AjaxTypeEnum;
+        requestUrl: string;
+        params: IAjaxParams | FormData;
+        headerParams?: IAjaxParams;
+    }
 
+    //#endregion
+    //.....................
+
+    //...........................
     //#region PUBLIC FUNCTIONS
+    
     /**
      * ajaxRequest
      * ----------------------------------------------------------------------------
@@ -58,22 +69,24 @@ namespace KIP {
      * 
      * @returns The request that was sent
     */
-    export function ajaxRequest(type: AjaxTypeEnum, url: string, successCb?: IAjaxSuccessFunction, errorCb?: IAjaxErrorFunction, params?: IAjaxParams | FormData): XMLHttpRequest {
+    export function ajaxRequest(
+        type: AjaxTypeEnum, 
+        url: string, 
+        successCb?: IAjaxSuccessFunction, 
+        errorCb?: IAjaxErrorFunction, 
+        params?: IAjaxParams | FormData,
+        headerParams?: IAjaxParams
+    ): XMLHttpRequest {
+
         let request: XMLHttpRequest;
         request = _getXmlRequestObject();                        // try to get an HTML Request
         if (!request) return null;                              // if we couldn't grab a request, quit
 
         _assignXmlRequestCallbacks(request, successCb, errorCb); // assign the callbacks upon request completion
-        _sendXmlRequest(request, type, url, params);             // send the XML request
+        _sendXmlRequest(request, type, url, params, headerParams);             // send the XML request
 
         return request;                                         // return the total request
     };
-
-    export interface IAjaxDetails {
-        type: AjaxTypeEnum;
-        requestUrl: string;
-        params: IAjaxParams | FormData;
-    }
 
     /**
      * ajax
@@ -93,7 +106,8 @@ namespace KIP {
                 () => {
                     reject("Ajax request failed: " + ajaxDetails.requestUrl)
                 },
-                ajaxDetails.params
+                ajaxDetails.params,
+                ajaxDetails.headerParams
             );
         });
     }
@@ -193,9 +207,9 @@ namespace KIP {
         return request;                                                     // return the updated request
     }
 
-    /**...........................................................................
+    /**
      * _assignXmlRequestCallbacks
-     * ...........................................................................
+     * 
      * handle the xml request getting back to us 
      * 
      * @param   request     The AJAX request, appropriate for the browser
@@ -203,7 +217,6 @@ namespace KIP {
      * @param   errorCb     What to do if the request fails
      * 
      * @returns The request, now configured to handle success + error states
-     * ...........................................................................
      */
     function _assignXmlRequestCallbacks (request: XMLHttpRequest, successCb?: IAjaxSuccessFunction, errorCb?: IAjaxErrorFunction) : XMLHttpRequest {
         request.onreadystatechange = () => {                // register the callback
@@ -253,6 +266,13 @@ namespace KIP {
         return paramOut;
     }
 
+    function _addHeaderData(request: XMLHttpRequest, headerParams: IAjaxParams): void {
+        if (!headerParams) { return; }
+        KIP.map(headerParams, (value, key) => {
+            request.setRequestHeader(key as string, value)
+        });
+    }
+
     /**...........................................................................
      * _sendXmlRequest
      * ...........................................................................
@@ -266,11 +286,11 @@ namespace KIP {
      * @returns The sent request
      * ...........................................................................
      */
-    function _sendXmlRequest (request: XMLHttpRequest, type: AjaxTypeEnum, url: string, params?: IAjaxParams | FormData): XMLHttpRequest {
+    function _sendXmlRequest (request: XMLHttpRequest, type: AjaxTypeEnum, url: string, params?: IAjaxParams | FormData, headerParams?: IAjaxParams): XMLHttpRequest {
         if (type === AjaxTypeEnum.GET) { 
-            return _sendGetRequest(request, url); 
+            return _sendGetRequest(request, url, headerParams); 
         } else if (type === AjaxTypeEnum.POST) { 
-            return _sendPostRequest(request, url, params); 
+            return _sendPostRequest(request, url, params, headerParams); 
         }
     }
 
@@ -285,8 +305,10 @@ namespace KIP {
      * @returns The sent request
      * ...........................................................................
      */
-    function _sendGetRequest (request: XMLHttpRequest, url: string) : XMLHttpRequest {
+    function _sendGetRequest (request: XMLHttpRequest, url: string, headerParams?: IAjaxParams) : XMLHttpRequest {
         request.open("GET", url, true);
+        _addHeaderData(request, headerParams);
+        request.send(null);
         return request;
     }
 
@@ -302,7 +324,7 @@ namespace KIP {
      * @returns The sent request
      * ...........................................................................
      */
-    function _sendPostRequest (request: XMLHttpRequest, url: string, params?: IAjaxParams | FormData) : XMLHttpRequest {
+    function _sendPostRequest (request: XMLHttpRequest, url: string, params?: IAjaxParams | FormData, headerParams?: IAjaxParams) : XMLHttpRequest {
         let reqHeaderType: string = "application/x-www-form-urlencoded";    // save off the appropriate header
         let reqHeaderDisposition: string;
 
@@ -316,6 +338,9 @@ namespace KIP {
         } else {
             uriParams = _buildParameters(params);  
         }
+
+        // add the header types
+        _addHeaderData(request, headerParams);
 
         if (reqHeaderType) { request.setRequestHeader("Content-Type", reqHeaderType); }         // pull in the data for the POST
         request.send(uriParams);                                                                // open request   
