@@ -1,7 +1,7 @@
 ///<reference path="drawable.ts" />
 namespace KIP {
 
-	//TODO: Cleanup this implementation
+	//FIXME: Cleanup this implementation
 
 	export interface OnDragEnterFunction {
 		(target: HTMLElement, e: Event): void;

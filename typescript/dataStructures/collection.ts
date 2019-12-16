@@ -261,7 +261,7 @@ namespace KIP {
 			key = this._sortedData[idx];
 			return this._removeElementByKey(key);
 		}
-
+ 
 		/**
 		 * _removeElementByValue
 		 * ----------------------------------------------------------------------------

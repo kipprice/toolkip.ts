@@ -106,7 +106,8 @@ namespace KIP {
 
 		private _findAppropriatePoint(): void {
 			var srcBox, pt, needsSourceMeasure, max, bblPt;
-			//TODO: fix
+			
+			// FIXME: make this actually work
 			// Measure the hilited element
 			let tmpBox: ClientRect = this._hilitedElement.getBoundingClientRect();
 

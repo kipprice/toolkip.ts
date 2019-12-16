@@ -238,6 +238,15 @@ namespace KIP {
 
     };
 
+    export function isInDOM(elem: StandardElement): boolean {
+        let parentNode = elem.parentNode;
+        while (parentNode) { 
+            if (parentNode === document.body) { return true; }
+            parentNode = parentNode.parentNode;
+        }
+        return false;
+    }
+
     //#endregion
     //..........................................
 

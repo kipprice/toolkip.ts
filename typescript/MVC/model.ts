@@ -510,9 +510,13 @@ namespace KIP {
             lastId = lastId.replace(prefixReg, "");
 
             let lastNumericId = parseInt(lastId);
+
+            // don't fail on NaN conditions; just increment
             if (isNaN(lastNumericId)) {
-                this._lastId += 1;      // don't fail on NaN conditions; just increment
-            } else {
+                this._lastId += 1;      
+
+            // update the last id if this is greater
+            } else if (lastNumericId > this._lastId) {
                 this._lastId = lastNumericId;
             }
             

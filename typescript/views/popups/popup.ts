@@ -71,6 +71,8 @@ namespace KIP {
 				display: "block",
 				borderTop: "10px solid <popupTheme>",
 				padding: "10px",
+				maxHeight: "90%",
+				overflowY: "auto"
 			},
 
 			".popup .popupTitle" : {

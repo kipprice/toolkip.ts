@@ -106,7 +106,8 @@ namespace KIP.Forms {
             },
 
             ".kipFormElem input, .kipFormElem textarea, .kipFormElem select": {
-                border: "1px solid #CCC"
+                border: "1px solid #CCC",
+                borderRadius: "3px"
             },
 
             ".kipFormElem textarea": {
@@ -171,6 +172,14 @@ namespace KIP.Forms {
                     "> div:not(.error), > label, > span, > input": {
                         width: "auto",
                         marginRight: "10px"
+                    }
+                }
+            },
+
+            ".kipFormElem.multiline": {
+                nested: {
+                    "input, textarea, select": {
+                        marginTop: "5px"
                     }
                 }
             }

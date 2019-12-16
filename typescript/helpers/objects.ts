@@ -199,7 +199,7 @@ namespace KIP {
    * Take two separate objects and combine them into one
    * 
    * @param   objA    First object to combine
-   * @param   objB    Second object to combine
+   * @param   objB    Second object to combine; will override A in cases of conflict
    * @param   deep    True if this should be recursive
    * 
    * @returns The combined object
@@ -223,7 +223,7 @@ namespace KIP {
    * ----------------------------------------------------------------------------
    * Combine an object into an output array
    * 
-   * @param   objToCombine  The ibject to merge into the output
+   * @param   objToCombine  The object to merge into the output
    * @param   outputObj     The object to output
    * @param   deep          True if we should recurse on this object
    * 

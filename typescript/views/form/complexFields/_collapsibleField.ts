@@ -71,7 +71,8 @@ namespace KIP.Forms {
                 width: ".8em",
                 fontSize: "1em",
                 transition: "all ease-in-out .1s",
-                cursor: "pointer"
+                cursor: "pointer",
+                color: "<formSubTheme>"
             },
 
             ".kipFormElem.collapsible.collapsed .caret": {

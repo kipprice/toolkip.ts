@@ -41,13 +41,11 @@ namespace KIP.Forms {
 
         protected static _uncoloredStyles: Styles.IStandardStyles = {
             ".kipFormElem.array .formChildren .kipFormElem.arrayChild": {
-                maxWidth: "calc(33% - 20px)",
                 backgroundColor: "#FFF",
                 borderRadius: "5px",
                 boxShadow: "1px 1px 5px 2px rgba(0,0,0,.1)",
-                marginRight: "20px",
-                marginBottom: "10px",
                 padding: "15px",
+                margin: "0",
 
                 nested: {
 

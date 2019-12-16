@@ -104,21 +104,17 @@ namespace KIP.Forms {
             helpText?: string;
         }
 
-        export interface IFormOptions extends IFormDisplay {
-            popupForm?: boolean;
-            noStandardStyles?: boolean;
-            colors?: {
-                formTheme: string;
-                formSubTheme?: string;
-            };
-            addlButtons?: IFormButton[];
-            ignoreChanges?: boolean;
+        export enum FormStyleOptions {
+            EMBEDDED = 1,
+            POPUP = 2,
+            INLINE = 3,
+            FULLSCREEN = 4
         }
-
         export interface IFormButton {
             display: string;
             cls?: string;
             callback: Function;
+            key?: "saveButton" | "cancelButton";
         }
 
         //#endregion
@@ -161,6 +157,8 @@ namespace KIP.Forms {
             value: any;
             checked?: boolean;
         }
+
+        export type FormColor = "formTheme" | "formSubTheme" | "formBackgroundTheme";
 
         //#endregion
         //.................................

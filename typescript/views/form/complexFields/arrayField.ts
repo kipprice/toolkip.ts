@@ -63,11 +63,22 @@ namespace KIP.Forms {
 
             ".kipFormElem.array": {
                 nested: {
-                    ".formChildren": {
-                        display: "flex",
-                        flexWrap: "wrap",
-                        alignItems: "top"
+                    "> .formChildren": {
+                        // display: "flex",
+                        // flexWrap: "wrap",
+                        // alignItems: "top"
+
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr 1fr",
+                        gridColumnGap: "10px",
+                        gridRowGap: "10px"
+
                     },
+
+                    ".array .formChildren": {
+                        gridTemplateColumns: "100%"
+                    },
+
 
                     "&.collapsed": {
                         nested: {
@@ -77,12 +88,17 @@ namespace KIP.Forms {
                         }
                     },
 
-                    ".kipBtn.new": {
-                        marginTop: "10px",
-                        marginBottom: "10px",
-                        backgroundColor: "<formTheme>",
-                        color: "#FFF",
-                        width: "calc(33% - 20px)",
+                    ".arrayChild.new": {
+                        border: "1px dashed <formSubTheme>",
+                        cursor: "pointer",
+                        opacity: "0.5",
+                        backgroundColor: "#FFF",
+                        fontSize: "1.3em",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "<formSubTheme>",
+
                         userSelect: "none",
                         webkitUserSelect: "none",
                         MozUserSelect: "none",
@@ -94,16 +110,7 @@ namespace KIP.Forms {
                             },
 
                             "&:hover": {
-                                transform: "scale(1.01)"
-                            }
-                        }
-                    },
-
-                    ".arrayChild": {
-                        nested: {
-                            ".kipBtn.new": {
-                                width: "100%",
-                                backgroundColor: "<formSubTheme>"
+                                opacity: "1"
                             }
                         }
                     }
@@ -193,7 +200,7 @@ namespace KIP.Forms {
             this._createCollapsibleTitle();
 
             // handle showing the children
-            this._elems.childrenContainer = createSimpleElement("", "formChildren", "", null, null, this._elems.base);
+            this._elems.childrenContainer = createElement({ cls: "formChildren", parent: this._elems.base });
             this._createNewButton();
             this._createStyles();
         }
@@ -205,9 +212,9 @@ namespace KIP.Forms {
          */
         protected _createNewButton(): void {
             this._elems.newButton = createElement({
-                cls: "kipBtn new",
+                cls: "arrayChild new",
                 content: this._newLabel,
-                parent: this._elems.base,
+                parent: this._elems.childrenContainer,
                 eventListeners: {
                     click: () => { this._createNewChild(); }
                 }
@@ -244,10 +251,12 @@ namespace KIP.Forms {
          * handle when an external force needs to update the form 
          */
         public update(data: M[], allowEvents: boolean): void {
-            if (!data) { return; }
-
+        
             // First clear out the existing data
             this.clear();
+
+            // quit if there's no other data to add
+            if (!data) { return; }
 
             // recreate the children
             data.map((elem: M) => {
@@ -287,7 +296,7 @@ namespace KIP.Forms {
             if (isArrayChildElement(this._childTemplate)) {
                 elem = this._cloneFormElement(this._childTemplate, this._id + "|" + idx.toString()) as ArrayChildField<M>;
 
-                // otherwise, spin up a new child altogether
+            // otherwise, spin up a new child altogether
             } else {
                 elem = new ArrayChildField(this._id + "|" + idx.toString(), this._childTemplate, { allowReordering: this._allowReordering });
             }
@@ -302,7 +311,10 @@ namespace KIP.Forms {
         protected _finalizeNewChild(elem: ArrayChildField<M>): void {
             this._applyColors(elem);
             this._children.push(elem);
+
+            removeElement(this._elems.newButton);
             elem.draw(this._elems.childrenContainer);
+            this._elems.childrenContainer.appendChild(this._elems.newButton);
 
             window.setTimeout(() => { elem.focus(); }, 300);
         }

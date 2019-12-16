@@ -1,4 +1,4 @@
-/// <reference path="../views/drawable.ts" />
+/// <reference path="../../views/drawable.ts" />
 
 namespace KIP {
 
@@ -10,10 +10,16 @@ namespace KIP {
      * @version	1.0.1
      * ----------------------------------------------------------------------------
      */
-    export abstract class BoundView<VM = any> extends Drawable {
+    export abstract class BoundView<VM = any, VC = any> extends Drawable {
 
         //.....................
         //#region PROPERTIES
+
+        /** allow passing in configurable parameters to the view, separate
+         * from the model itself. Controls how elements are created */
+        protected _config: VC;
+        public get config(): VC { return this._getConfig(); }
+        public set config(data: VC) { this._setConfig(data); }
         
         /** keep track of the model associated with this view */
         protected _model: VM;
@@ -31,8 +37,9 @@ namespace KIP {
         //..........................................
         //#region CREATE THE VIEW
         
-        public constructor(template?: IElemDefinition<IDictionary<Drawable | HTMLElement | SVGElement, string>>) {
-            super(template);
+        public constructor(config?: VC) {
+            super();
+            this._config = config || {} as VC;
             this._updateFunctions = {} as any;
             this._model = {} as any;
             this._createElements();
@@ -62,6 +69,30 @@ namespace KIP {
                 () => this._onPotentialModelChange(oldModel),
                 0
             );
+        }
+        
+        //#endregion
+        //..........................................
+
+        //..........................................
+        //#region CONFIG HANDLING
+        
+        protected _getConfig(): VC {
+            let oldConfig: VC = JSON.parse(JSON.stringify(this._config));
+            KIP.wait(0)
+                .then(() => this._onPotentialConfigChange(oldConfig))
+            return this._config;
+        }
+
+        protected _setConfig(data: VC): void {
+            let oldConfig: VC = this._config;
+            this._config = data;
+            KIP.wait(0)
+                .then(() => this._onPotentialConfigChange(oldConfig))
+        }
+
+        protected _onPotentialConfigChange(oldConfig: VC): void {
+
         }
         
         //#endregion

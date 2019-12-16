@@ -213,7 +213,7 @@ namespace KIP {
 	 * @returns	True if this is an integer string
 	 */
 	export function isNumeric(str: string): boolean {
-		return /[0-9]/.test(str);
+		return /^[0-9]+$/.test(str);
 	}
 
 	/**

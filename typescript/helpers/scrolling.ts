@@ -96,7 +96,7 @@ namespace KIP {
 				wentTooFar = (curAmt <= CLOSE_ENOUGH)
 			}
 
-			// check if we still havene't moved, as that's. apretty good sign that we can't or won't
+			// check if we still haven't moved, as that's a pretty good sign that we can't or won't
 			let canMove: boolean;
 			canMove = !((iteration !== 1) && (curAmt === totalAmt));
 			// TODO: make this work

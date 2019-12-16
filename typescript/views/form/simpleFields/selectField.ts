@@ -13,7 +13,7 @@ namespace KIP.Forms {
      * @version 2.0.0
      * ----------------------------------------------------------------------------
      */
-    export class SelectField<M extends string | number, T extends ISelectFieldTemplate<M>> extends Field<M, T> {
+    export class SelectField<M extends string | number, T extends ISelectFieldTemplate<M> = ISelectFieldTemplate<M>> extends Field<M, T> {
         protected get _type(): FieldTypeEnum { return FieldTypeEnum.SELECT; }
         protected get _defaultValue(): M { return null; }
         protected get _defaultCls(): string { return "select"; }

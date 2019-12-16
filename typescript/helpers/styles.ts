@@ -173,7 +173,6 @@ namespace KIP.Styles {
         }
 
         cls = document.createElement("style");
-        cls.innerHTML = "@charset \"utf-8\";\n";
         
         return cls;
     }
@@ -335,6 +334,7 @@ namespace KIP.Styles {
         WebkitUserSelect?: string;
         MozUserSelect?: string;
         WebkitFilter?: string;
+        webkitLineClamp?: string;
         khtmlUserSelect?: string;
         oUserSelect?: string;
         appearance?: string;

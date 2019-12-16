@@ -58,23 +58,23 @@ namespace KIP.Forms {
 
         /** static styles for the toggle buttons */
         protected static _uncoloredStyles: KIP.Styles.IStandardStyles = {
-
+            
             ".toggleBtns .formChildren": {
                 display: "flex",
                 flexWrap: "wrap",
-                marginLeft: "0"
+                marginLeft: "0",
+                marginTop: "5px"
             },
 
             ".toggleBtns.flex .formChildren": {
+
             },
 
             ".toggleBtn": {
-                borderRadius: "5px",
+                borderRadius: "3px",
                 boxShadow: "1px 1px 4px 2px rgba(0,0,0,.1)",
                 padding: "4px",
-                margin: "10px",
-                marginLeft: "0",
-                marginRight: "20px",
+                marginRight: "10px",
                 cursor: "pointer",
                 textAlign: "center",
                 fontSize: "0.8em",
@@ -92,6 +92,7 @@ namespace KIP.Forms {
             ".toggleBtn.selected": {
                 opacity: "1"
             }
+                
         };
 
         protected _getUncoloredStyles(): KIP.Styles.IStandardStyles {

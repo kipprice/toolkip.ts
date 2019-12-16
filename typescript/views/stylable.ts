@@ -414,6 +414,7 @@ namespace KIP.Styles {
                 length += tmpElem.innerHTML.length;
                 if (length >= MAX_STRING) {
                     newElem = this._addNewElement(elems);
+                    length = 0;
                 }
                 newElem.innerHTML += tmpElem.innerHTML;
             });
@@ -430,6 +431,8 @@ namespace KIP.Styles {
          */
         protected static _addNewElement(elems): HTMLStyleElement {
             let newElem = createStyleElement(false);
+            newElem.innerHTML = "@charset \"utf-8\";\n";
+            
             elems.push(newElem);
             document.head.appendChild(newElem);
             return newElem;
@@ -690,6 +693,23 @@ namespace KIP.Styles {
         }
 
         /**
+         * mergeInStyles
+         * ----------------------------------------------------------------------------
+         * allow a caller to add styles after class creation, to more specifically
+         * override the styles of a class
+         * 
+         * TODO: actually apply styles individually instead of globally
+         */
+        public mergeInStyles(...themes: IStandardStyles[]) {
+            let mergedThemes = Stylable._mergeThemes(null, ...themes);
+            Stylable._mergeIntoStyles(mergedThemes);
+            
+            Stylable._createStyles(true);
+            Stylable._createAllColoredStyles(true);
+            return this;
+        }
+
+        /**
          * _createStyles
          * ----------------------------------------------------------------------------
          * Create the styles for this class 
@@ -697,6 +717,7 @@ namespace KIP.Styles {
          *                          already exist
          */
         protected _createStyles(forceOverride?: boolean): void {
+
             // Quit if we don't have the right styles
             if (!this.uncoloredStyles) { return; }
 
@@ -716,9 +737,9 @@ namespace KIP.Styles {
 
             // create all styles for the element
             Stylable._createStyles(forceOverride);
-
             Stylable._createAllColoredStyles(forceOverride);
 
+            // ensure that we are not recreating these styles inappropriately
             Stylable._createdStyles[(this.constructor as any).name] = true;
 
         }
