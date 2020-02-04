@@ -1,4 +1,6 @@
 
+node_modules
+.DS_Store
 apps/**/*
 compiled_js/**/*
 typescript/MVC/_(old)_controller.ts
@@ -8,3 +10,13 @@ typescript/MVC/_(old)_viewModel.ts
 compile_tools/closure.sh
 js_version/toolkip.js/
 compile_tools/closure.sh
+typescript/oldObjects/form.ts
+typescript/oldObjects/form.ts
+typescript/oldObjects/graph.js
+typescript/oldObjects/projectPlanSVG.ts
+typescript/oldObjects/form.ts
+typescript/oldObjects/graph.js
+typescript/oldObjects/projectPlanSVG.ts
+typescript/oldObjects/form.ts
+typescript/oldObjects/graph.js
+typescript/oldObjects/projectPlanSVG.ts
